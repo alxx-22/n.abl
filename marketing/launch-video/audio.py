@@ -2332,6 +2332,22 @@ def build_reel_dark(variant="d2"):
     return out[0] * 1.3, out[1] * 1.0, out[2] * 1.3, out[3] * 0.75
 
 
+def build_music_track():
+    """A finished track played as it is: MUSIC_FILE in films/<id>/music from
+    MUSIC_AT seconds into the file at film time 0, brought to the same
+    loudness as the generated takes, easing out over the last seconds. No
+    marks, no filters, no hits: the track is the cut's own."""
+    y, sr = sf.read(os.path.join(HERE, "films", FILM_ID, "music", F.MUSIC_FILE), dtype="float64", always_2d=True)
+    y = np.repeat(y, 2, 1) if y.shape[1] == 1 else y[:, :2]
+    g = np.gcd(SR, sr); y = signal.resample_poly(y, SR // g, sr // g, axis=0)
+    music = np.zeros((N, 2)); a = at(getattr(F, "MUSIC_AT", 0.0)); n = min(N, len(y) - a)
+    music[:n] = y[a:a + n]
+    tail = np.clip((DUR - np.arange(N) / SR) / getattr(F, "MUSIC_TAIL", 0.6), 0, 1)
+    music *= tail[:, None]
+    music *= 10 ** ((-12.7 - pyln.Meter(SR).integrated_loudness(music[: int(DUR * SR)])) / 20)
+    return music, buf(), buf(), buf()
+
+
 def build_music_file():
     """A generated track (musicgen.py) fitted to the cut. film.py names it,
     MUSIC_FILE in films/<id>/music, and MUSIC_AT, the downbeat in the file
@@ -2562,9 +2578,9 @@ def main():
     drum_led = style in ("drums", "band", "garage", "perc", "electronica", "reel", "file")
     pads, bass, keys, drums = {"drums": build_music_drums, "band": build_music_band, "garage": build_music_garage, "perc": build_music_perc,
                                "electronica": build_music_electronica, "reel": reel_style(), "file": build_music_file,
-                               "none": lambda: (buf(), buf(), buf(), buf())}.get(style, build_music)()   # none: sound design only
+                               "none": lambda: (buf(), buf(), buf(), buf()), "track": build_music_track}.get(style, build_music)()   # none: sound design only
     music = pads * 1.0 + bass * 1.0 + keys * 1.0 + drums * (1.0 if drum_led else 0.9)
-    if style not in ("file", "none"):                       # a generated track comes mixed
+    if style not in ("file", "none", "track"):              # a generated or supplied track comes mixed
         music = peak_eq(music, 2800, 3.0, 0.6)
         music = peak_eq(music, 90, -2.0, 0.8)
     sfx = build_sfx()
