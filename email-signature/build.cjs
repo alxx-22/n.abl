@@ -28,6 +28,14 @@ const LINKEDIN = 'https://www.linkedin.com/in/alexander-alton-cohen-688018304/'
 const WEBSITE  = 'https://nabl.agency'
 const PHONE    = ''            // e.g. '+44 7700 900000'
 
+// n.abl's own social accounts (shown under the n.abl icon, separate
+// from the personal LinkedIn above).
+const NABL_SOCIAL = [
+  { key: 'linkedin',  label: 'n.abl on LinkedIn',  href: 'https://www.linkedin.com/company/n-abl-agency/home' },
+  { key: 'instagram', label: 'n.abl on Instagram', href: 'https://www.instagram.com/n.abl.ai/' },
+  { key: 'tiktok',    label: 'n.abl on TikTok',    href: 'https://www.tiktok.com/@n.abl.ai' },
+]
+
 const { chromium } = require('playwright')
 const fs = require('node:fs')
 const path = require('node:path')
@@ -72,10 +80,30 @@ const lockup = (stroke, dot) => clean(wordmarkSrc)
 // n, amber dot, so it reads the same on a light or a dark email.
 const icon = clean(faviconSrc).replace('viewBox="0 0 100 100"', 'viewBox="0 0 100 100" width="100" height="100"')
 
+// Font Awesome Free brand glyphs (CC BY 4.0, https://fontawesome.com/license/free),
+// path data copied unchanged from @fortawesome/free-brands-svg-icons 7.3.1.
+const GLYPHS = {
+  linkedin: { w: 448, h: 512, d: 'M100.3 448l-92.9 0 0-299.1 92.9 0 0 299.1zM53.8 108.1C24.1 108.1 0 83.5 0 53.8 0 39.5 5.7 25.9 15.8 15.8s23.8-15.8 38-15.8 27.9 5.7 38 15.8 15.8 23.8 15.8 38c0 29.7-24.1 54.3-53.8 54.3zM447.9 448l-92.7 0 0-145.6c0-34.7-.7-79.2-48.3-79.2-48.3 0-55.7 37.7-55.7 76.7l0 148.1-92.8 0 0-299.1 89.1 0 0 40.8 1.3 0c12.4-23.5 42.7-48.3 87.9-48.3 94 0 111.3 61.9 111.3 142.3l0 164.3-.1 0z' },
+  instagram: { w: 448, h: 512, d: 'M224.3 141a115 115 0 1 0 -.6 230 115 115 0 1 0 .6-230zm-.6 40.4a74.6 74.6 0 1 1 .6 149.2 74.6 74.6 0 1 1 -.6-149.2zm93.4-45.1a26.8 26.8 0 1 1 53.6 0 26.8 26.8 0 1 1 -53.6 0zm129.7 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM399 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z' },
+  tiktok: { w: 448, h: 512, d: 'M448.5 209.9c-44 .1-87-13.6-122.8-39.2l0 178.7c0 33.1-10.1 65.4-29 92.6s-45.6 48-76.6 59.6-64.8 13.5-96.9 5.3-60.9-25.9-82.7-50.8-35.3-56-39-88.9 2.9-66.1 18.6-95.2 40-52.7 69.6-67.7 62.9-20.5 95.7-16l0 89.9c-15-4.7-31.1-4.6-46 .4s-27.9 14.6-37 27.3-14 28.1-13.9 43.9 5.2 31 14.5 43.7 22.4 22.1 37.4 26.9 31.1 4.8 46-.1 28-14.4 37.2-27.1 14.2-28.1 14.2-43.8l0-349.4 88 0c-.1 7.4 .6 14.9 1.9 22.2 3.1 16.3 9.4 31.9 18.7 45.7s21.3 25.6 35.2 34.6c19.9 13.1 43.2 20.1 67 20.1l0 87.4z' },
+}
+
+// Social icons share the n.abl icon's construction: the same espresso
+// rounded tile (rx 22 of 100) with the glyph in the same cream as the n.
+// That keeps them one family with the logo, and a dark tile stays
+// visible whether the inbox is light or dark.
+const socialIcon = ({ w, h, d }) => {
+  const k = 54 / h, gw = w * k
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><rect width="100" height="100" rx="22" fill="${ESPRESSO}"/><path transform="translate(${+((100 - gw) / 2).toFixed(3)} 23) scale(${+k.toFixed(6)})" fill="#F0E7D8" d="${d}"/></svg>`
+}
+
 const nablSvgs = {
   'nabl-lockup.svg':         lockup(ESPRESSO, AMBER_DEEP),  // light grounds
   'nabl-lockup-reverse.svg': lockup(CREAM, AMBER),          // dark grounds
   'nabl-icon.svg':           icon,
+  'social-linkedin.svg':     socialIcon(GLYPHS.linkedin),
+  'social-instagram.svg':    socialIcon(GLYPHS.instagram),
+  'social-tiktok.svg':       socialIcon(GLYPHS.tiktok),
 }
 for (const [f, s] of Object.entries(nablSvgs)) fs.writeFileSync(path.join(SVG, f), s + '\n')
 
@@ -88,6 +116,8 @@ const HPE_W = HPE_H * 504 / 144      // 49
 const HPE_CLEAR = HPE_H / 2          // clear space = half the logo height
 const CHIP_W = HPE_W + 2 * HPE_CLEAR // 63
 const CHIP_H = HPE_H + 2 * HPE_CLEAR // 28
+const SOCIAL = 18                    // three of these + two 5px gaps = the 64px icon width
+const SOCIAL_GAP = 5
 
 const svgData = f => 'data:image/svg+xml;base64,' + fs.readFileSync(path.join(SVG, f)).toString('base64')
 
@@ -100,10 +130,9 @@ const exports_ = [
   { out: 'hpe-logo-blk-pos.png',       src: 'hpe-logo-blk-pos.svg',       w: HPE_W,    h: HPE_H },
   { out: 'hpe-logo-wht-rev.png',       src: 'hpe-logo-wht-rev.svg',       w: HPE_W,    h: HPE_H },
   // The one the signature uses: the official positive logo, unaltered,
-  // sitting on white with its clear space. Email clients never recolour
-  // images, so in dark mode this stays a legible white plate instead of
-  // the black "HPE" letters disappearing into a dark background.
-  { out: 'hpe-logo-email.png', src: 'hpe-logo-full-clr-pos.svg', w: HPE_W, h: HPE_H, pad: HPE_CLEAR, bg: '#FFFFFF' },
+  // with its clear space (half the logo height) as transparent padding.
+  { out: 'hpe-logo-email.png', src: 'hpe-logo-full-clr-pos.svg', w: HPE_W, h: HPE_H, pad: HPE_CLEAR },
+  ...NABL_SOCIAL.map(s => ({ out: `social-${s.key}.png`, src: `social-${s.key}.svg`, w: SOCIAL, h: SOCIAL })),
 ]
 
 function signatureHtml(base) {
@@ -114,10 +143,13 @@ function signatureHtml(base) {
   const link = (href, text) =>
     `<a href="${href}" style="${t}font-size:12px;line-height:18px;text-decoration:none;font-weight:bold;">${text}</a>`
   const contacts = [
-    link(LINKEDIN, 'LinkedIn'),
+    link(LINKEDIN, 'My LinkedIn'),
     link(WEBSITE, WEBSITE.replace(/^https?:\/\//, '')),
     PHONE && link('tel:' + PHONE.replace(/[^\d+]/g, ''), PHONE.replace(/ /g, '&nbsp;')),
   ].filter(Boolean).join(sep)
+  const socials = NABL_SOCIAL.map((s, i) =>
+    `<td style="padding:6px ${i < NABL_SOCIAL.length - 1 ? SOCIAL_GAP : 0}px 0 0;"><a href="${s.href}" title="${s.label}" style="text-decoration:none;">${img(`social-${s.key}.png`, SOCIAL, SOCIAL, s.label)}</a></td>`
+  ).join('')
 
   return `<!-- n.abl email signature. Images load from: ${base}
      To change that, edit IMAGE_BASE_URL in email-signature/build.cjs and re-run it. -->
@@ -125,6 +157,9 @@ function signatureHtml(base) {
   <tr>
     <td valign="top" style="padding:2px 16px 0 0;">
       <a href="${WEBSITE}" style="text-decoration:none;">${img('nabl-icon.png', ICON, ICON, 'n.abl')}</a>
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">
+        <tr>${socials}</tr>
+      </table>
     </td>
     <td valign="top" style="border-left:2px solid ${AMBER_DEEP};padding:0 0 0 16px;">
       <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">
@@ -139,7 +174,7 @@ function signatureHtml(base) {
             <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">
               <tr>
                 <td valign="middle" style="${t}font-size:13px;line-height:18px;">UKIMEA Innovations &amp; Programs Lead Developer,</td>
-                <td valign="middle" style="padding:0 0 0 6px;">${img('hpe-logo-email.png', CHIP_W, CHIP_H, 'HPE')}</td>
+                <td valign="middle" style="padding:0;">${img('hpe-logo-email.png', CHIP_W, CHIP_H, 'HPE')}</td>
               </tr>
             </table>
           </td>

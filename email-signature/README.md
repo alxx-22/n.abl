@@ -25,7 +25,7 @@ The simplest way to host them is to copy `png/` into the site's `public/` folder
 mkdir -p public/email-signature && cp email-signature/png/*.png public/email-signature/
 ```
 
-The signature only uses two images: `nabl-icon.png` and `hpe-logo-email.png`.
+The signature uses five images: `nabl-icon.png`, `hpe-logo-email.png` and the three `social-*.png` icons.
 
 To host them somewhere else, change `IMAGE_BASE_URL` in `build.cjs` (keep the trailing `/`) and rebuild:
 
@@ -58,6 +58,16 @@ Gmail stores pasted images by their URL, so they must already be uploaded.
 
 Set `PHONE` near the top of `build.cjs` (e.g. `'+44 7700 900000'`), rebuild, and copy and paste again. It appears in the contact row as a tap-to-call link.
 
+## Social links
+
+- Under the n.abl icon are n.abl's own LinkedIn, Instagram and TikTok accounts.
+- "My LinkedIn" in the text column is your personal profile.
+- To edit the n.abl accounts, change `NABL_SOCIAL` near the top of `build.cjs` and rebuild.
+
+The icons use the same espresso rounded tile as the n.abl icon, with the glyph in the same cream as the n. That keeps them one family with the logo, and visible in both light and dark inboxes.
+
+The glyphs come from [Font Awesome Free](https://fontawesome.com/license/free) brand icons (CC BY 4.0), with path data unchanged. LinkedIn, Instagram and TikTok all allow single-colour versions of their icons.
+
 ## Brand notes
 
 **n.abl.** Generated from `public/brand/wordmark.svg` and `public/favicon.svg`. The geometry is unchanged. The build only removes comments and sets the colours from the brand guide as fixed values.
@@ -70,7 +80,7 @@ Set `PHONE` near the top of `build.cjs` (e.g. `'+44 7700 900000'`), rebuild, and
 
 **HPE.** The four `hpe-logo-*.svg` files are the official 2025 files you supplied, copied without changes.
 
-- The signature uses `hpe-logo-email.png`: the full-colour positive logo, unaltered, on white, with clear space of half the logo height.
-- Email clients don't recolour images. In dark mode it therefore shows as a small white plate, so the black "HPE" letters don't disappear.
+- The signature uses `hpe-logo-email.png`: the full-colour positive logo, unaltered, on a transparent background, with clear space of half the logo height.
+- **Dark-mode limitation:** email clients can't swap images for dark mode, so the black "HP" in the logo is hard to see on a dark inbox. The green element stays visible. The earlier white-plate version avoided this; set `bg: '#FFFFFF'` on the `hpe-logo-email.png` entry in `build.cjs` to bring it back.
 - It is shown 14px tall (49px wide).
 - **To check:** the half-height clear space comes from HPE's older public standards, and 14px is a judgement call. Check both against the current rules on HPE BrandCentral, and HPE's own email-signature policy, before using this for HPE mail.
