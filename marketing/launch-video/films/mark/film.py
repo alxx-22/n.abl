@@ -37,12 +37,14 @@ SCENES = [
     dict(id="out",  beats=7,  lines=[]),   # it burns away into the square, which goes off; the full stop and the address
 ]
 
-MUSIC = "file"
-MUSIC_FILE, MUSIC_AT = "mark-1.wav", 4.0647
-MUSIC_DROPS = []
+# No music: a score of sound design (audio.py's cinematic cues, from the
+# film's own cues in scenes.js): a drone bed with no beat or tune, reverse
+# swells and reversed halls breathing in before each hit, deep impacts with a
+# sub drop and a low braam, granular sparkle for light, crackle for embers.
+# The Lyria takes in music/ are kept, unused. The tempo still sets the cuts.
+MUSIC = "none"
 SFX_TRIM = {}
-# the effects sit under the music, drowned, as in the other reels; the
-# water drops keep a dry click on their front, so they cut through
-MUSIC_GAIN, SFX_GAIN = 0.42, 0.62
-SFX_DROWN = dict(cut=2600, wobble=0.002, room=0.3)
-DROP_CLICK = 0.6
+MUSIC_GAIN, SFX_GAIN = 0.0, 1.0
+SFX_DROWN = None          # full range: nothing under water
+DROP_CLICK = 0
+LOUDNESS = -14.5          # a little under the others, to leave the hits their headroom
