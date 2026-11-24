@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Email Signature Preview</title>
+<style>
+  :root { --bg:#F4EFE6; --fg:#14110E; --muted:#5A5249; --card:#FFFFFF; --line:#E2D9CA; --accent:#B87718; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0E0C0A; --fg:#F0E7D8; --muted:#C8BBA8; --card:#1A1613; --line:#2B241E; --accent:#E9AC57; } }
+  :root[data-theme="dark"] { --bg:#0E0C0A; --fg:#F0E7D8; --muted:#C8BBA8; --card:#1A1613; --line:#2B241E; --accent:#E9AC57; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui,-apple-system,"Segoe UI",Arial,sans-serif; }
+  main { max-width:1180px; margin:0 auto; padding:32px 16px 48px; }
+  h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:15px; margin:0 0 10px; }
+  p { margin:0 0 12px; color:var(--muted); }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:20px 0 28px; }
+  @media (max-width:900px) { .grid { grid-template-columns:1fr; } }
+  .panel { border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .panel .label { font-size:12px; letter-spacing:.08em; text-transform:uppercase; padding:8px 14px; background:var(--card); color:var(--muted); border-bottom:1px solid var(--line); }
+  .stage { padding:28px 24px; overflow-x:auto; }
+  .stage.light { background:#FFFFFF; }
+  /* Simulates Outlook.com / Gmail app dark mode: the client darkens the
+     background and lightens text colours, but never touches images. */
+  .stage.dark { background:#1F1F1F; }
+  .stage.dark td, .stage.dark a, .stage.dark b, .stage.dark span:not(.keep) { color:#E8E6E3 !important; }
+  .copy { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px; }
+  #copyArea { background:#FFFFFF; padding:20px; border:1px dashed var(--line); border-radius:6px; margin:12px 0; overflow-x:auto; }
+  button { font:inherit; font-weight:600; padding:9px 16px; border-radius:6px; border:0; background:#E9AC57; color:#24170A; cursor:pointer; }
+  #status { margin-left:10px; color:var(--muted); font-size:14px; }
+  .notice { display:none; border-left:3px solid var(--accent); background:var(--card); padding:10px 14px; margin:12px 0 0; font-size:14px; }
+  code { font-size:13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Email signature</h1>
+  <p>The left panel is a normal light inbox. The right panel simulates Outlook.com and Gmail dark mode, which recolour text but leave images alone.</p>
+  <div class="notice" id="hostNotice">The images aren't at <code>https://nabl.agency/email-signature/</code> yet, so this preview is using the local <code>png/</code> files. Upload the PNGs before you copy, or the pasted signature will show broken images.</div>
+
+  <div class="grid">
+    <section class="panel"><div class="label">Light background</div><div class="stage light"><!-- n.abl email signature. Images load from: https://nabl.agency/email-signature/
+     To change that, edit IMAGE_BASE_URL in email-signature/build.cjs and re-run it. -->
+<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;max-width:500px;">
+  <tr>
+    <td valign="top" style="padding:2px 16px 0 0;">
+      <a href="https://nabl.agency" style="text-decoration:none;"><img src="https://nabl.agency/email-signature/nabl-icon.png" width="64" height="64" alt="n.abl" style="display:block;border:0;outline:none;width:64px;height:64px;"></a>
+    </td>
+    <td valign="top" style="border-left:2px solid #B87718;padding:0 0 0 16px;">
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">
+        <tr>
+          <td style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:18px;line-height:22px;font-weight:bold;padding:0 0 2px 0;">Alex Cohen</td>
+        </tr>
+        <tr>
+          <td style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:13px;line-height:18px;">Founder, <b>n.abl</b><span style="color:#B87718;">&nbsp;|&nbsp;</span>AI &amp; Automation for UK SMEs</td>
+        </tr>
+        <tr>
+          <td style="padding:0;">
+            <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">
+              <tr>
+                <td valign="middle" style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:13px;line-height:18px;">UKIMEA Innovations &amp; Programs Lead Developer,</td>
+                <td valign="middle" style="padding:0 0 0 6px;"><img src="https://nabl.agency/email-signature/hpe-logo-email.png" width="63" height="28" alt="HPE" style="display:block;border:0;outline:none;width:63px;height:28px;"></td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:12px;line-height:18px;padding:0;"><a href="https://www.linkedin.com/in/alexander-alton-cohen-688018304/" style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:12px;line-height:18px;text-decoration:none;font-weight:bold;">LinkedIn</a><span style="color:#B87718;">&nbsp;|&nbsp;</span><a href="https://nabl.agency" style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:12px;line-height:18px;text-decoration:none;font-weight:bold;">nabl.agency</a></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table></div></section>
+    <section class="panel"><div class="label">Dark mode (simulated)</div><div class="stage dark"><!-- n.abl email signature. Images load from: https://nabl.agency/email-signature/
+     To change that, edit IMAGE_BASE_URL in email-signature/build.cjs and re-run it. -->
+<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;max-width:500px;">
+  <tr>
+    <td valign="top" style="padding:2px 16px 0 0;">
+      <a href="https://nabl.agency" style="text-decoration:none;"><img src="https://nabl.agency/email-signature/nabl-icon.png" width="64" height="64" alt="n.abl" style="display:block;border:0;outline:none;width:64px;height:64px;"></a>
+    </td>
+    <td valign="top" style="border-left:2px solid #B87718;padding:0 0 0 16px;">
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">
+        <tr>
+          <td style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:18px;line-height:22px;font-weight:bold;padding:0 0 2px 0;">Alex Cohen</td>
+        </tr>
+        <tr>
+          <td style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:13px;line-height:18px;">Founder, <b>n.abl</b><span style="color:#B87718;">&nbsp;|&nbsp;</span>AI &amp; Automation for UK SMEs</td>
+        </tr>
+        <tr>
+          <td style="padding:0;">
+            <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">
+              <tr>
+                <td valign="middle" style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:13px;line-height:18px;">UKIMEA Innovations &amp; Programs Lead Developer,</td>
+                <td valign="middle" style="padding:0 0 0 6px;"><img src="https://nabl.agency/email-signature/hpe-logo-email.png" width="63" height="28" alt="HPE" style="display:block;border:0;outline:none;width:63px;height:28px;"></td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:12px;line-height:18px;padding:0;"><a href="https://www.linkedin.com/in/alexander-alton-cohen-688018304/" style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:12px;line-height:18px;text-decoration:none;font-weight:bold;">LinkedIn</a><span style="color:#B87718;">&nbsp;|&nbsp;</span><a href="https://nabl.agency" style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:12px;line-height:18px;text-decoration:none;font-weight:bold;">nabl.agency</a></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table></div></section>
+  </div>
+
+  <section class="copy">
+    <h2>Copy into Outlook.com</h2>
+    <p>Click the button, then in Outlook.com go to Settings → Account → Signatures, click in the editor and paste (Ctrl/Cmd + V).</p>
+    <button type="button" id="copyBtn">Select &amp; copy signature</button><span id="status" aria-live="polite"></span>
+    <div id="copyArea"><!-- n.abl email signature. Images load from: https://nabl.agency/email-signature/
+     To change that, edit IMAGE_BASE_URL in email-signature/build.cjs and re-run it. -->
+<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;max-width:500px;">
+  <tr>
+    <td valign="top" style="padding:2px 16px 0 0;">
+      <a href="https://nabl.agency" style="text-decoration:none;"><img src="https://nabl.agency/email-signature/nabl-icon.png" width="64" height="64" alt="n.abl" style="display:block;border:0;outline:none;width:64px;height:64px;"></a>
+    </td>
+    <td valign="top" style="border-left:2px solid #B87718;padding:0 0 0 16px;">
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">
+        <tr>
+          <td style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:18px;line-height:22px;font-weight:bold;padding:0 0 2px 0;">Alex Cohen</td>
+        </tr>
+        <tr>
+          <td style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:13px;line-height:18px;">Founder, <b>n.abl</b><span style="color:#B87718;">&nbsp;|&nbsp;</span>AI &amp; Automation for UK SMEs</td>
+        </tr>
+        <tr>
+          <td style="padding:0;">
+            <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">
+              <tr>
+                <td valign="middle" style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:13px;line-height:18px;">UKIMEA Innovations &amp; Programs Lead Developer,</td>
+                <td valign="middle" style="padding:0 0 0 6px;"><img src="https://nabl.agency/email-signature/hpe-logo-email.png" width="63" height="28" alt="HPE" style="display:block;border:0;outline:none;width:63px;height:28px;"></td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:12px;line-height:18px;padding:0;"><a href="https://www.linkedin.com/in/alexander-alton-cohen-688018304/" style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:12px;line-height:18px;text-decoration:none;font-weight:bold;">LinkedIn</a><span style="color:#B87718;">&nbsp;|&nbsp;</span><a href="https://nabl.agency" style="font-family:Arial,Helvetica,sans-serif;color:#14110E;font-size:12px;line-height:18px;text-decoration:none;font-weight:bold;">nabl.agency</a></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table></div>
+  </section>
+</main>
+<script>
+(function () {
+  var imgs = Array.prototype.slice.call(document.querySelectorAll('.stage img, #copyArea img'));
+  var base = "https://nabl.agency/email-signature/";
+  imgs.forEach(function (im) { im.setAttribute('data-remote', im.getAttribute('src')); });
+  // If the hosted images are not live yet, show the local copies so the layout can be checked.
+  imgs.forEach(function (im) {
+    im.addEventListener('error', function onErr() {
+      im.removeEventListener('error', onErr);
+      im.src = 'png/' + im.getAttribute('data-remote').slice(base.length);
+      document.getElementById('hostNotice').style.display = 'block';
+    });
+    if (im.complete && im.naturalWidth === 0) im.dispatchEvent(new Event('error'));
+  });
+  document.getElementById('copyBtn').addEventListener('click', function () {
+    var area = document.getElementById('copyArea');
+    var swapped = [];
+    // Always copy the public URLs, never the local fallbacks.
+    area.querySelectorAll('img').forEach(function (im) { swapped.push([im, im.src]); im.src = im.getAttribute('data-remote'); });
+    var range = document.createRange(); range.selectNodeContents(area);
+    var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+    var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+    setTimeout(function () { swapped.forEach(function (p) { p[0].src = p[1]; }); }, 300);
+    document.getElementById('status').textContent = ok ? 'Copied. Now paste it into Outlook.com.' : 'Selected. Press Ctrl/Cmd + C to copy.';
+  });
+})();
+</script>
+</body>
+</html>
