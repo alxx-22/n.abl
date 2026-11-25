@@ -15,9 +15,10 @@ fonts and is served with them.
 | Space Grotesk | `SpaceGrotesk-latin.woff2`, `SpaceGrotesk-latin-ext.woff2` | 400 to 700, variable | not recorded | Google Fonts | `SpaceGrotesk-OFL.txt` |
 | Inter Tight | `InterTight-latin.woff2`, `InterTight-latin-ext.woff2` | 400 to 600, variable | not recorded | Google Fonts | `InterTight-OFL.txt` |
 
-Manjari is the brand typeface from the 2026-11 revision. Space Grotesk and Inter
-Tight retire when the website moves to Manjari. JetBrains Mono stays, for keys and
-codes in the product only.
+Manjari is the brand typeface from the 2026-11 revision. The site no longer
+requests Space Grotesk or Inter Tight; their files stay because the launch films
+in `marketing/launch-video/film/` load them directly, and can go once the films
+move to Manjari. JetBrains Mono stays, for keys and codes in the product only.
 
 ## Manjari, file by file
 

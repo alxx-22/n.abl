@@ -486,8 +486,8 @@ looks wrong next to the drawn wordmark.
 **JetBrains Mono stays for one job only:** keys and codes in the product, such as
 portal access keys and identifiers, where every character must be read on its
 own. It is never used for labels, eyebrows, numbers in prose or anything in
-marketing. Space Grotesk and Inter Tight retire when the website moves to
-Manjari.
+marketing. Space Grotesk and Inter Tight are retired: the website does not use
+them, and their files remain only while the launch films still load them.
 
 ### 5.2 Scale
 

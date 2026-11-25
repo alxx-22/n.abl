@@ -5,6 +5,7 @@ import { prefersReducedMotion } from '../components/ui/index.jsx'
 import DiscoveryModal from '../components/DiscoveryModal.jsx'
 import SiteAssistant from '../components/SiteAssistant.jsx'
 import { JourneyRail } from '../components/Journey.jsx'
+import LitGround from '../components/LitGround.jsx'
 import { track, observeDepth } from '../lib/analytics.js'
 
 import Hero from '../components/sections/Hero.jsx'
@@ -76,7 +77,10 @@ export default function Home() {
   useEffect(() => { document.title = 'n.abl — AI implementation for small and mid-sized businesses' }, [])
 
   return (
-    <div className="grain">
+    <div className="lit">
+      {/* The light behind the page, and its grain. It follows the story
+          section by section; see components/ground/story.js. */}
+      <LitGround />
       <Intro />
       <Nav />
 

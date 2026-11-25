@@ -427,7 +427,10 @@
 @media (max-width: 720px) {
   .crm-ribbon { padding: var(--s-3) var(--s-4); }
   .crm-ribbon__right { width: 100%; margin-left: 0; }
-  .crm-ribbon__search { flex: 1; width: auto; max-width: none; }
+  /* min-width 0: an input will not shrink below its default size of twenty
+     characters, which in Manjari's wider letters pushed "+ Lead" 24px off a
+     390px screen. */
+  .crm-ribbon__search { flex: 1; width: auto; max-width: none; min-width: 0; }
   .crm-ribbon__team { display: none; }
   .crm-view { padding: var(--s-2) var(--s-3); flex: 0 0 auto; }
   /* Five views do not fit beside the logo on a 360px phone (31px over,

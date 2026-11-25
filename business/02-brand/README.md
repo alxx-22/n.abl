@@ -66,7 +66,8 @@ this folder.
 - [x] No document in this folder describes the logo as being "set in" a typeface.
 - [x] There is a working reference for the new look in the repository, and the
       guidelines say which wins when they disagree.
-- [ ] The website uses Manjari, the colourway and the lit ground. **In progress.**
+- [x] The website uses Manjari, the colourway and the lit ground. Done on the
+      branch `claude/modest-wright-2zlwat`; live once that branch is merged.
 
 What is **not** claimed:
 
@@ -82,12 +83,15 @@ What is **not** claimed:
 
 ### The 2026-11 revision
 
-- [ ] **Move the website over.** In progress on the branch
-      `claude/modest-wright-2zlwat`: `--font-display` and `--font-sans` onto
-      Manjari, the lit ground behind the page, the glass buttons, chips and
-      cards, the See it work scroll film restyled with its content unchanged,
-      the favicon and social card. Space Grotesk and Inter Tight leave
-      `public/fonts/` when it lands.
+- [x] **Move the website over.** Done on the branch
+      `claude/modest-wright-2zlwat`, waiting to be merged: `--font-display`
+      and `--font-sans` on Manjari, the lit ground behind the homepage and the
+      services page (`src/components/ground/`, `LitGround.jsx`), glass
+      buttons, cards and modal, the See it work film in Manjari and ember with
+      its content unchanged, the AI glyphs in the calm gradient, and a new
+      social card. The site no longer requests Space Grotesk or Inter Tight.
+      Their files stay in `public/fonts/` while the launch films
+      (`marketing/launch-video/film/`) still load them directly.
 - [ ] **Films.** `marketing/launch-video/film/film.css` sets Space Grotesk, Inter
       Tight and JetBrains Mono and the one-accent styling. New films use Manjari
       and the colourway (guidelines section 8). Re-cutting the existing ones is a
@@ -95,9 +99,9 @@ What is **not** claimed:
 - [ ] **Email fallback stack.** The templates still name `Arial Black` for
       headings. Move them to a light system stack (guidelines section 5.7) and
       re-run `npm run test:emails`.
-- [ ] **Regenerate the social card.** `scripts/build-og.mjs` inlines the August
-      fonts and draws the flat ground. Rebuild `public/brand/og.png` in Manjari on
-      the lit ground. Part of the website move.
+- [x] **Regenerate the social card.** `scripts/build-og.mjs` now draws the site's
+      own lit ground in a headless browser, with the wordmark and the hero's
+      line in Manjari Thin. `public/brand/og.png` is rebuilt from it.
 
 ### Carried over from 2026-08
 
@@ -154,7 +158,7 @@ application:
 | `public/brand/wordmark.svg` | The full wordmark. Drawn artwork, with the construction in comments. |
 | `public/brand/mark.svg` | The short mark: the `n` and the dot. |
 | `public/favicon.svg` | The mark inset in a rounded espresso tile. |
-| `public/fonts/` | Manjari in three weights, Latin and Latin Extended (six `.woff2` files, 78,604 bytes), the August families until the website move lands, each family's licence, `fonts.css` and a `README.md` of sources. |
+| `public/fonts/` | Manjari in three weights, Latin and Latin Extended (six `.woff2` files, 78,604 bytes), the August families while the launch films still use them, each family's licence, `fonts.css` and a `README.md` of sources. |
 | `src/styles/tokens.css` | Every colour, gradient, type and spacing token the product uses. |
 | `src/components/ui/index.jsx` | The `Logo` component, the same paths inlined. |
 | `logos/` | Six generated PNG exports for decks and documents. |

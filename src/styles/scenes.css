@@ -23,8 +23,8 @@
 .scene svg{display:block;width:100%;height:auto}
 .scene__tabs{display:flex;gap:var(--s-2);margin-top:var(--s-4)}
 .scene__tab{appearance:none;background:var(--surface-1);border:1px solid var(--line);
-  color:var(--cream-400);font:inherit;font-size:var(--t-xs);font-family:var(--font-mono);
-  letter-spacing:.06em;padding:.65rem .8rem;border-radius:var(--r-full);cursor:pointer;
+  color:var(--cream-400);font:inherit;font-size:.78rem;
+  letter-spacing:.04em;padding:.65rem .8rem;border-radius:var(--r-full);cursor:pointer;
   transition:border-color var(--dur) var(--ease),color var(--dur) var(--ease),background var(--dur) var(--ease)}
 .scene__tab:hover{color:var(--cream-100);border-color:rgba(var(--accent-rgb),.4)}
 .scene__tab[aria-selected="true"]{color:var(--accent-200);border-color:rgba(var(--accent-rgb),.7);
@@ -62,14 +62,16 @@
   opacity:0;transition:opacity var(--dur) var(--ease);pointer-events:none}
 .spot:hover::after{opacity:1}
 .problem__head{display:flex;align-items:center;justify-content:space-between;gap:var(--s-3);margin-bottom:var(--s-4)}
-.problem__num{font-family:var(--font-mono);font-size:var(--t-xs);color:var(--accent-400);letter-spacing:.1em}
-.problem__label{display:block;font-size:var(--t-xs);letter-spacing:var(--track-wide);
+.problem__num{font-size:.75rem;font-variant-numeric:tabular-nums;color:var(--accent-300);letter-spacing:.06em}
+.problem__label{display:block;font-size:.72rem;letter-spacing:var(--track-label);word-spacing:0;
   text-transform:uppercase;color:var(--cream-600)}
 .problem__quote{font-size:var(--t-xl);margin:var(--s-2) 0 var(--s-3);line-height:1.25;
-  color:var(--cream-100);text-wrap:balance;font-family:var(--font-display);font-weight:600;
-  letter-spacing:var(--track-tight)}
+  color:var(--cream-100);text-wrap:balance;font-family:var(--font-display);font-weight:400;
+  letter-spacing:0;word-spacing:-.04em}
+.problem__quote .q{color:var(--ember-300)}
 .problem__body{color:var(--cream-400);font-size:var(--t-sm)}
-.glyph{color:var(--accent-400);filter:drop-shadow(0 0 14px rgba(var(--accent-rgb),.35))}
+.glyph{color:var(--ice-400);filter:drop-shadow(0 0 12px rgba(var(--ice-rgb),.28))}
+.glyph--plain{color:var(--cream-300);filter:none}
 .problem{cursor:default}
 .problem:focus-visible{outline:2px solid var(--accent-400);outline-offset:4px}
 
@@ -92,16 +94,17 @@
 .problem__stage svg{display:block;width:100%;height:auto;max-height:100%}
 .problem__tag{display:flex;align-items:center;gap:var(--s-3);
   padding:.5rem var(--s-4) .6rem;border-top:1px solid var(--line-faint)}
-.problem__cap{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--accent-400);white-space:nowrap}
+.problem__cap{font-size:.7rem;letter-spacing:var(--track-label);
+  text-transform:uppercase;color:var(--accent-300);white-space:nowrap}
 .problem__note{font-size:.7rem;color:var(--cream-600);margin-left:auto;white-space:nowrap}
 /* the edge itself, so the wipe reads as one thing moving rather than
-   two things cross-fading. Amber, because it is a committed choice. */
+   two things cross-fading. Warm to cool, rising: the line between the
+   problem and the AI that takes it on. */
 .problem__edge{position:absolute;top:0;bottom:0;z-index:3;width:1px;pointer-events:none;
   left:calc(var(--wipe) * 100%);opacity:var(--edge-o,0);
-  background:linear-gradient(180deg,transparent,var(--accent-400) 16%,
-    var(--accent-400) 84%,transparent);
-  box-shadow:0 0 14px rgba(var(--accent-rgb),.55)}
+  background:linear-gradient(0deg,transparent,var(--ember-400) 16%,var(--accent-400) 42%,
+    var(--calm-mid) 64%,var(--ice-400) 84%,transparent);
+  box-shadow:0 0 14px rgba(var(--accent-rgb),.45)}
 /* the cursor bloom sits above everything, so it has to get out of the
    way as the animation arrives or it tints it */
 .problem.spot:hover::after{opacity:calc(1 - var(--wipe))}

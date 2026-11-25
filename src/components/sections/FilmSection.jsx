@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react'
 import { Reveal, useReducedMotion } from '../ui/index.jsx'
 import { Chapter } from '../Journey.jsx'
 import { createStage } from '../film/stage.js'
-import film, { BEAT, LIST, CHAPTERS, HOLDS } from '../film/reel.js'
+import film, { BEAT, LIST, CHAPTERS } from '../film/reel.js'
+import { PX_DESK, PX_TOUCH, DUR, pxAt, tAt } from '../film/scrollmap.js'
 
 /* ============================================================
    02 — SEE IT WORK
@@ -22,32 +23,13 @@ import film, { BEAT, LIST, CHAPTERS, HOLDS } from '../film/reel.js'
    and gets the chapters as cards instead of a film.
    ============================================================ */
 
-/* Scroll distance per second of film, between the important moments. A
-   wheel notch is about 100px, so roughly one notch a second, which is the
-   reel's pace. A phone swipe covers more ground, so it gets less. At the
-   moments in HOLDS (reel.js) the same scroll moves time several times
-   slower, so those take more scrolling to get past. */
-const PX_DESK = 105, PX_TOUCH = 90
-
-/* The film's length is known before anything is built, so the section can
-   take its height on the first render. Setting it only once the stage is
+/* The scroll map (how far the page moves per second of film, slower at the
+   moments worth reading) is in film/scrollmap.js, shared with the lit
+   ground behind the page so the light changes with the film's chapters.
+   The film's length is known before anything is built, so the section
+   takes its height on the first render. Setting it only once the stage was
    built moved everything below it down after the page had laid out, and a
    link straight to #pricing landed thousands of pixels short. */
-const DUR = LIST.reduce((n, s) => n + s.beats, 0) * BEAT + 0.6
-
-/* Film time to scroll distance, and back. Monotonic, so the way back is a
-   bisection: thirty halvings of a thirty-second film is far finer than a
-   frame. */
-function pxAt(t, px) {
-  let p = t * px
-  for (const [a, b, k] of HOLDS) p += Math.max(0, Math.min(t, b) - a) * (k - 1) * px
-  return p
-}
-function tAt(p, px) {
-  let lo = 0, hi = DUR
-  for (let i = 0; i < 30; i++) { const m = (lo + hi) / 2; if (pxAt(m, px) < p) lo = m; else hi = m }
-  return (lo + hi) / 2
-}
 
 function Words({ className }) {
   return (

@@ -50,7 +50,7 @@ export default function Nav({ home = true }) {
         ))}
         <Link to="/services" className="nav__link" onClick={() => setOpen(false)}>Other Services</Link>
         <Link to="/portal" className="btn btn--ghost btn--sm" onClick={() => setOpen(false)}>
-          Client Portal
+          <span className="lbl">Client Portal</span>
         </Link>
       </nav>
 
