@@ -109,19 +109,24 @@ try {
   check('and shrinks again when the text does', shrunkHeight < grownHeight - 4,
     `${grownHeight} -> ${shrunkHeight}`)
 
-  check('there is an AI mark on the launcher', Boolean(await page.$('.assistant-fab .spark')))
+  check('there is an AI mark on the launcher', Boolean(await page.$('.assistant-fab .mark-orb .mark-orb__spark')))
 
-  /* It turns for as long as the cursor is on the launcher rather than once
-     and stopping, so a hover that lingers keeps moving. */
+  /* Its lights turn for as long as the cursor is on the launcher rather than
+     once and stopping, so a hover that lingers keeps moving; off it, they
+     hold still. */
+  const lights = () => page.evaluate(() => {
+    const cs = getComputedStyle(document.querySelector('.assistant-fab .mark-orb__spin'))
+    return { count: cs.animationIterationCount, name: cs.animationName, state: cs.animationPlayState }
+  })
+  await page.mouse.move(5, 5)
+  await page.waitForTimeout(100)
+  const resting = await lights()
   await page.hover('.assistant-fab')
   await page.waitForTimeout(150)
-  const spin = await page.evaluate(() => {
-    const el = document.querySelector('.assistant-fab .spark')
-    const cs = getComputedStyle(el)
-    return { count: cs.animationIterationCount, name: cs.animationName }
-  })
-  check('and it keeps turning while hovered', spin.count === 'infinite' && /spark-turn/.test(spin.name),
+  const spin = await lights()
+  check('and it keeps turning while hovered', spin.count === 'infinite' && /orb-turn/.test(spin.name) && spin.state === 'running',
     JSON.stringify(spin))
+  check('and holds still otherwise', resting.state === 'paused', JSON.stringify(resting))
   check('and no disclaimer paragraph in the panel — the legal pages carry that',
     (await page.$$('#site-assistant .assistant__note')).length === 0)
 

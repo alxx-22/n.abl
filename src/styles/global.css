@@ -329,7 +329,6 @@ p { text-wrap: pretty; }
   min-height: 50px;
   padding: 0 1.55rem;
   isolation: isolate;
-  overflow: hidden;
   color: var(--cream-100);
   font-weight: 700;
   background: linear-gradient(180deg, rgba(var(--cream-rgb), 0.10), rgba(var(--cream-rgb), 0.035));
@@ -344,9 +343,14 @@ p { text-wrap: pretty; }
     radial-gradient(34% 46% at 18% 92%, rgba(var(--ember-rgb), 0.9), transparent 70%),
     radial-gradient(30% 44% at 52% 104%, rgba(var(--accent-rgb), 0.85), transparent 70%),
     radial-gradient(34% 46% at 86% 92%, rgba(var(--ice-rgb), 0.8), transparent 70%);
+  background-repeat: no-repeat;
   filter: blur(12px);
   opacity: 0.58;
-  transition: opacity 0.35s var(--ease), transform 0.6s var(--ease);
+  /* The light stays inside the glass. The button itself does not clip (its
+     ring sits outside it), so the light is cut to the button's own shape:
+     the inset is the button's edge measured inside this larger box. */
+  clip-path: inset(calc(60% / 2.2) calc(20% / 1.4) round 999px);
+  transition: opacity 0.35s var(--ease), background-position 0.6s var(--ease);
 }
 .btn--primary::after {
   content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
@@ -355,57 +359,63 @@ p { text-wrap: pretty; }
   transition: opacity 0.3s var(--ease);
 }
 .btn--primary:not(:disabled):hover { border-color: rgba(var(--cream-rgb), 0.30); }
-.btn--primary:not(:disabled):hover::before { opacity: 0.85; transform: translateY(-8%); }
+/* the light rises: moved within its box, so the cut it is clipped to stays put */
+.btn--primary:not(:disabled):hover::before { opacity: 0.85; background-position: 0 -9px; }
 .btn--primary:not(:disabled):hover::after { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .btn--primary::before, .btn--primary::after { transition: none; } }
 
 /* ------------------------------------------------------------
-   THE SWOOSH — the main calls to action, and Ask a question
+   THE RING — the main calls to action, and Ask a question
 
-   A <span class="ring"> inside the button draws its edge. On hover a
-   bright arc of the brand gradient (ember, amber, cream, ice) runs once
-   round the edge, then the whole edge settles to a softer gradient with a
-   low glow, and stays while the pointer does. Without @property the arc
-   simply fades in place; with reduced motion only the settled edge shows.
+   A <span class="ring"> inside the button draws a ring of the brand's light
+   just outside it. Under the pointer the ring opens out round the button,
+   an arc of the brand gradient (ember, amber, cream, then a white head)
+   circles it for as long as the pointer stays, and the whole ring glows.
+   It holds where it stopped, so the next visit carries on from there.
+   Without @property the arc holds still; with reduced motion the ring and
+   its glow show without the arc.
    ------------------------------------------------------------ */
 @property --ring-a { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
-.ring { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1; }
-.ring::before, .ring::after {
-  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px;
+/* scoped to the buttons: the scenes have status rings of their own */
+:is(.btn, .assistant-fab) > .ring {
+  position: absolute; inset: -6px; border-radius: 999px; pointer-events: none; z-index: 1;
+  opacity: 0; transform: scale(0.94);
+  filter: drop-shadow(0 0 4px rgba(var(--accent-rgb), 0.55)) drop-shadow(0 0 12px rgba(var(--ice-rgb), 0.3));
+  transition: opacity 0.35s var(--ease), transform 0.5s var(--ease-out);
+}
+:is(.btn, .assistant-fab) > .ring::before, :is(.btn, .assistant-fab) > .ring::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
           mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           mask-composite: exclude;
-  opacity: 0;
 }
-/* the arc: dark for most of the turn, then the gradient, brightest at its head */
-.ring::before {
-  background: conic-gradient(from var(--ring-a),
-    transparent 0deg, transparent 228deg,
-    rgba(var(--ember-rgb), 0.95) 262deg, var(--accent-300) 296deg, var(--calm-mid) 324deg, var(--ice-300) 350deg, transparent 360deg);
-}
-/* the settled edge: the whole gradient, softer */
-.ring::after {
+/* the whole ring, soft: the brand gradient end to end */
+:is(.btn, .assistant-fab) > .ring::after {
+  padding: 1.5px;
   background: linear-gradient(100deg, rgba(var(--ember-rgb), 0.6), rgba(var(--accent-rgb), 0.6) 38%, rgba(239, 226, 198, 0.5) 62%, rgba(var(--ice-rgb), 0.6));
-  transition: opacity 0.4s var(--ease);
 }
-:is(.btn, .assistant-fab):hover > .ring::before { animation: ring-sweep 0.95s var(--ease-out) forwards; }
-:is(.btn, .assistant-fab):hover > .ring::after { opacity: 0.75; transition: opacity 0.5s var(--ease) 0.5s; }
-@keyframes ring-sweep {
-  0%   { --ring-a: -100deg; opacity: 0; }
-  14%  { opacity: 1; }
-  72%  { opacity: 1; }
-  100% { --ring-a: 290deg; opacity: 0; }
+/* the arc of light that circles it, warm at its tail and brightest at its head */
+:is(.btn, .assistant-fab) > .ring::before {
+  padding: 2px;
+  background: conic-gradient(from var(--ring-a),
+    transparent 0deg, transparent 170deg,
+    rgba(var(--ember-rgb), 0.9) 240deg, var(--accent-300) 292deg, var(--calm-mid) 326deg, var(--ice-300) 346deg, #fff 357deg, transparent 360deg);
+  animation: ring-orbit 2.2s linear infinite paused;
 }
-/* the button's own edge steps aside while the ring is lit, and a low glow stays */
-.btn--primary:has(> .ring):not(:disabled):hover {
-  border-color: transparent;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -12px 22px -14px rgba(0, 0, 0, 0.55),
-              0 0 26px -6px rgba(var(--accent-rgb), 0.32), 0 0 44px -14px rgba(var(--ice-rgb), 0.3);
+@keyframes ring-orbit { from { --ring-a: 0deg; } to { --ring-a: 360deg; } }
+@media (hover: hover) {
+  :is(.btn, .assistant-fab):not(:disabled):hover > .ring { opacity: 1; transform: none; }
+  :is(.btn, .assistant-fab):not(:disabled):hover > .ring::before { animation-play-state: running; }
+  /* and a low glow stays on the glass itself */
+  .btn--primary:has(> .ring):not(:disabled):hover {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -12px 22px -14px rgba(0, 0, 0, 0.55),
+                0 0 30px -6px rgba(var(--accent-rgb), 0.38), 0 0 50px -12px rgba(var(--ice-rgb), 0.32);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  :is(.btn, .assistant-fab):hover > .ring::before { animation: none; }
-  :is(.btn, .assistant-fab):hover > .ring::after { transition: none; }
+  :is(.btn, .assistant-fab) > .ring { transition: opacity 0.2s linear; transform: none; }
+  :is(.btn, .assistant-fab) > .ring::before { animation: none; opacity: 0; }
 }
 
 .btn--accent {
