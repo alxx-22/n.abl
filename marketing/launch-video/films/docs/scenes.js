@@ -226,8 +226,8 @@ function buildFlash(s) {
   svg.style.filter = 'drop-shadow(0 0 30px rgba(251,246,236,.18))'
   return t => {
     let k = 0; HITS.forEach((a, i) => { if (t >= a) k = i })
-    const dt = Math.max(0, t - HITS[k]), l = Math.exp(-dt / .11)
-    put(lock, { s: SC[k] * (1 + .06 * dt / .27), o: l, blur: dt > .1 ? (dt - .1) * 36 : 0 })
+    const dt = Math.max(0, t - HITS[k]), l = dt < .22 ? Math.exp(-dt / .07) * (1 - dt / .22) : 0
+    put(lock, { s: SC[k] * (1 + .06 * dt / .27), o: l, blur: dt > .08 ? (dt - .08) * 40 : 0 })
     if (l > .3) shield(lock, 1)
     shoot(s, path([[s.t0, 0, 0, 0, 0, 0, 0, 1], [s.t1, 0, 0, 0, 0, 0, 0, 1]]), t)
     lens(s, {})
@@ -253,7 +253,7 @@ function buildFix(s) {
   const t0 = s.t0, t1 = s.t1
   const r = rng(23)
   // the pile, from the first shot, goes into Document AI on the drop
-  const pile = HEAP.slice(N - 30).map((p, j) => ({ e: sheet(s.cam, N - 30 + j), p, d: .012 * j + r() * .05 }))
+  const pile = HEAP.slice(N - 30).map((p, j) => ({ e: sheet(s.cam, N - 30 + j), p, d: .004 * j + r() * .03 }))
   const pill = h('div', 'd-pill', s.cam, '<span class="dot"></span><span>Reading <b>500</b> documents</span>')
   const pdot = pill.querySelector('.dot')
   const inv = h('div', 'd-inv', s.cam, INV)
@@ -272,8 +272,8 @@ function buildFix(s) {
   const capD = cap(s.hud, `Done by 9:02${STOP}`)
   const IK = M({ land: 1.12, sq: .9, tall: .96, port: 1.14 })
   let WW = null
-  cue('whoosh', t0 + .3, { d: .55, v: .55 })
-  cue('pop', t0 + .42, { v: .5 })
+  cue('whoosh', t0 + .26, { d: .45, v: .55 })
+  cue('pop', t0 + .34, { v: .5 })
   cue('pop', T_IN, { v: .45 })
   T_HL.forEach(a => cue('blip', a, { v: .55 }))
   cue('stamp', T_STAMP, { v: 1 })
@@ -281,13 +281,15 @@ function buildFix(s) {
   minis.forEach((m, j) => { if (j % 2 === 0) cue('tick', m.a + .32, { v: .28 }) })
   cue('confirm', T_DONE, { n: 2, deg: 3, v: .6 })
   return t => {
-    // the pile lifts and is pulled into the live chip, the outermost last
+    // on the drop the whole pile jumps, then is pulled into the live chip, the top of it last
+    const jump = bell(t, t0 - .01, t0 + .05, t0 + .22)
     pile.forEach(q => {
-      const u = P(t, t0 + q.d, t0 + q.d + .34, E.in2)
-      put(q.e, { x: lerp(q.p.x, 0, u), y: lerp(q.p.y, MIDY, u), r: lerp(q.p.r, 0, u), s: lerp(q.p.s, .1, u), o: 1 - P(u, .8, 1, E.lin), blur: u * 4 })
+      const u = P(t, t0 + .02 + q.d, t0 + .02 + q.d + .3, E.in2)
+      put(q.e, { x: lerp(q.p.x, 0, u), y: lerp(q.p.y - 46 * jump, MIDY, u), r: lerp(q.p.r * (1 + .4 * jump), 0, u), s: lerp(q.p.s * (1 + .07 * jump), .1, u), o: 1 - P(u, .8, 1, E.lin), blur: u * 4 })
     })
+    s.rig.style.transform = `scale(${(1 + .035 * jump).toFixed(4)})`
     const pin = P(t, t0, t0 + .28, E.back), pout = P(t, T_IN - .05, T_IN + .08, E.in2)
-    const gulp = bell(t, t0 + .36, t0 + .42, t0 + .62)
+    const gulp = bell(t, t0 + .3, t0 + .36, t0 + .56)
     put(pill, { y: MIDY, s: lerp(.6, 1, pin) * (1 + .08 * gulp) * lerp(1, 1.3, pout), o: Math.min(1, pin * 2) * (1 - pout) })
     pdot.style.opacity = (.35 + .65 * (.5 + .5 * Math.cos((t - t0) * Math.PI * 2 / 1.6))).toFixed(3)
     // the invoice opens out of the chip and is read, a field a sixteenth
