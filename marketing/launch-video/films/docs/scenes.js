@@ -462,7 +462,7 @@ function buildCount(s) {
     if (Math.abs(x) < 380 && Math.abs(y) < 190) x += Math.sign(x || 1) * 400
     return { e, x, y, z: -700 + r() * 900, rot: (r() - .5) * 24, ph: r() * 6, sp: .4 + r() * .6 }
   })
-  cue('type', t0 + .05, { d: tEnd - t0 - .1, v: .26 })
+  cue('type', t0 + .16, { d: tEnd - t0 - .22, v: .2 })      // off the clap: on it, its first click overshoots the AAC encoder
   cue('confirm', tEnd, { n: 3, deg: 2, v: .55 })
   cue('whoosh', t1 - .05, { d: .4, v: .4 })
   return t => {
