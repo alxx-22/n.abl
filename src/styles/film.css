@@ -1,5 +1,10 @@
 /* ============================================================
-   THE FILM — styles for src/components/film
+   THE FILM'S STAGE — styles for src/components/film
+
+   The site no longer plays the See it work film; its products each have a
+   chapter of their own (sections/Products.jsx), and each one's animation
+   is a scene built on this stage (film/cards.js). The film itself lives on
+   in marketing/launch-video.
 
    The reel's stylesheets (marketing/launch-video/film/film.css and
    films/reel/scenes.css), scoped under .f-stage so nothing in them can
@@ -14,96 +19,6 @@
    Manjari, the brand face (brand-guidelines.md, section 5); the stage's
    600 weights render in its Bold, its 500s in its Regular.
    ============================================================ */
-
-/* ---------- the section that pins it ---------- */
-.film-section { position: relative; padding-top: clamp(4.5rem, 10vw, 9rem); }
-.film-section__head { padding-bottom: var(--s-7); }
-.film--still .film-section__head { padding-bottom: 0; }
-.film {
-  position: relative;
-  /* the pinned stage scrolls for the length of the film; the height is set
-     from the film's duration in FilmSection.jsx */
-}
-.film__pin {
-  position: sticky; top: 0;
-  height: 100vh; height: 100svh;
-  overflow: hidden;
-}
-.film__host { position: absolute; left: 0; top: 0; }
-
-/* On the page the film has no ground of its own: it plays over the same
-   page background as the hero above it, so there is no box where one
-   ends and the other starts. Its light from above and its amber bloom
-   fade out towards the top and bottom edges, which are the edges that
-   show while the film scrolls into place and out again. The reel's dark
-   vignette would draw a frame round it, so it is not used here. */
-.film .f-stage { background: transparent; }
-.film .f-vignette { display: none; }
-/* On a lit page the light behind the film is the page's own (LitGround),
-   which turns to fluted glass while the film plays and changes with each
-   chapter. The film's own amber and cream blooms would double it. */
-.lit .film .f-ground { display: none; }
-.film .f-ground {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 76%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 76%, transparent 100%);
-}
-.film__intro {
-  position: absolute; left: 0; right: 0; top: 0;
-  padding: calc(var(--s-9) + var(--s-4)) var(--gutter) 0;
-  z-index: var(--z-raise);
-  pointer-events: none;
-  text-align: center;
-}
-.film__hint {
-  position: absolute; left: 50%; bottom: var(--s-6); transform: translateX(-50%);
-  font-size: 0.72rem; letter-spacing: var(--track-label);
-  text-transform: uppercase; color: var(--cream-600);
-  display: flex; align-items: center; gap: var(--s-2);
-  z-index: var(--z-raise); pointer-events: none;
-  transition: opacity var(--dur-slow) var(--ease);
-}
-.film__hint::before {
-  content: ''; width: 1px; height: 22px; background: linear-gradient(var(--accent-400), transparent);
-}
-.film__bar {
-  position: absolute; left: var(--gutter); right: var(--gutter); bottom: var(--s-4);
-  height: 2px; border-radius: 1px; background: var(--line-faint); overflow: hidden;
-  z-index: var(--z-raise); pointer-events: none;
-  transition: opacity var(--dur-slow) var(--ease);
-}
-.film__bar i { display: block; height: 100%; width: 100%; background: var(--grad-trio); transform-origin: 0 50%; transform: scaleX(0); }
-
-/* Reduced motion, and anything that cannot run the film: the same
-   chapters and steps, as words. */
-.film--still { padding-block: var(--s-9); }
-.film-still__grid { display: grid; gap: var(--s-4); margin-top: var(--s-7); }
-@media (min-width: 860px) { .film-still__grid { grid-template-columns: repeat(3, 1fr); } }
-.film-still__grid > .reveal { display: flex; }
-.film-still__grid > .reveal > .film-still__card { flex: 1; }
-.film-still__card {
-  border: 1px solid var(--line); border-radius: var(--r-xl); padding: var(--s-6);
-  background: rgba(19, 16, 14, 0.66);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-}
-.film-still__eb {
-  display: flex; align-items: center; gap: var(--s-2);
-  font-size: 0.72rem; letter-spacing: var(--track-label);
-  text-transform: uppercase; color: var(--accent-300);
-}
-.film-still__eb span:last-child { color: var(--cream-600); }
-.film-still__line { font-size: var(--t-lg); color: var(--cream-100); margin: var(--s-3) 0 var(--s-4); font-weight: 400; }
-.film-still__steps { display: flex; flex-direction: column; gap: var(--s-2); }
-.film-still__steps li {
-  display: flex; align-items: center; gap: var(--s-2);
-  font-size: 0.72rem; letter-spacing: var(--track-label);
-  text-transform: uppercase; color: var(--cream-400);
-}
-/* each step is the AI at work: the round ice dot */
-.film-still__steps li::before {
-  content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--ice-400);
-  box-shadow: 0 0 10px rgba(var(--ice-rgb), 0.7); flex: none;
-}
 
 /* ============================================================
    THE STAGE

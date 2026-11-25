@@ -3,6 +3,36 @@
 What has changed on the public site, newest first. Commit hashes are from this
 repository, so any entry can be read in full with `git show <hash>`.
 
+## 2026-11-25 · The 2026-11 brand, and a chapter for each product (on `claude/modest-wright-2zlwat`)
+
+The brand moved to Manjari and the ember, amber and ice colourway
+(`../02-brand/brand-guidelines.md`), and the homepage's middle was rebuilt
+around the products.
+
+- **Look:** Manjari throughout, the lit ground behind the page
+  (`src/components/ground`), glass buttons and cards, problem, fix and result
+  in ember, amber and ice. A new social card, drawn from the site's own ground.
+- **What it can do, one chapter per product (`sections/Products.jsx`):** the
+  See it work film and the grid of seven solution cards are replaced by one
+  chapter for each of the seven products. The words on one side; on the
+  other, the product's own scene (the card scenes from
+  `src/components/film/cards.js`), pinned and played by the scroll, leaning
+  towards the pointer. Between products the scene folds into the amber
+  square, which carries the light down to the next one, across the page when
+  the next one sits on the other side. Reduced motion gets each product's
+  outcome as a still beside its words.
+- **New copy:** each product now says what it is useful for and what you get.
+  Every line is drawn from words the site or `assistant-knowledge.md` already
+  used: the film's captions, the cases' results, the assistant's
+  descriptions. No number, no client. The quotes and descriptions are the
+  cards', unchanged. The copy is in `src/components/products/data.js`.
+- **Navigation:** "See It Work" leaves the nav and the footer, since its
+  content is now the products; `#see-it-work` still lands on them. The rail
+  loses its See it work stop and the chapters renumber.
+- **Retired:** the film's site version (`FilmSection.jsx`, `film/reel.js`)
+  and `Solutions.jsx`. The launch films are untouched in
+  `marketing/launch-video`.
+
 ## 2026-09-29 · AI implementation (on the `dev` branch)
 
 The site repositioned as an AI implementation business for small and mid-sized

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { Logo } from '../ui/index.jsx'
 
 const LINKS = [
-  { id: 'see-it-work', label: 'See It Work' },
   { id: 'what-we-do', label: 'What We Do' },
   { id: 'how-we-work', label: 'How We Work' },
   { id: 'pricing', label: 'Pricing' },

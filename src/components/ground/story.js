@@ -27,13 +27,13 @@ export const GWARM = [0.12, 0.3, 0.2, 0.78, 0.62, -1, -1, -1]
    overall strength · drift: how much scrolling pans the texture · tone hp
    sat: tone mapping · pace: speed of the slow drift · shd: how much the
    light dims behind the words in view · vig: the fixed fade on the copy's
-   side */
-const SK = ['g', 'f', 'a', 'fw', 'tau', 'spread', 'cy', 'heat', 'k', 'drift', 'tone', 'sat', 'hp', 'pace', 'shd', 'vig']
+   side · vside: which side the copy is on, 0 left, 1 right */
+const SK = ['g', 'f', 'a', 'fw', 'tau', 'spread', 'cy', 'heat', 'k', 'drift', 'tone', 'sat', 'hp', 'pace', 'shd', 'vig', 'vside']
 const GK = []
 for (let i = 0; i < NG; i++) GK.push(`g${i}x`, `g${i}y`, `g${i}r`, `g${i}a`)
 export const KEYS = SK.concat(GK)
 
-const S0 = { g: 1, f: 0, a: 0, fw: 26, tau: 0.3, spread: 0.6, cy: 0.55, heat: 0.3, k: 1, drift: 1, tone: 0.45, sat: 1, hp: 0, pace: 1, shd: 1, vig: 0 }
+const S0 = { g: 1, f: 0, a: 0, fw: 26, tau: 0.3, spread: 0.6, cy: 0.55, heat: 0.3, k: 1, drift: 1, tone: 0.45, sat: 1, hp: 0, pace: 1, shd: 1, vig: 0, vside: 0 }
 for (let i = 0; i < NG; i++) Object.assign(S0, { [`g${i}x`]: 0.5, [`g${i}y`]: 0.5, [`g${i}r`]: 0.2, [`g${i}a`]: 0 })
 
 const lay = (rows) => {
@@ -43,6 +43,8 @@ const lay = (rows) => {
 }
 const mk = (o, rows) => Object.assign({}, S0, rows ? lay(rows) : null, o)
 const dim = (rows, f) => rows.map((r) => [r[0], r[1], r[2], r[3] * f])
+/* the same layout for copy on the right: the light moves to the other side */
+const mirror = (rows) => rows.map((r) => [1 - r[0], r[1], r[2], r[3]])
 
 /* Layouts: [x 0 left..1 right, y 0 bottom..1 top, radius in screen
    heights, strength] for ember, ember, ember, amber, amber, ice, ice, ice.
@@ -89,6 +91,17 @@ export const ST = {
   contact: mk({ tau: 0.5, spread: 0.5, g: 0.9, a: 0.25, cy: 0.5 }, L.contact),
 }
 
+/* The products (sections/Products.jsx): fluted glass behind each one, the
+   light on the animation's side and the dark behind the words, a different
+   layout for each so the light moves as the products change. Copy on the
+   right mirrors the layout and moves the fade with it. */
+const PRODUCT_LAYOUTS = [L.fix1, L.fix2, L.fix1, L.fix3, L.fix2, L.fix3, L.cards]
+export function productState(i, side) {
+  const rows = PRODUCT_LAYOUTS[i % PRODUCT_LAYOUTS.length]
+  const left = side === 'left'
+  return mk({ ...CALM, f: 1, heat: 0.3, vig: 0.3, shd: 0.4, vside: left ? 1 : 0 }, left ? mirror(rows) : rows)
+}
+
 /* On a portrait screen the copy fills the width: smaller glows. */
 const portraitOf = (s) => {
   const o = { ...s }
@@ -100,13 +113,12 @@ const portraitOf = (s) => {
    The homepage, chapter by chapter (brand-guidelines.md, 7.1).
 
    page: { vh, maxY, portrait, sec(id) -> { top, h } | null,
-           film: { start, docs, office, cta, end } | null }
+           products: [{ top, h, side }] }
    Returns [[scrollY, state], ...] in order.
    ------------------------------------------------------------ */
 export function homeKeyframes(page) {
-  const { vh, maxY, portrait, sec, film } = page
+  const { vh, maxY, portrait, sec, products = [] } = page
   const A = portrait ? portraitOf : (s) => s
-  const at = (id, p) => { const s = sec(id); return s ? s.top + p * s.h : null }
   /* where a section sits as it passes through the screen: 0 as its top
      enters at the bottom, 1 as its bottom leaves at the top */
   const pass = (id, p) => { const s = sec(id); return s ? s.top - vh + p * (s.h + vh) : null }
@@ -115,31 +127,27 @@ export function homeKeyframes(page) {
   const kf = [[0, A(ST.hero)]]
   const push = (y, s) => { if (y != null && isFinite(y)) kf.push([y, A(s)]) }
 
-  const see = sec('see-it-work')
-  if (see) {
-    push(see.top - vh * 0.5, ST.hero)
-    /* the work before the AI: warm while the chapter opens */
-    push(see.top + vh * 0.1, ST.heatStart)
-    if (film) {
-      push(film.start - vh * 0.2, ST.heatPeak)
-      /* the glass arrives as the film starts, and each of its three
-         chapters holds its own light while it plays */
-      push(film.start + vh * 0.1, ST.glassIn)
-      push(film.start + vh * 0.45, ST.fix1)
-      push(film.docs - vh * 0.25, ST.fix1)
-      push(film.docs + vh * 0.15, ST.fix2)
-      push(film.office - vh * 0.25, ST.fix2)
-      push(film.office + vh * 0.15, ST.fix3)
-      push(film.cta - vh * 0.1, ST.fix3)
-      push(film.end, ST.glass)
-    } else {
-      /* reduced motion: the film is three cards, and the light simply turns to glass behind them */
-      push(at('see-it-work', 0.45), ST.glassIn)
-      push(at('see-it-work', 0.75), ST.fix2)
-      push(at('see-it-work', 1), ST.glass)
-    }
+  const what = sec('what-we-do')
+  if (what) {
+    push(what.top - vh * 0.5, ST.hero)
+    /* the problems first: warm while "which of these sounds familiar" is read */
+    push(what.top + vh * 0.1, ST.heatStart)
   }
-  push(mid('what-we-do'), ST.glassCards)
+  if (products.length) {
+    const first = products[0]
+    push(first.top - vh * 0.45, ST.heatPeak)
+    /* the glass arrives with the first product */
+    push(first.top - vh * 0.1, ST.glassIn)
+    /* each product holds its own light while its words are read, and the
+       light travels to the next one's across the hand-over */
+    products.forEach((p, i) => {
+      const s = productState(i, p.side)
+      push(p.top + p.h * 0.12, s)
+      push(p.top + p.h * 0.82, s)
+    })
+    const last = products[products.length - 1]
+    push(last.top + last.h + vh * 0.1, ST.glass)
+  }
   /* how we work: the reeds widen step by step while the glass gives way to the aurora */
   push(pass('how-we-work', 0.22), ST.step1)
   push(pass('how-we-work', 0.36), ST.step2)

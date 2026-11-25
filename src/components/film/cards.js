@@ -27,7 +27,7 @@ const WHITE = '247,242,234', ICE = '124,203,255', AMB = '233,172,87', CORAL = '2
    it fills the card edge to edge: the scene's light and specks reach every
    side, and there are no bars where a fixed-shape stage met a card of a
    different shape. It is drawn with zoom rather than a transform, for the
-   same reason as the film (see FilmSection.jsx): drawn at the size shown,
+   same reason the site's film once was: drawn at the size shown,
    not drawn large and shrunk. If the card changes shape while open, the
    stage is rebuilt to match and carries on from the same moment.
 

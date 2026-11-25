@@ -9,8 +9,7 @@ import LitGround from '../components/LitGround.jsx'
 import { track, observeDepth } from '../lib/analytics.js'
 
 import Hero from '../components/sections/Hero.jsx'
-import FilmSection from '../components/sections/FilmSection.jsx'
-import Solutions from '../components/sections/Solutions.jsx'
+import Products from '../components/sections/Products.jsx'
 import Process from '../components/sections/Process.jsx'
 import Examples from '../components/sections/Examples.jsx'
 import Pricing from '../components/sections/Pricing.jsx'
@@ -19,6 +18,7 @@ import About from '../components/sections/About.jsx'
 import Contact from '../components/sections/Contact.jsx'
 
 import '../styles/home.css'
+import '../styles/products.css'
 
 /* ============================================================
    INTRO — the blind lifts to reveal the page
@@ -88,8 +88,7 @@ export default function Home() {
 
       <main>
         <Hero onBook={() => book('cta_primary')} />
-        <FilmSection />
-        <Solutions />
+        <Products />
         <Process />
         <Examples />
         <Pricing />

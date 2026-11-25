@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { prefersReducedMotion, useReducedMotion } from './ui/index.jsx'
 import { createGround } from './ground/engine.js'
 import { homeKeyframes, stillKeyframes } from './ground/story.js'
-import { DUR, filmPx, pxAt, startOf } from './film/scrollmap.js'
 
 /* ============================================================
    LIT GROUND — the light behind the page
@@ -22,8 +21,8 @@ import { DUR, filmPx, pxAt, startOf } from './film/scrollmap.js'
    gradients (.ground__still), so the page is never flat black.
    ============================================================ */
 
-/* Where each section sits on the page, and where each of the film's
-   chapters sits inside See it work. */
+/* Where each section sits on the page, and where each product's chapter
+   sits, and on which side its words are. */
 function measure() {
   const vh = window.innerHeight
   const maxY = Math.max(1, document.documentElement.scrollHeight - vh)
@@ -32,15 +31,14 @@ function measure() {
     if (!el) return null
     return { top: el.getBoundingClientRect().top + window.scrollY, h: el.offsetHeight }
   }
-  let film = null
-  const filmEl = document.querySelector('#see-it-work .film')
-  if (filmEl) {
-    const top = filmEl.getBoundingClientRect().top + window.scrollY
-    const px = filmPx()
-    const at = (t) => top + pxAt(t, px)
-    film = { start: top, docs: at(startOf('docs')), office: at(startOf('office')), cta: at(startOf('cta')), end: at(DUR) }
-  }
-  return { vh, maxY, portrait: window.innerWidth < window.innerHeight, sec, film }
+  const portrait = window.innerWidth < window.innerHeight
+  const products = [...document.querySelectorAll('#what-we-do .product')].map((el) => ({
+    top: el.getBoundingClientRect().top + window.scrollY,
+    h: el.offsetHeight,
+    // on a phone the words run full width under the animation
+    side: !portrait && el.classList.contains('product--left') ? 'left' : 'right',
+  }))
+  return { vh, maxY, portrait, sec, products }
 }
 
 /* The words the light dims behind as they pass: headings and their

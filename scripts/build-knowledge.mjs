@@ -75,13 +75,14 @@ const missing = cats.filter((cat) => {
   return !new RegExp(`\\b${key}\\b`, 'i').test(knowledge)
 })
 
-/* Since the move to AI implementation the offer itself is the solution
-   cards on the home page, and those are what a visitor will ask about
-   first. Their titles are short and specific, so they are compared whole. */
-const solutions = readFileSync(new URL('../src/components/sections/Solutions.jsx', import.meta.url), 'utf8')
+/* Since the move to AI implementation the offer itself is the products on
+   the home page, one chapter each, and those are what a visitor will ask
+   about first. Their titles are short and specific, so they are compared
+   whole. */
+const solutions = readFileSync(new URL('../src/components/products/data.js', import.meta.url), 'utf8')
 const titles = [...solutions.matchAll(/title:\s*'([^']+)'/g)].map((m) => m[1])
 if (titles.length < 3) {
-  console.error('\n  Could not read the solution titles out of Solutions.jsx — the check that\n  keeps them in step with the assistant is now blind. Fix the pattern.\n')
+  console.error('\n  Could not read the product titles out of products/data.js — the check that\n  keeps them in step with the assistant is now blind. Fix the pattern.\n')
   process.exit(1)
 }
 for (const t of titles) {

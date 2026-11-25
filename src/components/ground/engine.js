@@ -131,8 +131,10 @@ void main(){
   vec3 col=C0+L;
   col+=C3*rim*.06*present;
   float sh=max(shield(B0)*BS.x,max(shield(B1)*BS.y,shield(B2)*BS.z))*SV.x;
-  /* the fixed fade: strongest at the left edge, gone by 78% across; on a portrait screen the copy is full width */
-  float vg=SV.y*mix(1.-smoothstep(.3,.78,uv.x),.72,SV.z);
+  /* the fixed fade on the copy's side (X.z: 0 left, 1 right): strongest at that edge, gone by 78% across;
+     on a portrait screen the copy is full width */
+  float vx=mix(uv.x,1.-uv.x,X.z);
+  float vg=SV.y*mix(1.-smoothstep(.3,.78,vx),.72,SV.z);
   col=mix(col,C0+(col-C0)*.3,max(sh,vg));
   col=C0+(col-C0)*F.w;
   gl_FragColor=vec4(col,1.);
@@ -310,7 +312,7 @@ export function createGround(canvas, { reduced = false, shields: shieldSel = '[d
     gl.uniform3f(U.SV, s.shd, s.vig, canvas.clientWidth < canvas.clientHeight ? 1 : 0)
     gl.uniform1f(U.Y, live ? sflow : 0); gl.uniform1f(U.V, vel * s.drift); gl.uniform3f(U.TQ, s.tone, s.hp, s.sat); gl.uniform2f(U.EM, EMBER[0], EMBER[1])
     gl.uniform3f(U.W, s.g, s.f, s.a); gl.uniform3f(U.P, s.tau, s.spread, 0)
-    gl.uniform4f(U.F, 0, s.fw, s.heat, s.k); gl.uniform4f(U.X, 0, s.cy, 0, 0)
+    gl.uniform4f(U.F, 0, s.fw, s.heat, s.k); gl.uniform4f(U.X, 0, s.cy, s.vside, 0)
     gl.uniform4fv(U.G, glowBuf(s)); gl.uniform3f(U.M, ptr.x, ptr.y, ptr.a); gl.uniform3f(U.WS, WISP[0], WISP[1], WISP[2])
     gl.uniform2f(U.WM, WARM[0], WARM[1]); gl.uniform3fv(U.RW, reedLevels(s.fw))
     gl.drawArrays(gl.TRIANGLES, 0, 3)

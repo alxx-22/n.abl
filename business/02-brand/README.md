@@ -87,9 +87,9 @@ What is **not** claimed:
       `claude/modest-wright-2zlwat`, waiting to be merged: `--font-display`
       and `--font-sans` on Manjari, the lit ground behind the homepage and the
       services page (`src/components/ground/`, `LitGround.jsx`), glass
-      buttons, cards and modal, the See it work film in Manjari and ember with
-      its content unchanged, the AI glyphs in the calm gradient, and a new
-      social card. The site no longer requests Space Grotesk or Inter Tight.
+      buttons, cards and modal, one chapter per product in place of the See
+      it work film and the card grid (`sections/Products.jsx`, guidelines
+      7.2), the AI glyphs in the calm gradient, and a new social card. The site no longer requests Space Grotesk or Inter Tight.
       Their files stay in `public/fonts/` while the launch films
       (`marketing/launch-video/film/`) still load them directly.
 - [ ] **Films.** `marketing/launch-video/film/film.css` sets Space Grotesk, Inter
