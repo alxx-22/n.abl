@@ -168,9 +168,9 @@ export default function SiteAssistant({ onHandoff }) {
                 <p>{handoff.intent === 'book_call'
                   ? 'Shall I open the form so you can book a call?'
                   : 'Shall I pass this to the team?'}</p>
-                <button type="button" className="btn btn--accent btn--sm"
+                <button type="button" className="btn btn--primary btn--sm"
                   onClick={() => { onHandoff?.(handoff.enquiry); toggle(); setHandoff(null) }}>
-                  {handoff.intent === 'book_call' ? 'Book a call' : 'Ask the team'}
+                  <span className="lbl">{handoff.intent === 'book_call' ? 'Book a call' : 'Ask the team'}</span>
                 </button>
               </div>
             )}
@@ -193,8 +193,8 @@ export default function SiteAssistant({ onHandoff }) {
               aria-label="Your question"
               maxLength={1000}
             />
-            <button type="submit" className="btn btn--accent btn--sm" disabled={busy || !input.trim()}>
-              Send
+            <button type="submit" className="btn btn--primary btn--sm" disabled={busy || !input.trim()}>
+              <span className="lbl">Send</span>
             </button>
           </form>
 

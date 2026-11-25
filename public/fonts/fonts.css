@@ -15,8 +15,9 @@
 
    Space Grotesk, Inter Tight and JetBrains Mono below are VARIABLE fonts: one
    file serves every weight, which is why several of their @font-face blocks
-   share a src. Space Grotesk and Inter Tight retire when the website moves to
-   Manjari; JetBrains Mono stays for keys and codes in the product. */
+   share a src. The site no longer uses Space Grotesk or Inter Tight, so a
+   browser never downloads them; they stay for the launch films, which load
+   the files directly. JetBrains Mono stays for keys and codes in the product. */
 
 /* Manjari 100 normal — latin-ext */
 @font-face {

@@ -51,7 +51,7 @@ export function WipeCard({ c, i, open, onOpen, onClose, fine, className = '' }) 
               <CategoryGlyph kind={c.glyph} />
             </div>
             <span className="problem__label">{c.title}</span>
-            <h3 className="problem__quote">&ldquo;{c.quote}&rdquo;</h3>
+            <h3 className="problem__quote"><span className="q">&ldquo;</span>{c.quote}<span className="q">&rdquo;</span></h3>
             <p className="problem__body">{c.body}</p>
           </>
         )}

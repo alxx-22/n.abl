@@ -121,7 +121,7 @@ export default function DiscoveryModal({ open, onClose, prefill = '' }) {
               We&rsquo;ll be in touch to find a time. Nothing to prepare — just bring the
               thing that&rsquo;s getting in the way.
             </p>
-            <button className="btn btn--primary btn--block" onClick={onClose}>Close</button>
+            <button className="btn btn--primary btn--block" onClick={onClose}><span className="lbl">Close</span></button>
           </div>
         ) : (
           <>
@@ -169,8 +169,8 @@ export default function DiscoveryModal({ open, onClose, prefill = '' }) {
                 />
               </div>
 
-              <button type="submit" className="btn btn--accent btn--block" disabled={sending}>
-                {sending ? 'Sending…' : 'Book my discovery call'}
+              <button type="submit" className="btn btn--primary btn--block" disabled={sending}>
+                <span className="lbl">{sending ? 'Sending…' : 'Book my discovery call'}</span>
               </button>
               {error && <p className="auth-error" role="alert">{error}</p>}
             </form>

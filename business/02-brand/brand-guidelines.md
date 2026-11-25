@@ -486,8 +486,8 @@ looks wrong next to the drawn wordmark.
 **JetBrains Mono stays for one job only:** keys and codes in the product, such as
 portal access keys and identifiers, where every character must be read on its
 own. It is never used for labels, eyebrows, numbers in prose or anything in
-marketing. Space Grotesk and Inter Tight retire when the website moves to
-Manjari.
+marketing. Space Grotesk and Inter Tight are retired: the website does not use
+them, and their files remain only while the launch films still load them.
 
 ### 5.2 Scale
 
@@ -639,14 +639,34 @@ The page is one story told in order, and the ground tells it with the words:
 | Chapter | What the words say | What the ground does |
 |---|---|---|
 | The opening | AI, built into your business | Grain gradient. Wisps drift slowly; all three colours are present, with dark kept behind the copy |
-| See it work: the problem | Where the time goes | Heat builds: ember strengthens and moves in while the problems appear |
-| See it work: the fix | The three fixes, one at a time | The fluted glass materialises in place, fine reeds first. Each fix holds its own layout while its words are on screen; ice appears as each one starts running |
-| What we do | The six jobs | Glass, calmer |
+| What it can do: the problems | Which of these sounds familiar? | Heat builds: ember strengthens and moves in |
+| What it can do: the products | One chapter per product: the words on one side, the product doing its job on the other | The fluted glass materialises with the first product. Each product holds its own layout of light, on the animation's side, with the dark behind the words; it mirrors when the words move to the right |
+| Between products | The hand-over | The product folds into the amber square, which drops down the screen (across it, when the next product sits on the other side) and the next product blooms out of it. The ground's light travels with it |
 | How we work | The five steps | The reeds widen step by step while the glass fades and the aurora rises |
 | Cases | Problem, fix, result | Aurora, settled |
 | Pricing and contact | The offer, then the conversation | The aurora sinks back to a quiet grain gradient |
 
-### 7.2 Pace
+### 7.2 The product chapters
+
+On the website each product is a chapter (`src/components/sections/Products.jsx`):
+
+- **The animation is pinned on one side and the words scroll on the other.**
+  It plays as its words are read, scrubbed by the scroll: forward when reading
+  on, backward when scrolling back. It never plays on its own clock.
+- **Sides follow the story.** Two related products stay on the same side
+  (the phone into the chat, the paperwork into the admin) and the animation
+  crosses the page when the subject changes. Not alternating for its own sake.
+- **The hand-over is the full stop.** The leaving product folds into the amber
+  square, the square travels down, and the next product blooms out of it. The
+  trail it leaves runs ember to ice, bottom to top, like every gradient.
+- **Under a mouse the animation leans towards the pointer**, at most 7°, with a
+  very soft light where the pointer is and a little shade on the far side.
+  Nothing else responds to hover; it is felt, not seen.
+- On a phone the animation is pinned in a band under the nav and the words
+  scroll up beneath it. With reduced motion each product shows the outcome of
+  its animation as a still, and changes as its words arrive.
+
+### 7.3 Pace
 
 - **Nothing snaps.** The ground eases toward where the scroll says it should be,
   every frame. Scrolling back reverses the story.
@@ -658,7 +678,7 @@ The page is one story told in order, and the ground tells it with the words:
   glass or the light lurch.
 - Interface motion uses the house easing, `cubic-bezier(0.22, 1, 0.36, 1)`.
 
-### 7.3 Reduced motion and fallbacks
+### 7.4 Reduced motion and fallbacks
 
 - With `prefers-reduced-motion`, the ground holds still apart from changing with
   the scroll, pinned chapters become ordinary sections, and interface

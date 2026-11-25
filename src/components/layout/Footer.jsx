@@ -27,7 +27,6 @@ export default function Footer({ home = true }) {
           <div>
             <h4 className="footer__head">Company</h4>
             <div className="footer__list">
-              <SectionLink id="see-it-work" home={home}>See It Work</SectionLink>
               <SectionLink id="what-we-do" home={home}>What We Do</SectionLink>
               <SectionLink id="pricing" home={home}>Pricing</SectionLink>
               <Link to="/services">Other Services</Link>

@@ -18,7 +18,7 @@
 
 import { CHECK, E, P, bell, blurIn, count, createStage, dotsPulse, drawRim, h, icon, lerp, pop, put, ringPill, rise, rng, spark, vis, words } from './stage.js'
 
-const WHITE = '247,242,234', ICE = '124,203,255', AMB = '233,172,87', CORAL = '240,122,106'
+const WHITE = '247,242,234', ICE = '124,203,255', AMB = '233,172,87', CORAL = '255,90,54'
 
 /* A card scene, looped inside a card.
 
@@ -27,7 +27,7 @@ const WHITE = '247,242,234', ICE = '124,203,255', AMB = '233,172,87', CORAL = '2
    it fills the card edge to edge: the scene's light and specks reach every
    side, and there are no bars where a fixed-shape stage met a card of a
    different shape. It is drawn with zoom rather than a transform, for the
-   same reason as the film (see FilmSection.jsx): drawn at the size shown,
+   same reason the site's film once was: drawn at the size shown,
    not drawn large and shrunk. If the card changes shape while open, the
    stage is rebuilt to match and carries on from the same moment.
 
@@ -283,7 +283,7 @@ export const copilot = cardScene(7.5, (s, { dur }) => {
   const lang = cap.querySelector('.lang'), line = cap.querySelector('.line')
   const es = words(line, 'Es un poco caro para nosotros…')
   const en = h('span', 'line', cap); en.textContent = 'It’s a bit pricey for us…'
-  const flag = h('div', 'r-flag', s.cam, `<span style="color:#F07A6A">${icon('alert')}</span><span>Objection · price</span>`)
+  const flag = h('div', 'r-flag', s.cam, `<span style="color:#FF5A36">${icon('alert')}</span><span>Objection · price</span>`)
   const say = h('div', 'c-say', s.cam, `<div class="sec">Say next</div><div class="txt"></div>`)
   const sayW = words(say.querySelector('.txt'), '“Most teams start with a 30-day pilot, so you only pay once it’s working.”')
   const tCap = .7, tSwap = 2.1, tObj = 3, tSay = 4.3
@@ -345,7 +345,7 @@ export const bespoke = cardScene(8, (s, { dur, compact }) => {
   const sp = specks(s, 27, 16, compact ? 900 : 1500, compact ? 900 : 600)
   const NAMES = [['inbox', 'New enquiry'], ['spark', 'n.abl'], ['cal', 'Checks the diary'], ['invoice', 'Prices the job'], ['mail', 'Replies in your tone'], ['bell', 'You approve']]
   const HGT = 74
-  const width = ([, txt]) => Math.ceil(textWidth(txt, '600 26px "Inter Tight", sans-serif')) + 30 + 12 + 60
+  const width = ([, txt]) => Math.ceil(textWidth(txt, '700 26px Manjari, sans-serif')) + 30 + 12 + 60
   const Wd = NAMES.map(width)
   const POS = compact
     ? [[0, -300], [0, -185], [0, -62], [0, 38], [0, 138], [0, 272]]
@@ -416,7 +416,7 @@ export const bespoke = cardScene(8, (s, { dur, compact }) => {
    type and few words, and fill the card around it like the others.
    ============================================================ */
 const STEP = { W: 540, H: 540 }
-const pillW = (txt, px = 28) => Math.ceil(textWidth(txt, `600 ${px}px "Inter Tight", sans-serif`)) + 32 + 12 + 56
+const pillW = (txt, px = 28) => Math.ceil(textWidth(txt, `700 ${px}px Manjari, sans-serif`)) + 32 + 12 + 56
 
 /* ---------- 01 listen: a discovery call on video, and n.abl's notes on where the time goes ----------
    A meeting window with both of you on camera, tilted in space; you talk
@@ -486,7 +486,7 @@ export const map = cardScene(7, (s, { dur }) => {
     return e
   })
   const dot = h('div', 'r-dot', s.cam)
-  const flag = h('div', 'r-flag c-flag', s.cam, `<span style="color:#F07A6A">${icon('clock')}</span><span>4 h a week, by hand</span>`)
+  const flag = h('div', 'r-flag c-flag', s.cam, `<span style="color:#FF5A36">${icon('clock')}</span><span>4 h a week, by hand</span>`)
   const at = [.4, .8, 1.2, 1.6], wireAt = [1, 1.4, 1.8], tRun = [2.3, 3.5], tStuck = 3.6
   const cam = drift(s, [[0, 0, -20, -40, 8, 6], [tStuck, 0, 10, 0, 3, 0], [dur, 0, 20, 10, 2, -4]])
   return t => {

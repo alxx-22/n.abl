@@ -6,6 +6,7 @@ import DiscoveryModal from '../components/DiscoveryModal.jsx'
 import { Reveal, EdgeCard } from '../components/ui/index.jsx'
 import { Chapter } from '../components/Journey.jsx'
 import { WipeGrid } from '../components/WipeCard.jsx'
+import LitGround from '../components/LitGround.jsx'
 import Capabilities from '../components/sections/Capabilities.jsx'
 import { automation, data, web } from '../components/scenes/index.js'
 import { track } from '../lib/analytics.js'
@@ -54,7 +55,9 @@ export default function Services() {
   const book = () => { track('cta_services'); track('form_open'); setModalOpen(true) }
 
   return (
-    <div className="grain">
+    <div className="lit">
+      {/* the opening light, held: this page has no story of its own */}
+      <LitGround story="still" />
       <Nav home={false} />
       <main>
         <section className="section services-hero">
@@ -74,8 +77,8 @@ export default function Services() {
             </Reveal>
             <Reveal delay={0.16}>
               <div className="hero__cta services-hero__cta">
-                <button className="btn btn--primary" onClick={book}>Book a free discovery call</button>
-                <Link className="btn btn--ghost" to="/#what-we-do">See what AI can do</Link>
+                <button className="btn btn--primary" onClick={book}><span className="lbl">Book a free discovery call</span></button>
+                <Link className="btn btn--ghost" to="/#what-we-do"><span className="lbl">See what AI can do</span></Link>
               </div>
             </Reveal>
           </div>
@@ -148,7 +151,6 @@ export default function Services() {
         </section>
 
         <section id="contact" className="section contact">
-          <div className="contact__glow" aria-hidden="true" />
           <div className="shell contact__inner">
             <Reveal>
               <h2 className="contact__title">Tell us where the time goes<span className="dot" /></h2>
@@ -160,7 +162,7 @@ export default function Services() {
               </p>
             </Reveal>
             <Reveal delay={0.16}>
-              <button className="btn btn--accent contact__btn" onClick={book}>Book a discovery call</button>
+              <button className="btn btn--primary contact__btn" onClick={book}><span className="lbl">Book a discovery call</span></button>
             </Reveal>
           </div>
         </section>

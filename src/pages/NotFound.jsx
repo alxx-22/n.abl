@@ -10,7 +10,7 @@ export default function NotFound() {
         <p className="auth-card__sub">
           That page doesn&rsquo;t exist — or it moved. Let&rsquo;s get you back.
         </p>
-        <Link to="/" className="btn btn--primary btn--block">Back to the site</Link>
+        <Link to="/" className="btn btn--primary btn--block"><span className="lbl">Back to the site</span></Link>
       </div>
     </div>
   )

@@ -32,7 +32,7 @@ export default function OtherServices() {
               We still build the ordinary things well. Sometimes the right answer is an
               automation, a dashboard or a better website, and we will say so.
             </p>
-            <Link to="/services" className="btn btn--ghost other__link">See other services</Link>
+            <Link to="/services" className="btn btn--ghost other__link"><span className="lbl">See other services</span></Link>
           </Reveal>
           <ul className="other__list">
             {OTHER.map((o, i) => (

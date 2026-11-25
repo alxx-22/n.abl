@@ -18,12 +18,15 @@ regenerated or deleted.
 |---|---|---|---|
 | `wordmark.svg` | 2,203 B | `viewBox 0 0 273 100` | **The master.** The full wordmark, drawn as stroked paths and one filled square. Strokes take `currentColor`; the dot takes `var(--mark-accent, #E9AC57)`. Carries the construction and the 7 / 7 / 13 / 10 spacing reasoning in comments. |
 | `mark.svg` | 580 B | `viewBox 0 0 104 100` | **The master** for the short mark: the `n` and the dot only, same geometry. Used for avatars and small placements. |
-| `og.png` | 308,534 B | 1200 × 630 | The social card. Espresso ground, amber and cream bloom, a noise layer at 0.035, the drawn wordmark at 270 px and a Space Grotesk headline. Referenced from `index.html` as `og:image`. Generated. |
+| `og.png` | 572,709 B | 1200 × 630 | The social card (2026-11). The site's own lit ground in its opening layout, the grain, the drawn wordmark at 210 px, the hero's line "AI, built into your business" in Manjari Thin with the amber square, and the descriptor in the calm gradient. Referenced from `index.html` as `og:image`. Generated. |
 | `wordmark-email.png` | 10,538 B | 632 × 244 | Cream wordmark on transparent, for the six email templates. Used at `width="150"`, so it has roughly 4× the pixels it needs and stays sharp on a retina mail client. |
 
 `og.png` is regenerated with `node scripts/build-og.mjs`. That script inlines the
-two woff2 files as base64 data URIs, so the card never depends on a font CDN
-either.
+three Manjari Latin files as base64 data URIs, so the card never depends on a font
+CDN either, and draws the ground with the site's own shader
+(`src/components/ground/`) in a headless browser, so the card's light is the
+site's light. It needs WebGL there; without it the script stops and writes
+nothing rather than a card with no ground.
 
 ## 2. `public/` — adjacent, and brand-owned
 
@@ -68,8 +71,10 @@ weights.** Every Manjari block in `fonts.css` carries the metric overrides
 (ascent 85.5%, descent 26.5%, line gap 0) described in the guidelines, section
 5.4.
 
-**The August families.** Variable fonts. Space Grotesk and Inter Tight leave this
-folder when the website moves to Manjari; JetBrains Mono stays for keys and codes.
+**The August families.** Variable fonts. The site no longer requests Space
+Grotesk or Inter Tight; their files stay because the launch films
+(`marketing/launch-video/film/`) load them directly. JetBrains Mono stays for keys
+and codes in the product.
 
 | File | Size | Family | Subset |
 |---|---|---|---|
@@ -90,8 +95,9 @@ blocks are served by six files: Space Grotesk 400 / 500 / 600 / 700, Inter Tight
 source and licence.
 
 `fonts.css` holds 24 `@font-face` blocks, all with `font-display: swap`. No
-italics ship. Until the website move lands, `index.html` still preloads
-`SpaceGrotesk-latin.woff2` and `InterTight-latin.woff2`. There is no reference to
+italics ship. `index.html` preloads `Manjari-Thin-latin.woff2` and
+`Manjari-Regular-latin.woff2` with `crossorigin`. A face that no rule uses is never
+downloaded, so the August blocks cost a visitor nothing. There is no reference to
 any external font host anywhere in the site, which is the point.
 
 ## 5. Where the brand lives in code

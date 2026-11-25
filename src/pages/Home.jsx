@@ -5,11 +5,11 @@ import { prefersReducedMotion } from '../components/ui/index.jsx'
 import DiscoveryModal from '../components/DiscoveryModal.jsx'
 import SiteAssistant from '../components/SiteAssistant.jsx'
 import { JourneyRail } from '../components/Journey.jsx'
+import LitGround from '../components/LitGround.jsx'
 import { track, observeDepth } from '../lib/analytics.js'
 
 import Hero from '../components/sections/Hero.jsx'
-import FilmSection from '../components/sections/FilmSection.jsx'
-import Solutions from '../components/sections/Solutions.jsx'
+import Products from '../components/sections/Products.jsx'
 import Process from '../components/sections/Process.jsx'
 import Examples from '../components/sections/Examples.jsx'
 import Pricing from '../components/sections/Pricing.jsx'
@@ -18,6 +18,7 @@ import About from '../components/sections/About.jsx'
 import Contact from '../components/sections/Contact.jsx'
 
 import '../styles/home.css'
+import '../styles/products.css'
 
 /* ============================================================
    INTRO — the blind lifts to reveal the page
@@ -76,7 +77,10 @@ export default function Home() {
   useEffect(() => { document.title = 'n.abl — AI implementation for small and mid-sized businesses' }, [])
 
   return (
-    <div className="grain">
+    <div className="lit">
+      {/* The light behind the page, and its grain. It follows the story
+          section by section; see components/ground/story.js. */}
+      <LitGround />
       <Intro />
       <Nav />
 
@@ -84,8 +88,7 @@ export default function Home() {
 
       <main>
         <Hero onBook={() => book('cta_primary')} />
-        <FilmSection />
-        <Solutions />
+        <Products />
         <Process />
         <Examples />
         <Pricing />
