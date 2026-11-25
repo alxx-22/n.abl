@@ -32,6 +32,18 @@ around the products.
   person), frosted main buttons with the three lights inside, and
   documents as frosted glass. n.abl is marked with its square rather than
   a generic sparkle, and the typed ticks and arrows are drawn.
+- **The assistant's mark (`src/components/AssistantMark.jsx`):** the flat
+  amber sparkle on the Ask a question launcher (and the portal's) is
+  replaced by a small sphere of dark glass with the brand's three lights
+  inside it and a white spark at its centre. Its lights turn once as the
+  launcher arrives and for as long as the pointer is on it; open, the spark
+  turns to a cross.
+- **The ring on the main buttons (`global.css`, THE RING):** under the
+  pointer, Ask a question and the Book a discovery call buttons are now
+  circled from outside by a ring of the brand gradient, with an arc of
+  light running round it and a glow, in place of an edge that was easy to
+  miss. The main button no longer clips its contents to make room for it;
+  its inner light is clipped to the glass instead.
 - **New copy:** each product now says what it is useful for and what you get.
   Every line is drawn from words the site or `assistant-knowledge.md` already
   used: the film's captions, the cases' results, the assistant's

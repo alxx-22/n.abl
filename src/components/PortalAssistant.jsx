@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { SUPABASE_URL } from '../lib/supabaseConfig.js'
+import AssistantMark from './AssistantMark.jsx'
 
 /* The assistant inside the client portal.
 
@@ -30,18 +31,6 @@ const KIND_LABEL = {
   call: 'Call request',
   quote_query: 'Quote query',
   detail_change: 'Change of details',
-}
-
-function Spark({ size = 20 }) {
-  return (
-    <svg className="spark" width={size} height={size} viewBox="0 0 24 24"
-      fill="none" aria-hidden="true" focusable="false">
-      <path d="M12 2.5c.5 4.2 2.8 6.5 7 7-4.2.5-6.5 2.8-7 7-.5-4.2-2.8-6.5-7-7 4.2-.5 6.5-2.8 7-7Z"
-        fill="currentColor" />
-      <path d="M19 14.5c.25 2 1.3 3.05 3.3 3.3-2 .25-3.05 1.3-3.3 3.3-.25-2-1.3-3.05-3.3-3.3 2-.25 3.05-1.3 3.3-3.3Z"
-        fill="currentColor" opacity=".55" />
-    </svg>
-  )
 }
 
 export default function PortalAssistant({ accessKey, clientName }) {
@@ -192,7 +181,8 @@ export default function PortalAssistant({ accessKey, clientName }) {
         aria-controls="portal-assistant"
         onClick={toggle}
       >
-        <Spark />
+        <span className="ring" aria-hidden="true" />
+        <AssistantMark />
         <span key={open ? 'close' : 'ask'} className="assistant-fab__label">
           {open ? 'Close' : 'Ask about your account'}
         </span>

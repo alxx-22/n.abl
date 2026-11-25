@@ -57,7 +57,8 @@
   margin-bottom: var(--s-6);
 }
 .hero__sub { font-size: var(--t-lede); color: var(--cream-300); max-width: 50ch; margin-bottom: var(--s-7); }
-.hero__cta { display: flex; gap: var(--s-3); flex-wrap: wrap; }
+/* room for the main button's ring (global.css, THE RING) to circle it without touching its neighbour */
+.hero__cta { display: flex; gap: var(--s-3) 18px; flex-wrap: wrap; }
 .hero__note {
   margin-top: var(--s-5);
   font-size: 14px;

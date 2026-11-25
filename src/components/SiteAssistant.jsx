@@ -1,19 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-
-/* The mark on the launcher. Four points rather than a robot or a speech
-   bubble: it reads as "something considered happens here" without promising a
-   person, and it sits in the same family as the dot in the wordmark. */
-function Spark({ size = 20 }) {
-  return (
-    <svg className="spark" width={size} height={size} viewBox="0 0 24 24"
-      fill="none" aria-hidden="true" focusable="false">
-      <path d="M12 2.5c.5 4.2 2.8 6.5 7 7-4.2.5-6.5 2.8-7 7-.5-4.2-2.8-6.5-7-7 4.2-.5 6.5-2.8 7-7Z"
-        fill="currentColor" />
-      <path d="M19 14.5c.25 2 1.3 3.05 3.3 3.3-2 .25-3.05 1.3-3.3 3.3-.25-2-1.3-3.05-3.3-3.3 2-.25 3.05-1.3 3.3-3.3Z"
-        fill="currentColor" opacity=".55" />
-    </svg>
-  )
-}
+import AssistantMark from './AssistantMark.jsx'
 
 /* The assistant on the public site.
 
@@ -129,7 +115,7 @@ export default function SiteAssistant({ onHandoff }) {
         onClick={toggle}
       >
         <span className="ring" aria-hidden="true" />
-        <Spark />
+        <AssistantMark />
         {/* Keyed so React swaps the node rather than the text: the label then
             replays its entrance and the two words cross-fade instead of
             snapping. */}
