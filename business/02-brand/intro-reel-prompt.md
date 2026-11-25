@@ -1,5 +1,13 @@
 # Master prompt: build the n.abl introduction reel in After Effects
 
+> **Type and colour in this file are replaced (2026-11-25).**
+> The brand moved to Manjari and to the ember, amber and ice colourway, with
+> gradients and a lit ground. Wherever this brief names Space Grotesk, Inter
+> Tight or JetBrains Mono, or forbids gradients, glows or a second accent, follow
+> [`brand-guidelines.md`](brand-guidelines.md) sections 3 to 8 instead, and see
+> the working reference in [`reference/`](reference/). The logo rules are
+> unchanged: no gradient, glow or second colour on the logo itself.
+
 Hand this whole file to a fresh session that has an After Effects MCP attached.
 It is written to be read cold. Everything needed to start is in it.
 
