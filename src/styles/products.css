@@ -10,6 +10,13 @@
 .products__anchor { position: absolute; top: 0; left: 0; width: 1px; height: 1px; pointer-events: none; }
 .products__head { padding-bottom: clamp(2rem, 6vh, 4rem); }
 
+/* The words and the animation share the shell's width with a clear gap
+   between them. The text column is at most 42% of the shell; the box is at
+   most 44vw and 600px, and it hangs up to 3rem into the outer margin, so on
+   a desk there is always 80px or more of dark between the last word and the
+   glass (plus room for the box to lean towards the pointer). The two used
+   to add up to more than the shell and overlapped by about 32px. */
+.products { --pv-w: min(44vw, 600px); --pv-edge: max(16px, calc((100vw - var(--maxw)) / 2 + var(--gutter) - 3rem)); }
 .products__track { position: relative; }
 .products__stage {
   position: sticky; top: 0;
@@ -23,7 +30,7 @@
 /* ---------- one product's box ---------- */
 .pv {
   position: absolute; top: 50%;
-  width: min(46vw, 640px);
+  width: var(--pv-w);
   aspect-ratio: 8 / 7;
   max-height: 76vh;
   translate: 0 -50%;
@@ -32,8 +39,8 @@
   pointer-events: auto;
   will-change: transform, opacity;
 }
-.pv--right { right: max(var(--gutter), calc((100vw - var(--maxw)) / 2 + var(--gutter) - 1rem)); }
-.pv--left  { left:  max(var(--gutter), calc((100vw - var(--maxw)) / 2 + var(--gutter) - 1rem)); }
+.pv--right { right: var(--pv-edge); }
+.pv--left  { left:  var(--pv-edge); }
 .pv__tilt { position: absolute; inset: 0; transform-style: preserve-3d; }
 /* The scenes' cameras drift, and a piece can travel past the box: it fades
    out over the outer edge rather than running off the screen or stopping
@@ -80,11 +87,11 @@
 /* ---------- where you are among the seven: under the animation ---------- */
 .pv__count {
   position: absolute; bottom: 30px;
-  width: min(46vw, 640px);
+  width: var(--pv-w);
   display: flex; justify-content: center; gap: 8px;
 }
-.pv__count[data-side='right'] { right: max(var(--gutter), calc((100vw - var(--maxw)) / 2 + var(--gutter) - 1rem)); }
-.pv__count[data-side='left']  { left:  max(var(--gutter), calc((100vw - var(--maxw)) / 2 + var(--gutter) - 1rem)); }
+.pv__count[data-side='right'] { right: var(--pv-edge); }
+.pv__count[data-side='left']  { left:  var(--pv-edge); }
 .pv__count i { display: block; width: 22px; height: 2px; background: var(--line-strong); transition: background var(--dur) var(--ease); }
 .pv__count i.on { background: var(--accent-400); box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.6); }
 
@@ -94,7 +101,7 @@
   display: flex; align-items: center;
 }
 .product__shell { width: 100%; }
-.product__text { width: min(46%, 560px); padding-block: 12vh; }
+.product__text { width: min(42%, 480px); padding-block: 12vh; }
 .product--left .product__text { margin-left: auto; }
 .product__title {
   margin-top: 20px;

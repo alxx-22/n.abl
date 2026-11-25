@@ -203,13 +203,74 @@
 }
 .chip--sm { font-size: var(--t-xs); padding: 0.25rem 0.6rem; }
 
-/* ---------- Steps ---------- */
-.step__num {
-  font-size: 0.75rem; font-variant-numeric: tabular-nums;
-  color: var(--accent-300); letter-spacing: 0.06em;
+/* ---------- Steps (sections/Process.jsx) ----------
+   The five How we work cards in the brand's card language: glass over the
+   light, the step's number in Thin, its line icon in a hairline circle, and
+   at the foot what the card turns over to show, with the amber square.
+
+   A line runs along the top of the five: the journey, ember at the first
+   step, through amber and cream, to ice at the last, the way the brand's
+   gradients run. Each card draws its own fifth of one gradient, so the five
+   read as one line; on a phone, stacked, it still warms to cool down the
+   page. It is drawn on the card and again on the scene side in the same
+   place, so it holds still while the card turns over. */
+.grid--steps > :nth-child(1) { --i: 0; }
+.grid--steps > :nth-child(2) { --i: 1; }
+.grid--steps > :nth-child(3) { --i: 2; }
+.grid--steps > :nth-child(4) { --i: 3; }
+.grid--steps > :nth-child(5) { --i: 4; }
+.problem.step {
+  --journey: linear-gradient(90deg, var(--ember-400), var(--accent-400) 42%, var(--calm-mid) 68%, var(--ice-400));
+  --journey-at: calc(var(--i, 0) * 25%) 0;
+  padding: 22px 22px 18px;
 }
-.step__title { font-size: var(--t-xl); font-weight: 400; margin: var(--s-3) 0 var(--s-2); }
-.step__body  { color: var(--cream-400); font-size: var(--t-sm); }
+.lit .problem.step {
+  background-image: var(--journey);
+  background-size: 500% 2px;
+  background-position: var(--journey-at);
+  background-repeat: no-repeat;
+}
+.problem.step .problem__face { flex: 1; display: flex; flex-direction: column; }
+.step__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s-3); }
+.step__num {
+  font-weight: 100; font-size: clamp(2.4rem, 1.9rem + 1vw, 3rem); line-height: 0.9;
+  letter-spacing: -0.01em; color: var(--cream-100); font-variant-numeric: tabular-nums;
+}
+/* the step's line icon, in a hairline circle like the scenes' */
+.step__icon {
+  width: 40px; height: 40px; flex: none; border-radius: 50%;
+  display: grid; place-items: center;
+  color: var(--cream-300);
+  border: 1px solid rgba(var(--cream-rgb), 0.2); background: rgba(var(--cream-rgb), 0.03);
+}
+.step__title {
+  margin: 22px 0 10px;
+  font-size: clamp(1.3rem, 1.1rem + 0.7vw, 1.65rem); font-weight: 400; line-height: 1.15;
+  letter-spacing: 0; word-spacing: -0.04em; color: var(--cream-100); text-wrap: balance;
+}
+.step__body { margin-bottom: 20px; color: var(--cream-400); font-size: var(--t-sm); line-height: 1.55; }
+/* what the card turns over to show: a label, the amber square, a drawn arrow */
+.step__peek {
+  margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line-faint);
+  display: flex; align-items: center; gap: 9px;
+  font-size: 0.68rem; line-height: 1.2; letter-spacing: var(--track-label); word-spacing: 0;
+  text-transform: uppercase; color: var(--cream-400);
+}
+.step__peek::before { content: ''; width: 6px; height: 6px; flex: none; background: var(--accent-400); box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.55); }
+.step__peek-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-top: 1px; }
+.step__peek-arrow { margin-left: auto; flex: none; color: var(--cream-600); transition: transform 0.3s var(--ease), color 0.3s var(--ease); }
+.problem.step:is(:hover, :focus-visible) .step__peek-arrow { transform: translateX(3px); color: var(--accent-300); }
+
+/* the scene side: darker glass, the journey line again, and its label in the brand's caps */
+.lit .problem.step .problem__scene {
+  background: var(--journey) var(--journey-at) / 500% 2px no-repeat, linear-gradient(180deg, #15120F, #0D0B0A);
+}
+.problem.step .problem__tag { padding: 0.6rem 18px 0.65rem; border-top: 1px solid var(--line-faint); }
+.problem.step .problem__cap { display: inline-flex; align-items: center; gap: 8px; font-size: 0.68rem; color: var(--accent-300); }
+.problem.step .problem__cap::before { content: ''; width: 6px; height: 6px; flex: none; background: var(--accent-400); box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.55); }
+/* the step cards are narrow: the label says what is showing, and "what happens" no longer fits beside it */
+.problem.step .problem__note { display: none; }
+@media (prefers-reduced-motion: reduce) { .step__peek-arrow { transition: none; } }
 
 /* ---------- Pricing ---------- */
 .section--impact {
