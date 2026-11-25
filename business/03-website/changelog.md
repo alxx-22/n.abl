@@ -21,6 +21,17 @@ around the products.
   square, which carries the light down to the next one, across the page when
   the next one sits on the other side. Reduced motion gets each product's
   outcome as a still beside its words.
+- **The scenes' interface is the brand's own (`src/styles/film.css`, THE
+  PIECES):** every window, row, chip and button in the product and How we
+  work scenes is now a brand component rather than the reel's dark cards
+  recoloured. Glass panels with the trio line, Manjari Regular with Thin
+  for big numbers and spoken lines, labels in tracked capitals, line icons
+  in hairline circles, rows between hairlines, chips with the brand's
+  markers (the breathing ice dot for the AI at work, the amber square for
+  n.abl, the ember square for the problem and anything waiting on a
+  person), frosted main buttons with the three lights inside, and
+  documents as frosted glass. n.abl is marked with its square rather than
+  a generic sparkle, and the typed ticks and arrows are drawn.
 - **New copy:** each product now says what it is useful for and what you get.
   Every line is drawn from words the site or `assistant-knowledge.md` already
   used: the film's captions, the cases' results, the assistant's

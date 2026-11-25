@@ -16,9 +16,18 @@
    Every name and figure is a prop, as in the film.
    ============================================================ */
 
-import { CHECK, E, P, bell, blurIn, count, createStage, dotsPulse, drawRim, h, icon, lerp, pop, put, ringPill, rise, rng, spark, vis, words } from './stage.js'
+import { CHECK, E, P, bell, blurIn, count, createStage, dotsPulse, drawRim, h, icon, lerp, pop, put, ringPill, rise, rng, vis, words } from './stage.js'
 
 const WHITE = '247,242,234', ICE = '124,203,255', AMB = '233,172,87', CORAL = '255,90,54'
+
+/* The interface in every scene is the brand's own (film.css, THE PIECES).
+   n.abl is marked the way the brand marks it, with the amber square; a
+   status names its state with a class, and the chip draws the marker that
+   goes with it: live and done are the ice dot, wait is the ember square. */
+const MK = '<i class="mk"></i>'
+/* the glass a panel or button is drawn with, kept when a glow is added to it */
+const GLASS_IN = 'inset 0 1.5px 0 rgba(255,255,255,.07), 0 50px 120px -30px rgba(0,0,0,.8)'
+const BTN_IN = 'inset 0 1.5px 0 rgba(255,255,255,.12), inset 0 -12px 22px -14px rgba(0,0,0,.55)'
 
 /* A card scene, looped inside a card.
 
@@ -49,6 +58,9 @@ function cardScene(dur, build, { W = 800, H = 600, design = null } = {}) {
         const k = Math.min(hw / d.W, hh / d.H)
         const w = Math.ceil(hw / k), hgt = Math.ceil(hh / k)
         box.style.zoom = String(k)
+        // Thin needs size (brand-guidelines.md, 5.2): drawn small, the
+        // scene's big numbers and spoken lines are set in Regular instead
+        box.classList.toggle('f-small', k < .66)
         if (`${w}x${hgt}` === shape) return
         shape = `${w}x${hgt}`
         if (ctx) ctx.destroy()
@@ -114,12 +126,12 @@ function typeIn(e, text, t, a, b) {
 export const voice = cardScene(7, (s, { dur }) => {
   const sp = specks(s, 21)
   const card = h('div', 'r-panel c-panel', s.cam, `
-    <div class="r-ph"><span class="av ph">${icon('phone')}<i></i><i></i></span><div><div class="t">Incoming call</div><div class="s">+44 7700 900412 · mobile</div></div><span class="on st">● RINGING</span></div>
+    <div class="r-ph"><span class="av ph">${icon('phone')}<i></i><i></i></span><div><div class="t">Incoming call</div><div class="s">+44 7700 900412 · mobile</div></div><span class="st wait">Ringing</span></div>
     <div class="c-wave"></div>
     <div class="r-thread">
-      <div class="r-tx"><span class="mic">CALLER</span><span class="q"></span></div>
-      <div class="r-m ai"><span class="r-dots"><i></i><i></i><i></i></span><span class="txt"></span></div>
-      <div class="c-done"><span class="r-chip">${CHECK('#1A1612', 22)}<span>Moved · Thu 10:00</span></span></div>
+      <div class="r-tx"><span class="who">Caller</span><span class="q"></span></div>
+      <div class="r-tx ai"><span class="who">n.abl</span><span class="r-dots"><i></i><i></i><i></i></span><span class="txt"></span></div>
+      <div class="c-done"><span class="r-chip">${CHECK('currentColor', 22)}<span>Moved · Thu 10:00</span></span></div>
     </div>`)
   const av = card.querySelector('.av'), rings = [...av.querySelectorAll('i')], st = card.querySelector('.st')
   const wave = card.querySelector('.c-wave'), wr = rng(4)
@@ -138,26 +150,26 @@ export const voice = cardScene(7, (s, { dur }) => {
       e.style.transform = `scale(${(1 + ph * 1.1).toFixed(3)})`
       e.style.opacity = (on ? 0 : (1 - ph) * .7).toFixed(3)
     })
-    st.textContent = on ? '● n.abl ANSWERED' : '● RINGING'
-    st.classList.toggle('ans', on)
-    // the line: ice while the caller talks, amber while n.abl does
+    st.textContent = on ? 'n.abl answered' : 'Ringing'
+    st.classList.toggle('wait', !on); st.classList.toggle('live', on)
+    // the line: cream while the caller talks, ice while n.abl does
     const caller = t > tQ && t < tQ + 1.4, agent = t > tA && t < tA + 1.3
     bars.forEach((e, i) => {
       const live = caller || agent
       const k = live ? .35 + .65 * Math.abs(Math.sin(t * 9 + i * .7) * Math.sin(t * 3.1 + i * .23)) : .12
       e.style.height = (e._h * k + 4).toFixed(1) + 'px'
-      e.style.background = caller ? `rgba(${ICE},.9)` : agent ? `rgba(${AMB},.9)` : `rgba(${WHITE},.2)`
+      e.style.background = caller ? `rgba(${WHITE},.85)` : agent ? `rgba(${ICE},.95)` : `rgba(${WHITE},.14)`
     })
     vis(mQ, P(t, tQ - .05, tQ + .1))
     qW.forEach((e, i) => rise(e, t, tQ + i * .07, { dur: .25, dy: 10, blur: 10 }))
     pop(mA, t, tDots)
     dots.style.display = t < tA ? 'inline-flex' : 'none'
     dotsPulse(dots, t)
-    mA.querySelector('.txt').style.display = t < tA ? 'none' : 'inline'
+    mA.querySelector('.txt').style.display = t < tA ? 'none' : 'block'
     aW.forEach((e, i) => rise(e, t, tA + i * .045, { dur: .24, dy: 8, blur: 8 }))
     pop(done, t, tDone)
     const g = bell(t, tDone, tDone + .1, tDone + 1.2)
-    done.firstChild.style.boxShadow = `0 0 ${(20 + 50 * g).toFixed(0)}px rgba(${WHITE},${(.2 + .5 * g).toFixed(2)})`
+    done.firstChild.style.boxShadow = `0 0 ${(20 + 50 * g).toFixed(0)}px rgba(${ICE},${(.12 + .3 * g).toFixed(2)})`
   }
 })
 
@@ -165,12 +177,12 @@ export const voice = cardScene(7, (s, { dur }) => {
 export const chat = cardScene(7.5, (s, { dur }) => {
   const sp = specks(s, 22)
   const card = h('div', 'r-panel c-panel', s.cam, `
-    <div class="r-ph"><span class="av">${spark(26)}</span><div><div class="t">Your business</div><div class="s">Web chat · WhatsApp · Instagram</div></div><span class="on">● ONLINE</span></div>
+    <div class="r-ph"><span class="av">${MK}</span><div><div class="t">Your business</div><div class="s">Web chat · WhatsApp · Instagram</div></div><span class="st live">Online</span></div>
     <div class="c-clip"><div class="r-thread">
       <div class="r-m in">Do you do gluten-free?</div>
       <div class="r-m ai a1"><span class="r-dots"><i></i><i></i><i></i></span><span class="txt"></span></div>
       <div class="r-m in">Great. Table for 4, Saturday at 7?</div>
-      <div class="r-m ai card"><span class="ok">✓ Booked</span><span class="r-chip">${icon('cal')}<span>Sat 7:00 pm · 4</span></span></div>
+      <div class="r-m ai card"><span class="ok">${CHECK('currentColor', 22)}<span>Booked</span></span><span class="r-chip">${icon('cal')}<span>Sat 7:00 pm · 4</span></span></div>
     </div></div>`)
   const thread = card.querySelector('.r-thread')
   const [m1, m2, m3, m4] = thread.children
@@ -186,9 +198,9 @@ export const chat = cardScene(7.5, (s, { dur }) => {
     m2.querySelector('.txt').style.display = t < tA ? 'none' : 'inline'
     aW.forEach((e, i) => rise(e, t, tA + i * .04, { dur: .24, dy: 8, blur: 8 }))
     // the thread scrolls as it fills
-    thread.style.transform = `translateY(${(-90 * P(t, T[2] - .1, T[3] + .2, E.io)).toFixed(1)}px)`
+    thread.style.transform = `translateY(${(-104 * P(t, T[2] - .1, T[3] + .2, E.io)).toFixed(1)}px)`
     const g = bell(t, T[3] + .1, T[3] + .2, T[3] + 1.4)
-    m4.querySelector('.r-chip').style.boxShadow = `0 0 ${(20 + 50 * g).toFixed(0)}px rgba(${WHITE},${(.2 + .5 * g).toFixed(2)})`
+    m4.querySelector('.r-chip').style.boxShadow = `0 0 ${(20 + 50 * g).toFixed(0)}px rgba(${ICE},${(.12 + .3 * g).toFixed(2)})`
   }
 })
 
@@ -204,7 +216,7 @@ export const documents = cardScene(7, (s, { dur }) => {
   const beam = h('div', 'r-beam', s.cam)
   const chips = ['Harbour Foods Ltd', '£1,284.60', 'Due 17 Oct'].map(txt => h('div', 'r-fly c-got', s.cam, txt))
   const post = h('div', 'c-post', s.cam, `${icon('sheet')}<span>Posted to your accounts</span>`)
-  const PX = -170, CX = 230, tS = [.7, 3.2], tPost = 4.9
+  const PX = -150, CX = 230, tS = [.7, 3.2], tPost = 4.9
   let lay = null
   const cam = drift(s, [[0, -80, 0, -30, 6, -14], [3.4, 20, 0, 0, 3, -4], [dur, 90, 0, 30, 2, 4]])
   return t => {
@@ -228,7 +240,7 @@ export const documents = cardScene(7, (s, { dur }) => {
     })
     blurIn(post, t, tPost, { x: CX, y: 160, dz: 160, s0: .9, blur: 16 })
     const g = bell(t, tPost, tPost + .1, tPost + 1.2)
-    post.style.boxShadow = `0 0 ${(30 + 50 * g).toFixed(0)}px rgba(${AMB},${(.15 + .35 * g).toFixed(2)})`
+    post.style.boxShadow = `0 0 ${(30 + 50 * g).toFixed(0)}px rgba(${ICE},${(.12 + .3 * g).toFixed(2)})`
   }
 })
 
@@ -237,8 +249,8 @@ export const office = cardScene(7.5, (s, { dur }) => {
   const sp = specks(s, 24)
   const TASKS = [['inbox', 'Find overdue invoices', '3 overdue'], ['mail', 'Draft the reminders', '3 drafted'], ['link', 'Send and log them', '3 sent']]
   const run = h('div', 'r-run c-run', s.cam, `
-    <div class="hd"><span class="av">${spark(24)}</span><div><div class="t">Back-office agent</div><div class="s">Morning run · 7:00</div></div><span class="st">● RUNNING</span></div>
-    <div class="tasks">${TASKS.map(([ic, txt, res]) => `<div class="task"><span class="ic">${icon(ic)}</span><span class="tx">${txt}</span><span class="stt"><i class="ring"></i><i class="spin"></i><i class="ok">${CHECK('#1A1612', 16)}</i></span><span class="res">${res}</span></div>`).join('')}</div>
+    <div class="hd"><span class="av">${MK}</span><div><div class="t">Back-office agent</div><div class="s">Morning run · 7:00</div></div><span class="st live">Running</span></div>
+    <div class="tasks">${TASKS.map(([ic, txt, res]) => `<div class="task"><span class="ic">${icon(ic)}</span><span class="tx">${txt}</span><span class="stt"><i class="ring"></i><i class="spin"></i><i class="ok">${CHECK('currentColor', 18)}</i></span><span class="res">${res}</span></div>`).join('')}</div>
     <div class="ask"><div class="q">3 reminders ready. Send them?</div><div class="btns"><span class="no">Not yet</span><span class="yes">Approve and send</span></div></div>`)
   const st = run.querySelector('.st'), tasks = [...run.querySelectorAll('.task')]
   const ask = run.querySelector('.ask'), yes = ask.querySelector('.yes')
@@ -259,11 +271,13 @@ export const office = cardScene(7.5, (s, { dur }) => {
     ask.style.opacity = ap.toFixed(3); ask.style.transform = `translateY(${((1 - ap) * 16).toFixed(1)}px)`
     const press = bell(t, tPress, tPress + .06, tPress + .3)
     yes.style.transform = `scale(${(1 - .06 * press).toFixed(4)})`
-    yes.style.boxShadow = `0 0 ${(20 + 60 * press).toFixed(0)}px rgba(${AMB},${(.25 + .45 * press).toFixed(2)})`
+    yes.style.boxShadow = `${BTN_IN}, 0 0 ${(18 + 50 * press).toFixed(0)}px rgba(${ICE},${(.12 + .4 * press).toFixed(2)})`
     yes.classList.toggle('pressed', t >= tPress)
+    ask.classList.toggle('ok', t >= tPress)
     const wait = t >= tAsk && t < tPress
-    st.textContent = t >= T[2][1] ? '● DONE' : wait ? '● WAITING FOR YOU' : '● RUNNING'
-    st.classList.toggle('wait', wait); st.classList.toggle('ok', t >= T[2][1])
+    const fin = t >= T[2][1]
+    st.textContent = fin ? 'Done' : wait ? 'Waiting for you' : 'Running'
+    st.classList.toggle('wait', wait); st.classList.toggle('done', fin); st.classList.toggle('live', !wait && !fin)
   }
 }, { W: 800, H: 640 })
 
@@ -274,16 +288,16 @@ export const office = cardScene(7.5, (s, { dur }) => {
 export const copilot = cardScene(7.5, (s, { dur }) => {
   const sp = specks(s, 25)
   const glow = h('div', 'f-abs', s.cam)
-  Object.assign(glow.style, { width: '620px', height: '420px', borderRadius: '50%', background: `radial-gradient(closest-side, rgba(${CORAL},.6), rgba(${CORAL},.18) 45%, transparent)` })
+  Object.assign(glow.style, { width: '620px', height: '420px', borderRadius: '50%', background: `radial-gradient(closest-side, rgba(${CORAL},.42), rgba(${CORAL},.12) 45%, transparent)` })
   const win = h('div', 'r-call c-call', s.cam, `
-    <div class="r-tl"><div class="av" style="background:linear-gradient(140deg,#E9AC57,#B87718)">Y</div><div class="r-nm">You</div><div class="mic"></div></div>
-    <div class="r-tl"><div class="av" style="background:linear-gradient(140deg,#7CCBFF,#3B78B8)">M</div><div class="r-nm">Client · Madrid</div><div class="mic"></div></div>`)
-  const badge = h('div', 'r-badge', s.cam, `${spark(18)}<span>n.abl co-pilot</span>`)
-  const cap = h('div', 'r-cap', s.cam, `<span class="lang">ES</span><span class="line"></span>`)
-  const lang = cap.querySelector('.lang'), line = cap.querySelector('.line')
+    <div class="r-tl"><div class="av" data-who="you">Y</div><div class="r-nm">You</div><div class="mic"></div></div>
+    <div class="r-tl"><div class="av" data-who="client">M</div><div class="r-nm">Client · Madrid</div><div class="mic"></div></div>`)
+  const badge = h('div', 'r-badge', s.cam, `<span>n.abl co-pilot</span>`)
+  const cap = h('div', 'r-cap', s.cam, `<span class="lang"><span>ES</span><span class="to">${icon('arrow')}<span>EN</span></span></span><span class="line"></span>`)
+  const to = cap.querySelector('.to'), line = cap.querySelector('.line')
   const es = words(line, 'Es un poco caro para nosotros…')
   const en = h('span', 'line', cap); en.textContent = 'It’s a bit pricey for us…'
-  const flag = h('div', 'r-flag', s.cam, `<span style="color:#FF5A36">${icon('alert')}</span><span>Objection · price</span>`)
+  const flag = h('div', 'r-flag', s.cam, `<span>Objection · price</span>`)
   const say = h('div', 'c-say', s.cam, `<div class="sec">Say next</div><div class="txt"></div>`)
   const sayW = words(say.querySelector('.txt'), '“Most teams start with a 30-day pilot, so you only pay once it’s working.”')
   const tCap = .7, tSwap = 2.1, tObj = 3, tSay = 4.3
@@ -294,14 +308,16 @@ export const copilot = cardScene(7.5, (s, { dur }) => {
     put(badge, { y: -244, o: 1 })
     const swap = t >= tSwap
     line.style.display = swap ? 'none' : 'inline-block'; en.style.display = swap ? 'inline-block' : 'none'
-    lang.textContent = swap ? 'ES → EN' : 'ES'
+    to.style.display = swap ? 'inline-flex' : 'none'
     es.forEach((e, i) => rise(e, t, tCap + i * .07, { dur: .24, dy: 14, blur: 12 }))
     const sw = bell(t, tSwap - .12, tSwap, tSwap + .25)
     put(cap, { y: 52, o: P(t, tCap - .05, tCap + .1), blur: sw * 8 })
     const ob = P(t, tObj, tObj + .3, E.out), gone = P(t, tSay - .2, tSay + .1)
     blurIn(flag, t, tObj, { y: 122, dur: .28, s0: .7, blur: 12, o: 1 - gone })
     put(glow, { y: -122, z: -40, s: lerp(.6, 1, ob), o: ob * (.8 + .2 * Math.sin(t * 9)) * (1 - P(t, tSay + .6, tSay + 1.2)) })
-    win.style.borderColor = `rgba(${CORAL},${(.09 + .8 * ob * (1 - P(t, tSay + .6, tSay + 1.2))).toFixed(3)})`
+    // the call's edge warms while the objection is live, and settles back to its hairline
+    const ex = ob * (1 - P(t, tSay + .6, tSay + 1.2))
+    win.style.borderColor = ex > .01 ? `rgba(${CORAL},${(.13 + .6 * ex).toFixed(3)})` : ''
     blurIn(say, t, tSay, { y: 186, dz: 160, s0: .94, blur: 14 })
     sayW.forEach((e, i) => rise(e, t, tSay + .2 + i * .04, { dur: .2, dy: 8, blur: 8 }))
   }
@@ -311,7 +327,7 @@ export const copilot = cardScene(7.5, (s, { dur }) => {
 export const knowledge = cardScene(7.5, (s, { dur }) => {
   const sp = specks(s, 26)
   const Q = 'What’s our refund policy on deposits?'
-  const ask = h('div', 'c-ask', s.cam, `<span class="sp">${spark(22)}</span><span class="q"></span><span class="caret"></span>`)
+  const ask = h('div', 'c-ask', s.cam, `<span class="sp">${MK}</span><span class="q"></span><span class="caret"></span>`)
   const q = ask.querySelector('.q'), caret = ask.querySelector('.caret')
   const ans = h('div', 'c-ans', s.cam, `
     <div class="txt">Deposits are refunded in full if the booking is cancelled <mark>at least 48 hours before</mark>. Inside 48 hours they are kept.</div>
@@ -343,9 +359,9 @@ export const knowledge = cardScene(7.5, (s, { dur }) => {
    like the others, on a phone, where across would leave a thin strip. */
 export const bespoke = cardScene(8, (s, { dur, compact }) => {
   const sp = specks(s, 27, 16, compact ? 900 : 1500, compact ? 900 : 600)
-  const NAMES = [['inbox', 'New enquiry'], ['spark', 'n.abl'], ['cal', 'Checks the diary'], ['invoice', 'Prices the job'], ['mail', 'Replies in your tone'], ['bell', 'You approve']]
+  const NAMES = [['inbox', 'New enquiry'], ['nabl', 'n.abl'], ['cal', 'Checks the diary'], ['invoice', 'Prices the job'], ['mail', 'Replies in your tone'], ['bell', 'You approve']]
   const HGT = 74
-  const width = ([, txt]) => Math.ceil(textWidth(txt, '700 26px Manjari, sans-serif')) + 30 + 12 + 60
+  const width = ([, txt]) => Math.ceil(textWidth(txt, '400 26px Manjari, sans-serif')) + 30 + 12 + 60
   const Wd = NAMES.map(width)
   const POS = compact
     ? [[0, -300], [0, -185], [0, -62], [0, 38], [0, 138], [0, 272]]
@@ -378,7 +394,7 @@ export const bespoke = cardScene(8, (s, { dur, compact }) => {
     return p
   })
   const pills = NAMES.map(([ic, txt], i) => {
-    const e = ringPill(s.cam, Wd[i], HGT, `<span class="ic">${ic === 'spark' ? spark(30) : icon(ic)}</span><span class="txt">${txt}</span>`)
+    const e = ringPill(s.cam, Wd[i], HGT, `<span class="ic">${ic === 'nabl' ? MK : icon(ic)}</span><span class="txt">${txt}</span>`, { rim: ic === 'nabl' ? 'calm' : '' })
     e.classList.add('c-node'); if (i === 1) e.classList.add('c-core')
     e._x = POS[i][0]; e._y = POS[i][1]
     return e
@@ -402,9 +418,9 @@ export const bespoke = cardScene(8, (s, { dur, compact }) => {
       p.style.opacity = k > 0 ? 1 : 0
     })
     const core = pills[1], g = .5 + .5 * Math.sin(t * 3)
-    core.style.boxShadow = `0 0 ${(30 + 20 * g).toFixed(0)}px rgba(${AMB},${(.25 + .15 * g).toFixed(2)})`
+    core.style.boxShadow = `0 0 ${(30 + 20 * g).toFixed(0)}px rgba(${AMB},${(.14 + .1 * g).toFixed(2)})`
     const done = bell(t, 4.1, 4.3, 5.8)
-    pills[5].style.boxShadow = `0 0 ${(20 + 60 * done).toFixed(0)}px rgba(${AMB},${(.15 + .45 * done).toFixed(2)})`
+    pills[5].style.boxShadow = `0 0 ${(20 + 60 * done).toFixed(0)}px rgba(${ICE},${(.1 + .35 * done).toFixed(2)})`
   }
 }, { design: a => (a >= 1.9 ? { W: 1420, H: 430, compact: false } : { W: 800, H: 720, compact: true }) })
 
@@ -416,7 +432,7 @@ export const bespoke = cardScene(8, (s, { dur, compact }) => {
    type and few words, and fill the card around it like the others.
    ============================================================ */
 const STEP = { W: 540, H: 540 }
-const pillW = (txt, px = 28) => Math.ceil(textWidth(txt, `700 ${px}px Manjari, sans-serif`)) + 32 + 12 + 56
+const pillW = (txt, px = 28) => Math.ceil(textWidth(txt, `400 ${px}px Manjari, sans-serif`)) + 32 + 12 + 56
 
 /* ---------- 01 listen: a discovery call on video, and n.abl's notes on where the time goes ----------
    A meeting window with both of you on camera, tilted in space; you talk
@@ -427,14 +443,14 @@ export const listen = cardScene(7.5, (s, { dur }) => {
   const meet = h('div', 'c-meet', s.cam, `
     <div class="bar"><span class="rec"></span><span class="t">Discovery call</span><span class="time">00:00</span></div>
     <div class="tiles">
-      <div class="tile you"><div class="av" style="background:linear-gradient(140deg,#E9AC57,#B87718)">Y</div><div class="nm">You</div><div class="lv"><i></i><i></i><i></i><i></i></div></div>
-      <div class="tile nabl"><div class="av sp">${spark(40)}</div><div class="nm">n.abl</div><div class="lv"><i></i><i></i><i></i><i></i></div></div>
+      <div class="tile you"><div class="av" data-who="you">Y</div><div class="nm">You</div><div class="lv"><i></i><i></i><i></i><i></i></div></div>
+      <div class="tile nabl"><div class="av sp">${MK}</div><div class="nm">n.abl</div><div class="lv"><i></i><i></i><i></i><i></i></div></div>
     </div>
     <div class="ctl"><span>${icon('mic')}</span><span>${icon('cam')}</span><span class="end">${icon('phone')}</span></div>`)
   const time = meet.querySelector('.time'), you = meet.querySelector('.tile.you'), nb = meet.querySelector('.tile.nabl')
   const lvY = [...you.querySelectorAll('.lv i')], lvN = [...nb.querySelectorAll('.lv i')]
   const notes = h('div', 'c-notes', s.cam, `
-    <div class="hd">${spark(20)}<span>n.abl notes</span></div>
+    <div class="hd"><span>n.abl notes</span></div>
     <div class="note"><i></i><span>Missed calls after 5 pm</span></div>
     <div class="note"><i></i><span>Invoices typed by hand</span></div>
     <div class="note"><i></i><span>Chasing late payments</span></div>
@@ -453,11 +469,12 @@ export const listen = cardScene(7.5, (s, { dur }) => {
     you.classList.toggle('talk', talkY); nb.classList.toggle('talk', talkN)
     const lv = (els, on, ph) => els.forEach((e, i) => { e.style.transform = `scaleY(${(on ? .3 + .7 * Math.abs(Math.sin(t * 11 + i * 1.3 + ph)) : .15).toFixed(3)})` })
     lv(lvY, talkY, 0); lv(lvN, talkN, 2)
-    blurIn(notes, t, tNotes, { x: 62, y: 146, z: 90, ry: -10, rx: 4, dz: 200, s0: .92, blur: 16 })
+    // far enough in front, and turned little enough, that its plane never cuts through the call's
+    blurIn(notes, t, tNotes, { x: 62, y: 128, z: 130, ry: -5, rx: 4, dz: 200, s0: .92, blur: 16 })
     lines.forEach((e, i) => pop(e, t, T[i]))
     pop(sum, t, tSum)
     const g = bell(t, tSum, tSum + .1, tSum + 1.3)
-    sum.style.boxShadow = `0 0 ${(20 + 50 * g).toFixed(0)}px rgba(${AMB},${(.15 + .4 * g).toFixed(2)})`
+    sum.style.boxShadow = `0 0 ${(20 + 50 * g).toFixed(0)}px rgba(${AMB},${(.1 + .28 * g).toFixed(2)})`
   }
 }, { W: 620, H: 600 })
 
@@ -486,7 +503,7 @@ export const map = cardScene(7, (s, { dur }) => {
     return e
   })
   const dot = h('div', 'r-dot', s.cam)
-  const flag = h('div', 'r-flag c-flag', s.cam, `<span style="color:#FF5A36">${icon('clock')}</span><span>4 h a week, by hand</span>`)
+  const flag = h('div', 'r-flag c-flag', s.cam, `<span>4 h a week, by hand</span>`)
   const at = [.4, .8, 1.2, 1.6], wireAt = [1, 1.4, 1.8], tRun = [2.3, 3.5], tStuck = 3.6
   const cam = drift(s, [[0, 0, -20, -40, 8, 6], [tStuck, 0, 10, 0, 3, 0], [dur, 0, 20, 10, 2, -4]])
   return t => {
@@ -518,9 +535,9 @@ export const buildIt = cardScene(7.5, (s, { dur }) => {
   const sp = specks(s, 33, 10, 900, 700)
   const TESTS = ['Table for 4, Sat 7 pm', 'Move me to Thursday', 'Can I get a refund?']
   const panel = h('div', 'c-step', s.cam, `
-    <div class="hd"><span class="ic amb">${spark(26)}</span><span class="t">Your AI</span><span class="st amb">● TESTING</span></div>
+    <div class="hd"><span class="ic">${MK}</span><span class="t">Your AI</span><span class="st">Testing</span></div>
     <div class="tone"><span class="k">Tone</span><span class="ch">Warm</span><span class="ch">Brief</span><span class="ch off">Formal</span></div>
-    <div class="tests">${TESTS.map(txt => `<div class="test"><span class="tx">${txt}</span><span class="stt"><i class="ring"></i><i class="spin"></i><i class="ok">${CHECK('#1A1612', 16)}</i></span></div>`).join('')}</div>
+    <div class="tests">${TESTS.map(txt => `<div class="test"><span class="tx">${txt}</span><span class="stt"><i class="ring"></i><i class="spin"></i><i class="ok">${CHECK('currentColor', 18)}</i></span></div>`).join('')}</div>
     <div class="pass"><span>Checks passed</span><b>0 / 24</b></div>`)
   const st = panel.querySelector('.st'), chips = [...panel.querySelectorAll('.tone .ch')]
   const tests = [...panel.querySelectorAll('.test')], pass = panel.querySelector('.pass'), num = pass.querySelector('b')
@@ -539,8 +556,8 @@ export const buildIt = cardScene(7.5, (s, { dur }) => {
     pop(pass, t, tPass)
     count(num, t, tPass + .1, tPass + .9, 24, v => `${v} / 24`)
     const done = t >= tPass + .9
-    st.textContent = done ? '● READY' : '● TESTING'
-    st.classList.toggle('ok', done)
+    st.textContent = done ? 'Ready' : 'Testing'
+    st.classList.toggle('done', done)
     const g = bell(t, tPass + .9, tPass + 1, tPass + 2)
     pass.style.boxShadow = `0 0 ${(20 + 50 * g).toFixed(0)}px rgba(124,203,255,${(.15 + .35 * g).toFixed(2)})`
   }
@@ -556,9 +573,9 @@ export const launch = cardScene(7.5, (s, { dur }) => {
   const ask = h('div', 'c-step c-review', s.cam, `
     <div class="hd"><span class="ic coral">${icon('bell')}</span><span class="t">Needs your OK</span></div>
     <div class="msg">Refund of £60 requested</div>
-    <div class="btns"><span class="no">Not yet</span><span class="yes">Approve</span></div>`)
+    <div class="btns"><span class="no">Not yet</span><span class="yes"><span class="a">Approve</span><span class="b">${CHECK('currentColor', 20)}<span>Approved by you</span></span></span></div>`)
   const yes = ask.querySelector('.yes')
-  const loop = h('div', 'r-badge c-loop', s.cam, `${spark(18)}<span>Person in the loop</span>`)
+  const loop = h('div', 'r-badge c-loop', s.cam, `<span>Person in the loop</span>`)
   const tOn = 1, tAsk = 2.3, tPress = 3.7, tLoop = 4.4
   const cam = drift(s, [[0, 0, -28, -30, 8, -6], [tAsk, 0, 0, 0, 4, 0], [dur, 0, 20, 10, 2, 4]])
   return t => {
@@ -570,12 +587,12 @@ export const launch = cardScene(7.5, (s, { dur }) => {
     lbl.textContent = t >= tOn + .2 ? 'Live, alongside your team' : 'Off'
     stDot.classList.toggle('is-on', t >= tOn + .2)
     const g = bell(t, tOn, tOn + .15, tOn + 1.2)
-    live.style.boxShadow = `0 40px 120px rgba(0,0,0,.6), 0 0 ${(70 * g).toFixed(0)}px rgba(${AMB},${(.35 * g).toFixed(2)})`
+    live.style.boxShadow = `${GLASS_IN}, 0 0 ${(70 * g).toFixed(0)}px rgba(${ICE},${(.3 * g).toFixed(2)})`
     blurIn(ask, t, tAsk, { y: 58, dz: 180, s0: .94, blur: 16 })
     const press = bell(t, tPress, tPress + .06, tPress + .3)
     yes.style.transform = `scale(${(1 - .06 * press).toFixed(4)})`
     yes.classList.toggle('pressed', t >= tPress)
-    yes.textContent = t >= tPress ? '✓ Approved by you' : 'Approve'
+    ask.classList.toggle('ok', t >= tPress)
     blurIn(loop, t, tLoop, { y: 196, dur: .3, s0: .7, blur: 12 })
   }
 }, STEP)
@@ -592,7 +609,7 @@ export const improve = cardScene(8, (s, { dur }) => {
   const pts = VALS.map((v, k) => [px(k), py(v)])
   const line = pts.map(([x, y], k) => `${k ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ')
   const share = h('div', 'c-share', s.cam, `
-    <div class="hd"><span class="live">● SHARING</span><span class="t">Monthly report</span></div>
+    <div class="hd"><span class="st live">Sharing</span><span class="t">Monthly report</span></div>
     <div class="k">Calls answered</div>
     <svg class="chart" viewBox="-14 -14 ${CW + 28} ${CH + 48}" style="width:${CW + 28}px;height:${CH + 48}px;display:block;overflow:visible">
       ${[0, 1, 2, 3].map(g => `<line class="grid" x1="0" x2="${CW}" y1="${(CH * g / 3).toFixed(1)}" y2="${(CH * g / 3).toFixed(1)}"/>`).join('')}
@@ -605,12 +622,12 @@ export const improve = cardScene(8, (s, { dur }) => {
   const L = ln.getTotalLength() || 1
   // the latest figure stands off the screen, in front of it
   const tag = h('div', 'c-tag', s.cam, `<b>97%</b><span>up from 86%</span>`)
-  const pres = h('div', 'c-pres', s.cam, `<div class="av">${spark(46)}</div><div class="nm">n.abl</div><div class="lv"><i></i><i></i><i></i><i></i></div>`)
+  const pres = h('div', 'c-pres', s.cam, `<div class="av">${MK}</div><div class="nm">n.abl</div><div class="lv"><i></i><i></i><i></i><i></i></div>`)
   const lvP = [...pres.querySelectorAll('.lv i')]
   const cc = h('div', 'c-cc', s.cam, `<span class="a"></span><span class="b"></span>`)
   const ccA = words(cc.querySelector('.a'), '“Calls answered are up to 97% this month.”')
   const ccB = words(cc.querySelector('.b'), '“Next, we add after-hours bookings.”')
-  const next = h('div', 'c-chip amb', s.cam, `${spark(20)}<span>Next: after-hours bookings</span>`)
+  const next = h('div', 'c-chip amb', s.cam, `<span>Next: after-hours bookings</span>`)
   const meet = h('div', 'c-chip', s.cam, `${icon('cal')}<span>Next session · Thu 10:00</span>`)
   const tLine = [.6, 2.2], tTag = 2.3, tA = 1.1, tB = 3.4, tNext = 3.9, tMeet = 4.6
   const talking = t => (t > 1 && t < 3) || (t > 3.3 && t < 4.6)
@@ -624,7 +641,7 @@ export const improve = cardScene(8, (s, { dur }) => {
     dots.forEach((e, k) => { e.style.opacity = q * (MONTHS.length - 1) >= k - .01 ? 1 : 0 })
     blurIn(tag, t, tTag, { x: 172, y: -196, z: 90, ry: -14, dz: 160, s0: .8, blur: 12 })
     const tg = bell(t, tTag, tTag + .1, tTag + 1.4)
-    tag.style.boxShadow = `0 20px 60px rgba(0,0,0,.5), 0 0 ${(30 + 50 * tg).toFixed(0)}px rgba(${AMB},${(.25 + .35 * tg).toFixed(2)})`
+    tag.style.boxShadow = `inset 0 1.5px 0 rgba(255,255,255,.07), 0 20px 60px rgba(0,0,0,.5), 0 0 ${(30 + 50 * tg).toFixed(0)}px rgba(${ICE},${(.14 + .26 * tg).toFixed(2)})`
     blurIn(pres, t, .5, { x: -180, y: 120, z: 80, ry: 8, dz: 200, s0: .9, blur: 14 })
     const on = talking(t)
     pres.classList.toggle('talk', on)
