@@ -2,16 +2,16 @@
 The docs reel: n.abl's Document AI, in 16 seconds, cut to a supplied track
 with no voice.
 
-Problem, then answer, every move on a hit of the track. The problem is the
-tedium, not the volume: one document, and the dozens of fields finance,
-legal and ops each need from it, typed in one at a time. One document: 47
-fields stack up on the plucks; in the track's silence a VAT number is typed a
-key at a time, One. At. A. Time.; the plucks come back as Copy. Paste. Check.
-Repeat., over and over. The three build hits flash n.abl Document AI in and
-out. On the drop the same form fills itself, every field; it goes to finance
-and legal; 47 fields, none typed. Then the name, held. In the 2026-11 brand:
-Manjari, the lit ground, ember for the problem, amber for n.abl, ice for the
-AI at work. The brief is SCRIPT.md; the animation is scenes.js.
+A story up to the drop, then the answer, every move on a hit of the track. A
+delivery arrives, its paperwork taped to the box; the slip goes to the
+computer, and it is a mess: scrawled, crossed out, a coffee ring on it; in
+the track's silence, Is that a 7? Or a 1?; then onto the pile it goes, with
+all the others. The three build hits flash n.abl Document AI in and out. On
+the drop a cursor picks the pile up and drops it into Upload documents; one
+sheet fills, a row a document and a column a field, in one wave; thousands
+of documents counted up; the name, held. In the 2026-11 brand: Manjari, the
+lit ground, ember for the problem, amber for n.abl, ice for the AI at work.
+The brief is SCRIPT.md; the animation is scenes.js.
 """
 
 TITLE = "n.abl · Document AI"
@@ -33,12 +33,15 @@ VOICE_PROVIDER = "none"
 VOICE, LANG, SPEED, SHORT_SPEED = "bm_fable", "en-gb", 1.2, 1.36
 SAY = {"n.abl": "enable"}
 SCENES = [
-    dict(id="fields", beats=6.0625, lines=[]), # One document. 47 fields to fill: the form stacks up on the plucks, Finance, Legal, Ops
-    dict(id="type",  beats=2, lines=[]),       # the silence: a VAT number typed a key at a time; One. At. A. Time., a word a key
-    dict(id="loop",  beats=5, lines=[]),       # Copy. Paste. Check. Repeat., a word a pluck, then the line again and again
-    dict(id="flash", beats=1.5, lines=[]),     # the three build hits: n.abl Document AI, flashed in and out on each
-    dict(id="fix",   beats=8, lines=[]),       # the drop: the same form fills itself; every field, filled; sent to finance and legal; 47 fields, none typed
-    dict(id="end",   beats=7.04, lines=[]),    # n.abl, Document AI, Paperwork, read and filed., the address, held
+    dict(id="box",    beats=2.5625, lines=[]),  # a delivery arrives: the box drops on the first pluck, its paperwork taped to the front
+    dict(id="paper",  beats=3.5, lines=[]),     # the slip comes off and goes to the computer; closer on each pluck: scrawled, crossed out, coffee-ringed
+    dict(id="squint", beats=2, lines=[]),       # the silence: Is that a 7? Or a 1? Typed, deleted, typed, deleted, a key at a time
+    dict(id="pile",   beats=5, lines=[]),       # onto the pile it goes, with all the others, tossed on with the plucks
+    dict(id="flash",  beats=1.5, lines=[]),     # the three build hits: n.abl Document AI, flashed in and out on each
+    dict(id="upload", beats=2, lines=[]),       # the drop: a cursor picks the pile up and drops it into Upload documents, on the clap
+    dict(id="sheet",  beats=3, lines=[]),       # one sheet, a row a document and a column a field, filling in one wave; the rest stream past
+    dict(id="count",  beats=3, lines=[]),       # thousands of documents read and filed, counted up to the clap
+    dict(id="end",    beats=7.04, lines=[]),    # n.abl, Document AI, Paperwork, read and filed., the address, held
 ]
 
 # the supplied track, played as it is from its start (films/docs/music)
