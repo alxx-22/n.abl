@@ -44,6 +44,17 @@ around the products.
   light running round it and a glow, in place of an edge that was easy to
   miss. The main button no longer clips its contents to make room for it;
   its inner light is clipped to the glass instead.
+- **How we work, the five cards (`sections/Process.jsx`, `home.css` Steps):**
+  in the brand's card language: the step number in Thin, the step's line
+  icon in a hairline circle, and at the foot what the card turns over to
+  show, with the amber square and a drawn arrow. A line runs along the top
+  of the five, ember at the first step to ice at the last, and holds still
+  while a card turns over to its scene.
+- **Room between the words and the animations:** on a desk the text column
+  and the animation's box added up to more than the page's width and
+  overlapped by about 32px. The text is now at most 42% of the shell and
+  the box at most 600px, hanging up to 3rem into the margin, which leaves
+  at least 84px between them at every width.
 - **New copy:** each product now says what it is useful for and what you get.
   Every line is drawn from words the site or `assistant-knowledge.md` already
   used: the film's captions, the cases' results, the assistant's
