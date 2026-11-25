@@ -170,6 +170,7 @@ export default function DiscoveryModal({ open, onClose, prefill = '' }) {
               </div>
 
               <button type="submit" className="btn btn--primary btn--block" disabled={sending}>
+                <span className="ring" aria-hidden="true" />
                 <span className="lbl">{sending ? 'Sending…' : 'Book my discovery call'}</span>
               </button>
               {error && <p className="auth-error" role="alert">{error}</p>}

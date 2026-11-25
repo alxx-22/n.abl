@@ -83,6 +83,7 @@ export function blurIn(e, t, t0, { x = 0, y = 0, z = 0, dur = .32, s0 = 1.12, bl
   return p
 }
 export function count(e, t, a, b, to, fmt = v => v) { e.textContent = fmt(Math.round(to * P(t, a, b, E.out))) }
+let RIMS = 0
 export function ringPill(parent, w, hgt, html) {
   const e = h('div', 'r-pill', parent, html)
   e.style.width = w + 'px'; e.style.height = hgt + 'px'
@@ -91,7 +92,13 @@ export function ringPill(parent, w, hgt, html) {
   svg.setAttribute('width', w + 16); svg.setAttribute('height', hgt + 16)
   svg.style.width = (w + 16) + 'px'; svg.style.height = (hgt + 16) + 'px'
   const mk = cls => { const r = document.createElementNS(ns, 'rect'); r.setAttribute('x', 8); r.setAttribute('y', 8); r.setAttribute('width', w); r.setAttribute('height', hgt); r.setAttribute('rx', hgt / 2); r.setAttribute('pathLength', 1); if (cls) r.setAttribute('class', cls); svg.appendChild(r); return r }
+  /* the rim draws in the brand's warm-to-cool gradient, rising from the bottom left */
+  const id = `rim${++RIMS}`
+  const defs = document.createElementNS(ns, 'defs')
+  defs.innerHTML = `<linearGradient id="${id}" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#E9AC57"/><stop offset=".55" stop-color="#EFE2C6"/><stop offset="1" stop-color="#7CCBFF"/></linearGradient>`
+  svg.appendChild(defs)
   mk('base'); e._rim = mk('')
+  e._rim.style.stroke = `url(#${id})`
   e.appendChild(svg)
   return e
 }
@@ -125,7 +132,7 @@ export const SPARK = 'M0 -10 C1 -2.5 2.5 -1 10 0 C2.5 1 1 2.5 0 10 C-1 2.5 -2.5 
    too large on iPhone, and stretched its pill into a circle round it. */
 export const svgSize = (w, h = w) => `width:${w}px;height:${h}px;flex:none;display:block;overflow:visible`
 export const spark = (size, fill = '#E9AC57') => `<svg width="${size}" height="${size}" viewBox="-10 -10 20 20" style="${svgSize(size)}"><path d="${SPARK}" fill="${fill}"/></svg>`
-export const CHECK = (c = '#B9D4B3', s = 16) => `<svg width="${s}" height="${s}" viewBox="0 0 16 16" style="${svgSize(s)}"><path d="M3.2 8.4l3 3 6.6-7" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+export const CHECK = (c = '#A9DCFF', s = 16) => `<svg width="${s}" height="${s}" viewBox="0 0 16 16" style="${svgSize(s)}"><path d="M3.2 8.4l3 3 6.6-7" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
 /* the wordmark, from public/brand/wordmark.svg: same paths, same 13-unit stroke */
 export const WORDMARK = () => `<svg viewBox="0 0 273 100">
   <g fill="none" stroke="#FBF6EC" stroke-width="13" stroke-linecap="butt">

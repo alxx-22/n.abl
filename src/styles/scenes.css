@@ -58,7 +58,7 @@
 .edge--lift:hover{transform:translateY(-4px)}
 .spot{position:relative;overflow:hidden;isolation:isolate}
 .spot::after{content:'';position:absolute;inset:-1px;border-radius:inherit;
-  background:radial-gradient(22rem circle at var(--mx,50%) var(--my,0%),rgba(var(--cream-rgb),.10),transparent 62%);
+  background:radial-gradient(44rem circle at var(--mx,50%) var(--my,0%),rgba(var(--cream-rgb),.035),rgba(var(--cream-rgb),.012) 45%,transparent 72%);
   opacity:0;transition:opacity var(--dur) var(--ease);pointer-events:none}
 .spot:hover::after{opacity:1}
 .problem__head{display:flex;align-items:center;justify-content:space-between;gap:var(--s-3);margin-bottom:var(--s-4)}

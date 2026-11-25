@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Reveal, useReducedMotion } from '../ui/index.jsx'
 import { Chapter } from '../Journey.jsx'
 import { PRODUCTS } from '../products/data.js'
@@ -19,22 +19,34 @@ import { createProductStage } from '../products/stage.js'
    the grid of cards that named the same products again below it. Links
    to #see-it-work still land here.
    ============================================================ */
+/* Phones get the narrow layout: each animation in the page above its words. */
+const NARROW = '(max-width: 980px)'
+
 export default function Products() {
   const track = useRef(null)
   const stage = useRef(null)
   const ctl = useRef(null)
   const reduced = useReducedMotion()
+  const [narrow, setNarrow] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia(NARROW)
+    const on = () => setNarrow(mq.matches)
+    on()
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
 
   useEffect(() => {
     // the stage measures the words it sits beside, so the fonts come first
     let alive = true
     document.fonts.ready.then(() => {
       if (!alive || !track.current || !stage.current) return
-      ctl.current = createProductStage({ track: track.current, stage: stage.current, items: PRODUCTS, reduced })
+      ctl.current = createProductStage({ track: track.current, stage: stage.current, items: PRODUCTS, reduced, narrow })
     })
     return () => { alive = false; if (ctl.current) ctl.current.destroy(); ctl.current = null }
-    // built once; a change of motion preference is passed in live, below
-  }, [])
+    // rebuilt when the layout changes; a change of motion preference is passed in live, below
+  }, [narrow])
   useEffect(() => { if (ctl.current) ctl.current.setReduced(reduced) }, [reduced])
 
   return (
@@ -81,6 +93,10 @@ export default function Products() {
           {PRODUCTS.map((p) => (
             <article key={p.n} id={`product-${p.id}`} className={`product product--${p.side}`} aria-labelledby={`product-${p.id}-title`}>
               <div className="shell product__shell">
+                {/* on a phone the animation sits here, above its words */}
+                <div className="product__visual" aria-hidden="true">
+                  <div className="pv__tilt"><div className="pv__host" /></div>
+                </div>
                 <div className="product__text" data-shield=".85">
                   <span className="eyebrow">{p.n} · {p.label}</span>
                   <h3 id={`product-${p.id}-title`} className="product__title">{p.title}<span className="dot" /></h3>

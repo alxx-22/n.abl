@@ -128,6 +128,7 @@ export default function SiteAssistant({ onHandoff }) {
         aria-controls="site-assistant"
         onClick={toggle}
       >
+        <span className="ring" aria-hidden="true" />
         <Spark />
         {/* Keyed so React swaps the node rather than the text: the label then
             replays its entrance and the two words cross-fade instead of
@@ -139,7 +140,7 @@ export default function SiteAssistant({ onHandoff }) {
 
       {open && (
         <div
-          className={`assistant ${closing ? 'assistant--closing' : ''}`}
+          className={`assistant ${closing ? 'assistant--closing' : ''} ${busy ? 'assistant--thinking' : ''}`}
           id="site-assistant"
           role="dialog"
           aria-label="Ask n.abl a question"

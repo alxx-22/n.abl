@@ -77,7 +77,7 @@ export default function Services() {
             </Reveal>
             <Reveal delay={0.16}>
               <div className="hero__cta services-hero__cta">
-                <button className="btn btn--primary" onClick={book}><span className="lbl">Book a free discovery call</span></button>
+                <button className="btn btn--primary" onClick={book}><span className="ring" aria-hidden="true" /><span className="lbl">Book a free discovery call</span></button>
                 <Link className="btn btn--ghost" to="/#what-we-do"><span className="lbl">See what AI can do</span></Link>
               </div>
             </Reveal>
@@ -162,7 +162,7 @@ export default function Services() {
               </p>
             </Reveal>
             <Reveal delay={0.16}>
-              <button className="btn btn--primary contact__btn" onClick={book}><span className="lbl">Book a discovery call</span></button>
+              <button className="btn btn--primary contact__btn" onClick={book}><span className="ring" aria-hidden="true" /><span className="lbl">Book a discovery call</span></button>
             </Reveal>
           </div>
         </section>

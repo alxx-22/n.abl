@@ -542,7 +542,7 @@ export const buildIt = cardScene(7.5, (s, { dur }) => {
     st.textContent = done ? '● READY' : '● TESTING'
     st.classList.toggle('ok', done)
     const g = bell(t, tPass + .9, tPass + 1, tPass + 2)
-    pass.style.boxShadow = `0 0 ${(20 + 50 * g).toFixed(0)}px rgba(157,190,151,${(.15 + .35 * g).toFixed(2)})`
+    pass.style.boxShadow = `0 0 ${(20 + 50 * g).toFixed(0)}px rgba(124,203,255,${(.15 + .35 * g).toFixed(2)})`
   }
 }, STEP)
 
