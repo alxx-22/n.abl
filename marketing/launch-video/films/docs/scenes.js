@@ -1,440 +1,371 @@
 /* ============================================================
    THE DOCS REEL: n.abl's Document AI, in 16 seconds
 
-   Daylight: warm paper, ink, the amber of the full stop, and the product's
-   interface drawn in the site's own type and driven by a cursor. Each
-   moment hands its shape to the next.
+   Problem, then answer, and every move on a hit of the track. In the site's
+   brand: espresso, cream, the amber of the square full stop; paper is the
+   one light thing in it.
 
-   hook   the site's line, kinetic: a highlighted word rolls through
-          Invoices, Delivery notes, Forms, and lands on Paperwork, as
-          ", read and filed." builds beside it and ends on the square stop
-   drop   three documents dragged into Drop in your paperwork; on the
-          track's silent beat the drop zone folds into Reading 3 documents
-   read   the pill opens into the invoice; a line of light reads it, its
-          fields light up and fly into the record; matched to the order;
-          the handwritten +2 is flagged, and a person approves it
-   table  on the drop the camera slams back: the record is row one of the
-          paperwork, and the rest read and file on the sixteenths
-   count  into the counter: the documents read, files floating past
-   brand  the n. drawn a stroke a beat over four backdrops
+   pile   Monday, 9am. The paperwork lands on every pluck: one invoice,
+          two, three, then by the dozen, by the hundred, piling up the frame
+   type   the track's silence: one supplier's name typed in by hand, a key
+          at a time. Invoice 1 of 500
+   week   the plucks again: the calendar flips Tuesday to Friday, the count
+          barely moves; a whole week, gone
+   flash  the three build hits: n.abl Document AI, flashed in and out
+   fix    the drop: Monday, 9am again. The pile goes into Document AI;
+          read, checked, filed, one word a clap; done by 9:02
    end    the name, Document AI, Paperwork, read and filed., the address
    The script is films/docs/film.py; the brief is films/docs/SCRIPT.md.
    ============================================================ */
 
-import { E, M, P, TL, LAND, WORDMARK, bell, cue, h, icon, lerp, offs, put, rise, scene, vis } from '../../film/stage.js'
-import { blurIn, drop, lens, path, shoot, widen } from '../../film/kit.js'
+import { E, M, P, TL, W, H, WORDMARK, bell, cue, h, icon, lerp, put, rise, rng, scene, vis } from '../../film/stage.js'
+import { blurIn, lens, path, shoot, widen } from '../../film/kit.js'
 
 const B = TL.beat, OFF = 0.304
 const bt = k => OFF + k * B                               // the track's own beat k (its first is 0.304 s in)
-const PORT = !LAND
-const paper = (s, grey) => { const e = h('div', 'layer d-paper' + (grey ? ' grey' : '')); s.root.insertBefore(e, s.rig); return e }
-const CURSOR = `<svg width="40" height="40" viewBox="0 0 40 40"><path d="M6 3 L6 31 L13.5 24 L18.5 35.5 L23.5 33.3 L18.6 22.2 L28.5 22.2 Z" fill="#17130F" stroke="#FBF8F2" stroke-width="2.4" stroke-linejoin="round"/></svg>`
-/* the cursor, its tip at (x, y) from the middle; pressed, it shrinks to its tip */
-function cursor(parent) { const e = h('div', 'd-cur', parent, CURSOR); e.style.transformOrigin = '6px 3px'; return e }
-function aim(e, x, y, o = 1, press = 0) {
-  e.style.transform = `translate3d(${(x - 6).toFixed(1)}px,${(y - 3).toFixed(1)}px,0) scale(${(1 - .16 * press).toFixed(3)})`
-  vis(e, o)
+const CHECK = (s = 22) => `<svg width="${s}" height="${s}" viewBox="0 0 16 16"><path d="M3.2 8.4l3 3 6.6-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+const STOP = '<span class="d-stop"></span>'
+const SPARK = s => `<svg width="${s}" height="${s}" viewBox="-10 -10 20 20"><path d="M0 -10 C1 -2.5 2.5 -1 10 0 C2.5 1 1 2.5 0 10 C-1 2.5 -2.5 1 -10 0 C-2.5 -1 -1 -2.5 0 -10 Z" fill="#E9AC57"/></svg>`
+
+/* where things sit, per frame */
+const TOPY = M({ land: -432, sq: -436, tall: -552, port: -776 })      // the clock
+const CAPY = M({ land: -292, sq: -278, tall: -380, port: -560 })      // the caption
+const MIDY = M({ land: 112, sq: 118, tall: 130, port: 110 })          // what it is about
+const CAP = M({ land: 112, sq: 88, tall: 92, port: 96 }), CAPW = M({ land: 1720, def: 960 })
+
+/* a caption: big cream type, centred, wrapping in the narrow frames */
+function cap(parent, html, size = CAP) {
+  const e = h('div', 'd-cap', parent, html)
+  Object.assign(e.style, { fontSize: size + 'px', width: 'max-content', maxWidth: CAPW + 'px' })
+  return e
 }
-/* the centre of an element inside a box placed (by put) at (bx, by) with scale k, in the world */
-const at = (e, box, bx, by, k = 1) => { const o = offs(e, box); return [bx + (o.x + o.w / 2 - box.offsetWidth / 2) * k, by + (o.y + o.h / 2 - box.offsetHeight / 2) * k] }
-const CHECK = '<svg width="14" height="14" viewBox="0 0 16 16"><path d="M3.2 8.4l3 3 6.6-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+/* in on a hit (fast, so it lands with it), out on another */
+function capAt(e, t, a, b, { y = CAPY, x = 0, dy = 36 } = {}) {
+  const pi = P(t, a - .03, a + .2, E.out), po = b == null ? 0 : P(t, b - .1, b + .02, E.in2)
+  put(e, { x, y: y + (1 - pi) * dy - po * 24, s: lerp(.94, 1, pi) * lerp(1, 1.03, po), o: pi * (1 - po), blur: (1 - pi) * 14 + po * 14 })
+}
+/* the clock: a face and a day and time; set(day, minutes after midnight) */
+function clock(parent) {
+  const e = h('div', 'd-clock', parent, '<span class="face"><i class="h"></i><i class="m"></i></span><span class="day">MON</span><span class="tm">09:00</span>')
+  const [hh, mm] = e.querySelectorAll('.face i'), day = e.querySelector('.day'), tm = e.querySelector('.tm')
+  e.set = (d, mins) => {
+    hh.style.transform = `rotate(${(mins / 720 * 360).toFixed(1)}deg)`; mm.style.transform = `rotate(${(mins / 60 * 360).toFixed(1)}deg)`
+    day.textContent = d
+    const m = Math.round(mins); tm.textContent = `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
+  }
+  e.set('MON', 540)
+  return e
+}
+/* a sheet of paper */
+const KINDS = ['INVOICE', 'DELIVERY NOTE', 'INVOICE', 'FORM', 'INVOICE', 'STATEMENT', 'INVOICE', 'RECEIPT']
+const LW = [62, 44, 90, 84, 70, 92, 58, 80, 40, 66]
+function sheet(parent, i) {
+  const lines = LW.map((w, j) => `<i class="${j === 1 || j === 8 ? 'd' : ''}" style="width:${(w + (i * 7 + j * 13) % 17) % 100}%"></i>`).join('')
+  return h('div', 'd-sheet ' + ['', 'b', 'c'][i % 3], parent, `<div class="h">${KINDS[i % KINDS.length]}</div>${lines}`)
+}
+/* the pile: where each sheet lands. The first three big and in the middle;
+   the rest heap up from the bottom, wider and higher as it grows */
+const N = 46
+const HEAP = (() => {
+  const r = rng(11), out = []
+  const first = [[0, 140, -4, 1.28], [46, 118, 6, 1.28], [-38, 100, -9, 1.28]]
+  for (let i = 0; i < N; i++) {
+    if (i < 3) { const [x, y, rot, s] = first[i]; out.push({ x, y, r: rot, s }); continue }
+    const f = (i - 3) / (N - 4)
+    const top = H / 2 - 70 - Math.pow(f, .85) * H * .6
+    const spread = lerp(320, W / 2 + 40, Math.pow(f, .5))
+    out.push({ x: (r() * 2 - 1) * spread, y: top + r() * 150, r: (r() - .5) * 56, s: .86 + r() * .34 })
+  }
+  return out
+})()
 
 /* ============================================================
-   HOOK: the site's line, with its first word rolling
+   PILE: Monday, 9am, and the paperwork lands on every pluck
    ============================================================ */
-function buildHook(s) {
-  widen(s); paper(s)
-  const t0 = s.t0, t1 = s.t1
-  const WORDS = ['Invoices', 'Delivery notes', 'Forms', 'Paperwork'], REST = ['read', 'and', 'filed']
-  const line = h('div', 'd-line', s.cam); line.style.fontSize = M({ land: 108, sq: 92, tall: 96, port: 92 }) + 'px'
-  if (PORT) line.style.flexDirection = 'column'
-  const rowA = h('span', 'w', line), rowB = h('span', 'w', line)
-  ;[rowA, rowB].forEach(r => Object.assign(r.style, { display: 'inline-flex', alignItems: 'center', gap: '.26em' }))
-  if (LAND) rowB.style.display = 'none'
-  const chip = h('span', 'd-chip', rowA, `<span class="bg"></span><span class="ic">${icon('doc')}</span><span class="win"><span class="strip">${WORDS.map(w => `<div style="width:max-content">${w}</div>`).join('')}</span></span>`)
-  const comma = h('span', 'w', rowA, ','); comma.style.marginLeft = '-.3em'
-  const ws = REST.map(w => h('span', 'w', LAND ? rowA : rowB, w))
-  const stop = h('span', 'd-stop', ws[2])
-  const bg = chip.querySelector('.bg'), win = chip.querySelector('.win'), strip = chip.querySelector('.strip'), ic = chip.querySelector('.ic')
-  const tw = [bt(1), bt(2), bt(3)]                         // the word rolls on these beats, and a word of the line lands
-  cue('pop', t0 + .1, { v: .4 })
-  tw.forEach((t, i) => { cue('tick', t, { v: .5 }); cue('swish', t + .02, { v: .2 }) })
-  drop(bt(3) + .14, 4, { wet: .25, v: .5 })                // the full stop
-  cue('whoosh', t1 - .05, { d: .4, v: .35 })
-  let L = null
+// [beat, sheets in the burst, the count it brings the pile to]
+const BURSTS = [[0, 1, 1], [.5, 1, 2], [1, 1, 3], [2, 3, 12], [2.5, 4, 40], [3, 6, 95], [3.5, 7, 180], [4, 9, 320], [5, 14, 500]]
+function buildPile(s) {
+  widen(s)
+  const t0 = s.t0
+  const r = rng(5)
+  const sheets = [], land = []
+  let i = 0
+  BURSTS.forEach(([b, n]) => { for (let j = 0; j < n; j++, i++) land.push(bt(b) - .012 + j * .022) })
+  for (let k = 0; k < N; k++) {
+    const p = HEAP[k], e = sheet(s.cam, k)
+    sheets.push({ e, p, tl: land[k], x0: p.x * .6 + (r() - .5) * 500, y0: -H / 2 - 260 - r() * 260, r0: p.r + (r() - .5) * 110, fall: k < 3 ? .3 : .24 + r() * .06 })
+  }
+  const row = h('div', 'd-row', s.cam), clk = clock(row)
+  const cnt = h('div', 'd-count', row, '<b>1</b> <span>document</span>'), cn = cnt.querySelector('b'), cw = cnt.querySelector('span')
+  const capA = cap(s.cam, `Monday, 9am${STOP}`), capB = cap(s.cam, `Here comes the paperwork${STOP}`)
+  BURSTS.forEach(([b, n]) => { for (let j = 0; j < Math.min(3, n); j++) cue('paper', bt(b) + j * .03, { v: Math.min(.85, .45 + n * .03), pan: (j - 1) * .5 }) })
   return t => {
-    if (!L) L = { lh: win.offsetHeight, w: [...strip.children].map(d => d.offsetWidth), ww: ws.map(e => e.offsetWidth), gap: parseFloat(getComputedStyle(rowA).columnGap) || 0 }
-    // the strip rolls up a word on each beat, settling with a little overshoot; the window fits the word
-    let k = 0; tw.forEach(b => { k += P(t, b - .03, b + .26, E.snap) })
-    strip.style.transform = `translateY(${(-k * L.lh).toFixed(1)}px)`
-    const i = Math.min(2, Math.floor(k)), f = k - i
-    win.style.width = lerp(L.w[i], L.w[Math.min(3, i + 1)], Math.min(1, f)).toFixed(1) + 'px'
-    strip.style.filter = bell(t, tw[0] - .03, tw[0] + .05, tw[0] + .2) + bell(t, tw[1] - .03, tw[1] + .05, tw[1] + .2) + bell(t, tw[2] - .03, tw[2] + .05, tw[2] + .2) > .05 ? 'blur(2px)' : 'none'
-    // the words of the line arrive on the same beats; the line stays centred on what is showing
-    let hidden = 0
-    ws.forEach((e, j) => { const a = P(t, tw[j] - .02, tw[j] + .3, E.out); rise(e, t, tw[j] - .02, { dur: .3, dy: 26, blur: 12 }); hidden += (1 - E.io(Math.min(1, a))) * (L.ww[j] + L.gap) })
-    const sp = P(t, bt(3) + .12, bt(3) + .42, E.back); stop.style.transform = `scale(${sp.toFixed(3)})`; vis(stop, sp > 0 ? 1 : 0)
-    bg.style.opacity = (1 - .85 * P(t, bt(3.5), bt(4) - .1)).toFixed(3)
-    ic.style.opacity = (1 - P(t, bt(3.5), bt(4) - .1)).toFixed(3)
-    const out = P(t, t1 - .22, t1, E.in2)
-    put(line, { x: LAND ? hidden / 2 : 0, y: (1 - P(t, t0, t0 + .35, E.out)) * 18, s: lerp(.96, 1, P(t, t0, t0 + .4, E.out)) * (1 + .06 * out), o: Math.min(1, P(t, t0, t0 + .25) * 1.5) * (1 - out), blur: (1 - P(t, t0, t0 + .3)) * 14 + out * 16 })
-    if (PORT) rowB.style.transform = `translateX(${(hidden / 2).toFixed(1)}px)`
-    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1], [t1, 0, 0, 30, 0, 0, 0, 1]]), t)
+    // each sheet falls in and lands on its pluck, with a little settle
+    sheets.forEach(d => {
+      const ts = d.tl - d.fall, u = P(t, ts, d.tl, E.in2), st = bell(t, d.tl, d.tl + .03, d.tl + .2)
+      put(d.e, { x: lerp(d.x0, d.p.x, u), y: lerp(d.y0, d.p.y, u), r: lerp(d.r0, d.p.r, P(t, ts, d.tl, E.out)), s: d.p.s * (1 + .05 * st), o: t >= ts ? 1 : 0 })
+    })
+    // the count jumps with each burst
+    let n = 0, k = -1; BURSTS.forEach(([b, , c], j) => { if (t >= bt(b) - .02) { n = c; k = j } })
+    cn.textContent = n; cw.textContent = n === 1 ? 'document' : 'documents'
+    const kb = k < 0 ? 0 : bell(t, bt(BURSTS[k][0]) - .02, bt(BURSTS[k][0]) + .03, bt(BURSTS[k][0]) + .25)
+    cnt.style.transform = `scale(${(1 + .12 * kb).toFixed(3)})`; cnt.style.opacity = n ? 1 : 0
+    blurIn(row, t, t0 + .02, { y: TOPY, dur: .3, s0: 1, blur: 10, dy: -14 })
+    capAt(capA, t, bt(0), bt(2))
+    capAt(capB, t, bt(2), null)
+    // the camera pulls back as the pile grows, and jolts with each burst
+    let jolt = 0; BURSTS.forEach(([b, nn]) => { jolt += bell(t, bt(b) - .01, bt(b) + .02, bt(b) + .22) * Math.min(1, .25 + nn * .06) })
+    s.rig.style.transform = `scale(${(1 + .018 * jolt).toFixed(4)}) translateY(${(jolt * 4).toFixed(1)}px)`
+    shoot(s, path([[t0, 0, 30, 0, 0, 0, 0, 1.06], [bt(2), 0, 20, 0, 0, 0, 0, 1.04], [s.t1, 0, 0, 0, 0, 0, 0, .94]]), t)
     lens(s, {})
   }
 }
 
 /* ============================================================
-   DROP: three documents into the drop zone; on the silent beat, it folds
-   into the reading pill
+   TYPE: the silence. One name, typed in by hand, a key at a time
    ============================================================ */
-const PILL = [470, 92]
-function buildDrop(s) {
-  widen(s); paper(s)
-  const t0 = s.t0, t1 = s.t1
-  const ZW = M({ land: 780, def: 700 }), ZH = 330
-  const zone = h('div', 'd-zone', s.cam, `<div class="t">Drop in your paperwork</div><div class="s">Invoices, delivery notes, forms</div>
-    <div class="t n" style="position:absolute">3 documents</div><div class="pill"><span class="d-spin"></span><span>Reading 3 documents</span></div>`)
-  const [zt, zs, zn] = zone.querySelectorAll('.t, .s'), pill = zone.querySelector('.pill'), spin = zone.querySelector('.d-spin')
-  const lines = (n, a) => Array.from({ length: n }, (_, i) => `<i class="${i === a ? 'a' : ''}" style="width:${[92, 70, 84, 58, 76, 64, 88][i % 7]}%"></i>`).join('')
-  const docs = [['INVOICE', -9, -34, 14], ['DELIVERY NOTE', 4, 10, -6], ['FORM', 13, 44, 10]].map(([k, r, dx, dy]) => ({ e: h('div', 'd-doc', s.cam, `<div class="h">${k}</div>${lines(9, 3)}`), r, dx, dy }))
-  const cur = cursor(s.cam)
-  const tIn = t0 + .05, tDrop = bt(5.5), tFold = bt(6)
-  const from = M({ land: [760, 420], sq: [520, 520], tall: [520, 600], port: [500, 760] })
-  cue('whoosh', tIn + .2, { d: .6, v: .35 })
-  cue('paper', tIn + .35, { v: .5 })
-  cue('pop', tDrop, { v: .5 }); drop(tDrop + .03, 3, { wet: .3, v: .45 })
-  cue('confirm', tDrop + .22, { n: 2, deg: 2, v: .3 })
-  cue('swish', tFold + .05, { v: .25 })                     // the zone folds into the pill, in the track's silence
-  return t => {
-    // the zone, and how far it has folded into the pill
-    const z = blurIn(zone, t, tIn, { dur: .4, s0: .94, blur: 14, dy: 16 })
-    const fo = P(t, tFold, tFold + .4, E.io)
-    const lit = bell(t, tDrop, tDrop + .06, tDrop + .5)
-    Object.assign(zone.style, { width: lerp(ZW, PILL[0], fo) + 'px', height: lerp(ZH, PILL[1], fo) + 'px', borderRadius: lerp(28, PILL[1] / 2, fo) + 'px',
-      borderColor: `rgba(${Math.round(lerp(227, 233, lit))},${Math.round(lerp(218, 172, lit))},${Math.round(lerp(203, 87, lit))},1)`,
-      background: lit > .02 ? `rgb(${Math.round(lerp(242, 248, lit))},${Math.round(lerp(236, 227, lit))},${Math.round(lerp(226, 189, lit))})` : '' })
-    const sw = P(t, tDrop + .08, tDrop + .3, E.out)
-    ;[zt, zs].forEach(e => { e.style.opacity = ((1 - sw) * (1 - fo)).toFixed(3); e.style.transform = `translateY(${(-sw * 30).toFixed(1)}px)` })
-    zn.style.opacity = (sw * (1 - P(t, tFold, tFold + .15))).toFixed(3); zn.style.transform = `translateY(${((1 - sw) * 30).toFixed(1)}px)`
-    pill.style.opacity = P(t, tFold + .2, tFold + .4).toFixed(3)
-    spin.style.transform = `rotate(${(t * 420).toFixed(1)}deg)`
-    // the stack, carried in on the cursor and dropped
-    const m = P(t, tIn + .1, tDrop, E.io), dp = P(t, tDrop, tDrop + .28, E.in2)
-    const cx = lerp(from[0], 0, m), cy = lerp(from[1], 0, m) - 60 * Math.sin(Math.PI * m)
-    docs.forEach((d, i) => put(d.e, { x: cx + d.dx * (1 - dp), y: cy + d.dy * (1 - dp) + dp * 20, r: d.r * (1 - .5 * dp) + 4 * Math.sin(t * 2 + i) * (1 - m), s: lerp(1, .35, dp), o: P(t, tIn, tIn + .2) * (1 - dp) }))
-    const leave = P(t, tDrop + .05, tDrop + .55, E.io)
-    aim(cur, cx + 30 + leave * 300, cy - 60 + leave * 240, P(t, tIn + .05, tIn + .25) * (1 - P(t, tDrop + .3, tDrop + .55)), bell(t, tDrop - .02, tDrop, tDrop + .12))
-    put(zone, { y: 16 * (1 - z), s: lerp(.94, 1, z) * (1 + .04 * lit) * (1 + .5 * P(t, t1 - .1, t1, E.in2)), o: Math.min(1, z * 1.6), blur: (1 - z) * 14 })
-    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1], [tFold, 0, 0, 40, 0, 0, 0, 1], [t1, 0, 0, 60, 0, 0, 0, 1]]), t)
-    lens(s, {})
-  }
-}
-
-/* ============================================================
-   READ: the invoice, read by a line of light, its fields into the record;
-   matched to the order; a person approves the line it was unsure of
-   ============================================================ */
-const INV = `
-  <div class="top"><div><div class="sup f" data-k="sup">Harbour Foods Ltd</div><div class="ad">Unit 4, Quay Road</div></div><div class="kind">INVOICE</div></div>
-  <div class="meta"><div><span>Invoice</span><b class="f" data-k="no">INV-2291</b></div><div><span>Date</span><b class="f" data-k="date">3 Oct 2026</b></div><div><span>Order</span><b class="f" data-k="po">PO-0417</b></div></div>
-  <div class="it"><span>Plum tomatoes, 2.5 kg</span><span class="f" data-k="qty">12 cases</span><b>£186.00</b><span class="hw">+2</span></div>
-  <div class="it"><span>Olive oil, 5 L</span><span>6 tins</span><b>£214.20</b></div>
-  <div class="it"><span>Flour, 16 kg</span><span>10 sacks</span><b>£142.50</b></div>
-  <div class="tot"><div>Net<b>£542.70</b></div><div>VAT<b>£0.00</b></div><div class="g">Total<b class="f" data-k="tot">£542.70</b></div></div>`
-const REC = [['sup', 'Supplier', 'Harbour Foods Ltd', ''], ['no', 'Invoice', 'INV-2291', 'm'], ['date', 'Date', '3 Oct 2026', ''], ['po', 'Order', 'PO-0417', 'm'], ['tot', 'Total', '£542.70', 'm'], ['qty', 'Quantity', '14 cases', '']]
-function buildRead(s) {
-  widen(s); paper(s)
-  const t0 = s.t0, t1 = s.t1
-  const inv = h('div', 'd-inv', s.cam, INV)
-  const rec = h('div', 'd-rec', s.cam, `
-    <div class="hd"><span class="av"><svg width="20" height="20" viewBox="-10 -10 20 20"><path d="M0 -10 C1 -2.5 2.5 -1 10 0 C2.5 1 1 2.5 0 10 C-1 2.5 -2.5 1 -10 0 C-2.5 -1 -1 -2.5 0 -10 Z" fill="#E9AC57"/></svg></span>
-      <div><div class="t">Document AI</div><div class="s">Supplier invoices</div></div><span class="st d-tag read">READING</span></div>
-    ${REC.map(([k, l, v, m]) => `<div class="row" data-k="${k}"><span class="k">${l}</span><span class="v ${m}"><span class="sk"></span><span class="val" style="opacity:0">${v}</span></span><span class="ck">${CHECK}</span></div>`).join('')}
-    <div class="flag"><span class="q">Handwritten: +2 cases</span><span class="n">Not sure. Is it 14?</span><span class="btn">Approve</span></div>`)
-  const st = rec.querySelector('.st'), flag = rec.querySelector('.flag'), btn = flag.querySelector('.btn'), fq = flag.querySelector('.q'), fn = flag.querySelector('.n')
-  const rows = REC.map(([k]) => { const r = rec.querySelector(`[data-k="${k}"]`); return { k, r, sk: r.querySelector('.sk'), val: r.querySelector('.val'), ck: r.querySelector('.ck') } })
-  const fields = REC.map(([k]) => inv.querySelector(`.f[data-k="${k}"]`))
-  const hls = fields.map(() => h('div', 'd-hl', inv)); hls.forEach(e => inv.insertBefore(e, inv.firstChild))
-  const scan = h('div', 'd-scan', inv)
-  const flys = REC.map(([, , v]) => h('div', 'd-fly', s.cam, v))
-  const qtyRow = rows[5]
-  const cur = cursor(s.cam)
-  // side by side, except in the tallest frame, where the record sits under the invoice
-  const IX = M({ land: -400, sq: -232, tall: -222, port: 0 }), IY = M({ land: 0, sq: 0, tall: 0, port: -410 }), RX = M({ land: 380, sq: 228, tall: 218, port: 0 }), RY = M({ land: 0, sq: 0, tall: 0, port: 440 })
-  const IK = M({ land: 1.18, sq: .74, tall: .7, port: 1 }), RK = M({ land: 1.18, sq: .78, tall: .74, port: 1.06 })
-  const tScan0 = bt(7.5), tScan1 = bt(9), tFly = bt(9.1), tMatch = bt(11), tFlag = bt(10.6), tClick = bt(12)
-  cue('swish', t0 + .02, { v: .3 })
-  cue('scan', tScan0, { d: tScan1 - tScan0 })
-  cue('whoosh', tFly - .05, { d: .5, v: .25 })
-  REC.forEach((_, i) => cue('blip', tFly + i * B / 4 + .3, { v: .35 }))
-  cue('confirm', tMatch, { n: 2, deg: 3, v: .45 })
-  cue('tick', tFlag, { v: .4 })
-  cue('click', tClick)
-  drop(tClick + .06, 5, { wet: .3, v: .5 })
-  let L = null
-  function layout() {
-    const iw = inv.offsetWidth, ih = inv.offsetHeight
-    L = {
-      ih, hl: fields.map(f => { const o = offs(f, inv); return [o.x - 6, o.y - 3, o.w + 12, o.h + 6] }),
-      from: fields.map(f => at(f, inv, IX, IY, IK)),
-      to: rows.map(r => at(r.val, rec, RX, RY, RK)),
-      btn: at(btn, rec, RX, RY, RK),
-    }
-    L.hl.forEach((b, i) => Object.assign(hls[i].style, { left: b[0] + 'px', top: b[1] + 'px', width: b[2] + 'px', height: b[3] + 'px' }))
-    L.camA = [IX * .9, IY * .9]
-  }
-  return t => {
-    if (!L) layout()
-    // the invoice opens out of the pill; the record slides in beside it
-    const op = P(t, t0, t0 + .42, E.out)
-    put(inv, { x: IX * lerp(.0, 1, op), y: IY * lerp(.0, 1, op), s: IK * lerp(.35, 1, op), o: Math.min(1, op * 2.5), blur: (1 - op) * 6 })
-    blurIn(rec, t, t0 + .22, { x: RX, y: RY, s: RK, dur: .4, s0: .96, blur: 14, dx: RX ? 60 : 0, dy: RX ? 0 : 60 })
-    // the line of light reads down the page; each field lights as it passes
-    const sp = P(t, tScan0, tScan1, E.io)
-    scan.style.top = (lerp(-90, L.ih, sp)).toFixed(1) + 'px'; scan.style.opacity = (P(t, tScan0, tScan0 + .08) * (1 - P(t, tScan1 - .1, tScan1))).toFixed(3)
-    L.hl.forEach((b, i) => {
-      const ta = tScan0 + (b[1] + b[3]) / (L.ih + 90) * (tScan1 - tScan0)
-      const a = P(t, ta, ta + .12, E.out) * (1 - .55 * P(t, tFly + i * B / 4 + .3, tFly + i * B / 4 + .6))
-      hls[i].style.opacity = a.toFixed(3); hls[i].style.transform = `scale(${lerp(.85, 1, P(t, ta, ta + .15, E.back)).toFixed(3)})`
-    })
-    // the values fly across into the record, one a sixteenth
-    REC.forEach((_, i) => {
-      const a = tFly + i * B / 4, u = P(t, a, a + .32, E.io)
-      const f = L.from[i], g = L.to[i]
-      put(flys[i], { x: lerp(f[0], g[0], u), y: lerp(f[1], g[1], u) - 50 * Math.sin(Math.PI * u), s: lerp(IK, RK, u) * (1 + .12 * Math.sin(Math.PI * u)), o: t >= a && u < 1 ? 1 : 0 })
-      const done = t >= a + .32
-      rows[i].sk.style.display = done ? 'none' : ''; rows[i].val.style.opacity = done ? 1 : 0
-      const c = P(t, a + .32, a + .5, E.back); rows[i].ck.style.transform = `scale(${c.toFixed(3)})`; rows[i].ck.style.opacity = c > 0 ? 1 : 0
-      if (i === 5) rows[i].ck.style.background = t >= tClick + .04 ? '' : '#F8E3BD', rows[i].ck.style.color = t >= tClick + .04 ? '' : '#8A5A12'
-    })
-    // matched to the order
-    const mt = t >= tMatch
-    st.className = 'st d-tag ' + (mt ? 'ok' : 'read'); st.innerHTML = mt ? `${CHECK} MATCHED TO PO-0417` : 'READING'
-    st.style.transform = `scale(${(1 + .12 * bell(t, tMatch, tMatch + .05, tMatch + .35)).toFixed(3)})`
-    // the line it is unsure of, flagged; a person approves it
-    const fl = P(t, tFlag, tFlag + .3, E.out)
-    flag.style.opacity = fl.toFixed(3); flag.style.transform = `translateY(${((1 - fl) * 14).toFixed(1)}px)`
-    const ok = t >= tClick + .04
-    flag.style.background = ok ? '#DCEBD8' : ''
-    fq.textContent = ok ? 'Approved: 14 cases' : 'Handwritten: +2 cases'; fq.style.color = ok ? '#3F7A45' : ''
-    fn.textContent = ok ? 'Checked by you, filed with the invoice' : 'Not sure. Is it 14?'
-    btn.style.opacity = ok ? 0 : 1
-    btn.style.transform = `scale(${(1 - .08 * bell(t, tClick - .03, tClick, tClick + .15)).toFixed(3)})`
-    qtyRow.r.style.background = ok ? '' : (t > tFly + 5 * B / 4 + .3 ? 'rgba(248,227,189,.35)' : '')
-    // the cursor comes up to Approve and clicks it on the beat
-    const cm = P(t, bt(11.1), tClick - .04, E.io)
-    const st0 = [L.btn[0] + 260, L.btn[1] + 240]
-    aim(cur, lerp(st0[0], L.btn[0] + 10, cm), lerp(st0[1], L.btn[1] + 8, cm), P(t, bt(11.1), bt(11.1) + .15) * (1 - P(t, tClick + .35, tClick + .55)), bell(t, tClick - .03, tClick, tClick + .14))
-    // the camera: close on the invoice, across to both, in on the record, then back for the drop
-    const cam = path([
-      [t0, L.camA[0], L.camA[1], 120, 0, 0, 0, 1],
-      [bt(9), L.camA[0] * .5, L.camA[1] * .5, 70, 0, 2, 0, 1],
-      [bt(10.5), RX * .25, RY * .25, 40, 0, -1, 0, 1],
-      [tClick, RX * .5, RY * .5, 110, 0, -2, 0, 1],
-      [t1, RX * .35, RY * .35, 40, 0, 0, 0, 1],
-    ])
-    const mb = shoot(s, cam, t)
-    lens(s, { mbX: mb.mbX, mbY: mb.mbY })
-  }
-}
-
-/* ============================================================
-   TABLE: on the drop, pulled back: the record is row one of the paperwork,
-   and the rest read and file in on the sixteenths
-   ============================================================ */
-const ROWS = [
-  ['INV-2291', 'invoice', 'Harbour Foods Ltd', '£542.70', 'ok', 'Matched', 'Accounts / Purchases'],
-  ['Delivery note', 'doc', 'Harbour Foods Ltd', '14 cases', 'ok', 'Matched', 'Stock / Deliveries'],
-  ['INV-0318', 'invoice', 'Clearway Logistics', '£2,310.00', 'chk', 'Check', 'Accounts / Purchases'],
-  ['New starter form', 'notes', 'People', '—', 'ok', 'Filed', 'HR / Starters'],
-  ['INV-7742', 'invoice', 'Mill Lane Bakery', '£412.80', 'ok', 'Matched', 'Accounts / Purchases'],
-  ['Delivery note', 'doc', 'Northgate Supplies', '9 items', 'ok', 'Matched', 'Stock / Deliveries'],
-  ['Supplier form', 'notes', 'Clearway Logistics', '—', 'ok', 'Filed', 'Suppliers'],
-  ['INV-1190', 'invoice', 'Parkside Print', '£96.00', 'ok', 'Matched', 'Accounts / Purchases'],
-  ['Delivery note', 'doc', 'Mill Lane Bakery', '6 trays', 'ok', 'Matched', 'Stock / Deliveries'],
-]
-const N0 = 1204
-const fmtN = n => n.toLocaleString('en-GB')
-function buildTable(s) {
-  widen(s); paper(s)
-  const t0 = s.t0, t1 = s.t1
-  const TW = M({ land: 1640, sq: 990, tall: 990, port: 970 })
-  const COLS = LAND ? '2fr 1.7fr 1fr 1.1fr 1.5fr' : '1.9fr 1.1fr 1.05fr'
-  const tbl = h('div', 'd-tbl', s.cam, `
-    <div class="hd"><span class="t">Paperwork</span><span class="cnt"><b>${fmtN(N0)}</b> read this month</span></div>
-    <div class="tabs"><span class="on">All</span><span>Invoices</span><span>Delivery notes</span><span>Forms</span></div>
-    <div class="th" style="grid-template-columns:${COLS}"><span>Document</span>${LAND ? '<span>From</span>' : ''}<span>Amount</span><span>Status</span>${LAND ? '<span>Filed to</span>' : ''}</div>
-    ${ROWS.map(([d, ic, f, a, k, sl, to]) => `<div class="tr" style="grid-template-columns:${COLS}"><span class="doc"><span class="ic">${icon(ic)}</span>${d}</span>${LAND ? `<span class="g fr">${f}</span>` : ''}
-      <span class="m am">${a}</span><span class="stc"><span class="d-tag ${k}">${k === 'ok' ? CHECK : ''}${sl}</span></span>${LAND ? `<span class="g to">${to}</span>` : ''}
-      <span class="rd" style="position:absolute;right:0"><i></i>Reading…</span></div>`).join('')}`)
-  tbl.style.width = TW + 'px'
-  const trs = [...tbl.querySelectorAll('.tr')], cnt = tbl.querySelector('.cnt b'), cntEl = tbl.querySelector('.cnt')
-  const parts = trs.map(r => ({ r, vals: [...r.querySelectorAll('.fr, .am, .stc, .to')], rd: r.querySelector('.rd'), tag: r.querySelector('.d-tag') }))
-  const tRow = i => i === 0 ? t0 - 1 : t0 + .06 + i * B / 4, tVal = i => i === 0 ? t0 - 1 : tRow(i) + B * .75
-  cue('whoosh', t0 + .02, { d: .5, v: .6 })
-  ROWS.forEach((_, i) => { if (i) { cue('tick', tRow(i), { v: .3 }); cue('pop', tVal(i), { v: .25 }) } })
-  cue('whoosh', t1 - .08, { d: .45, v: .4 })
-  let L = null
-  return t => {
-    if (!L) L = { r0: at(trs[0], tbl, 0, 0), cnt: at(cntEl, tbl, 0, 0), h: tbl.offsetHeight }
-    put(tbl, { o: 1 })
-    let filed = 0
-    parts.forEach((p, i) => {
-      const a = P(t, tRow(i), tRow(i) + .2, E.out), v = P(t, tVal(i), tVal(i) + .2, E.out)
-      p.r.style.opacity = a.toFixed(3); p.r.style.transform = `translateY(${((1 - a) * 14).toFixed(1)}px)`
-      p.vals.forEach(e => { e.style.opacity = v.toFixed(3) })
-      p.rd.style.opacity = (a * (1 - v)).toFixed(3)
-      p.tag.style.transform = `scale(${P(t, tVal(i), tVal(i) + .25, E.back).toFixed(3)})`
-      p.r.style.background = i === 0 ? `rgba(248,227,189,${(.5 * (1 - P(t, t0 + .3, t0 + 1))).toFixed(3)})` : ''
-      if (t >= tVal(i)) filed++
-    })
-    cnt.textContent = fmtN(N0 + filed - 1)
-    // the camera: slammed back from row one, then down the page and into the counter
-    const cam = path([
-      [t0, L.r0[0] * .6, L.r0[1], 0, 0, 0, 0, 2.3],
-      [t0 + .55, 0, -L.h * .06, 0, 4, 0, 0, M({ land: 1.12, def: 1.04 })],
-      [bt(16), 0, L.h * .08, 0, 6, 0, 0, M({ land: 1.16, def: 1.08 })],
-      [t1, L.cnt[0], L.cnt[1], 0, 0, 0, 0, 2.6],
-    ])
-    const mb = shoot(s, cam, t)
-    lens(s, { mbX: mb.mbX, mbY: mb.mbY, blur: 6 * P(t, t1 - .12, t1, E.in2) })
-  }
-}
-
-/* ============================================================
-   COUNT: into the counter: the documents read, files floating past
-   ============================================================ */
-function buildCount(s) {
-  widen(s); paper(s, true)
-  const t0 = s.t0, t1 = s.t1
-  const big = h('div', 'd-big', s.cam, fmtN(N0)); big.style.fontSize = M({ land: 300, def: 230 }) + 'px'
-  const cap = h('div', 'd-cap', s.cam, 'documents read and filed')
-  const KINDS = [['PDF', 'doc'], ['JPG', 'notes'], ['XLSX', 'chart'], ['DOCX', 'doc'], ['EML', 'inbox'], ['PNG', 'notes'], ['PDF', 'invoice'], ['CSV', 'chart']]
-  const r = (n => () => (n = (n * 1664525 + 1013904223) >>> 0) / 4294967296)(42)
-  const SPREAD = M({ land: [860, 430], sq: [470, 470], tall: [470, 560], port: [450, 760] })
-  const tiles = Array.from({ length: 18 }, (_, i) => {
-    const [k, ic] = KINDS[i % KINDS.length]
-    const e = h('div', 'd-tile' + (i % 6 === 2 ? ' a' : ''), s.cam, `${icon(ic)}<b>${k}</b>`)
-    let x = (r() * 2 - 1) * SPREAD[0], y = (r() * 2 - 1) * SPREAD[1]
-    if (Math.abs(x) < 360 && Math.abs(y) < 170) x += Math.sign(x || 1) * 380
-    return { e, x, y, z: -650 + r() * 900, rot: (r() - .5) * 24, ph: r() * 6, sp: .4 + r() * .6 }
-  })
-  const toast = h('div', 'd-toast', s.cam, `<span class="d-spin"></span><div><div>64 new documents</div><div class="s">Reading and filing</div></div>`)
-  const tSpin = toast.querySelector('.d-spin')
-  const tc0 = bt(17.25), tc1 = bt(20.5)
-  cue('type', tc0, { d: tc1 - tc0, v: .28 })
-  cue('confirm', tc1, { n: 2, deg: 3, v: .4 })
-  cue('whoosh', t1 - .1, { d: .5, v: .45 })
-  return t => {
-    const n = Math.round(lerp(N0, N0 + 64, P(t, tc0, tc1, E.out)))
-    big.textContent = fmtN(n)
-    const bi = P(t, t0, t0 + .5, E.out)
-    put(big, { y: -40, s: lerp(1.35, 1, bi) * (1 + .03 * bell(t, tc1, tc1 + .05, tc1 + .4)), blur: (1 - bi) * 30, o: Math.min(1, bi * 2) })
-    blurIn(cap, t, bt(17.6), { y: M({ land: 140, def: 110 }), dur: .4, s0: 1, blur: 12, dy: 16 })
-    tiles.forEach(d => {
-      const zz = d.z + (t - t0) * 60 * d.sp
-      put(d.e, { x: d.x + Math.sin(t * .7 + d.ph) * 18, y: d.y - (t - t0) * 30 * d.sp, z: zz, r: d.rot + Math.sin(t + d.ph) * 4, o: P(t, t0 + .1, t0 + .5), blur: Math.min(14, Math.abs(zz) / 45) })
-    })
-    blurIn(toast, t, bt(18), { x: M({ land: -560, def: -150 }), y: M({ land: 330, sq: 380, tall: 470, port: 640 }), dur: .35, s0: .94, blur: 10, dy: 16 })
-    tSpin.style.transform = `rotate(${(t * 420).toFixed(1)}deg)`
-    const cam = path([[t0, 0, 0, 60, 0, 0, 0, 1], [bt(21.25), 0, 0, 160, 2, -2, 0, 1], [t1, 0, -40, 900, 0, 0, 0, 1]])
-    const mb = shoot(s, cam, t)
-    lens(s, { mbX: mb.mbX, mbY: mb.mbY, blur: 10 * P(t, t1 - .15, t1, E.in2) })
-  }
-}
-
-/* ============================================================
-   BRAND: the n. drawn a stroke a beat, over four backdrops cut on the beat
-   ============================================================ */
-const WMW = M({ land: 680, def: 600 })                     // the whole name's width at the end; the n. here is the same size
-const MK = WMW / 273                                       // px to a unit of the wordmark
-const BIG = M({ land: 1.7, def: 1.6 })                     // the n. in the brand shots, against its size in the name
-function buildBrand(s) {
+function buildType(s) {
   widen(s)
   const t0 = s.t0, t1 = s.t1
-  const bds = [0, 1, 2, 3].map(i => h('div', 'd-bd' + (i === 2 ? ' amb' : i === 3 ? ' dark' : ''), s.root))
-  bds.forEach(e => s.root.insertBefore(e, s.rig))
-  // the first two are the reel's own paper, close and soft: the invoice, the table
-  bds[0].innerHTML = `<div class="d-paper layer"></div><div class="d-inv" style="transform:translate(-50%,-50%) rotate(-7deg) scale(2.4);filter:blur(5px)">${INV}</div><div class="tint" style="background:rgba(233,172,87,.22)"></div>`
-  bds[1].innerHTML = `<div class="d-paper layer grey"></div><div class="d-tbl" style="width:1500px;transform:translate(-50%,-50%) rotate(5deg) scale(2.2);filter:blur(6px)"><div class="hd"><span class="t">Paperwork</span></div>${ROWS.slice(0, 5).map(([d, , f, a]) => `<div class="tr" style="grid-template-columns:2fr 1.7fr 1fr"><span class="doc">${d}</span><span class="g">${f}</span><span class="m">${a}</span></div>`).join('')}</div><div class="tint" style="background:rgba(23,19,15,.18)"></div>`
-  const mark = h('div', 'd-mark', s.cam, `<svg width="${104 * MK * BIG}" height="${100 * MK * BIG}" viewBox="0 0 104 100">
-    <g fill="none" stroke-width="13" stroke-linecap="butt">
-      <path class="p" d="M24.5 82 L24.5 48" pathLength="1"/><path class="p" d="M24.5 48 A20 20 0 0 1 64.5 48" pathLength="1"/><path class="p" d="M64.5 48 L64.5 82" pathLength="1"/>
-    </g><rect class="dot" x="78" y="69" width="13" height="13" fill="#E9AC57"/></svg>`)
-  const ps = [...mark.querySelectorAll('.p')], dot = mark.querySelector('.dot'), svg = mark.firstChild
-  const cuts = [0, 1, 2, 3].map(i => bt(22 + i))
-  cuts.forEach((c, i) => { cue('whoosh', c + .02, { d: .3, v: .35 }); if (i < 3) drop(c + .02, 1 + 2 * i, { wet: .35, v: .45 }) })
-  cue('pop', cuts[3] + .02, { v: .5 }); drop(cuts[3] + .04, 5, { n: 2, step: 3, gap: .06, wet: .2, v: .55 })
-  const yM = M({ land: -50, def: -60 })
+  const KEYS = [t0 + .12, t0 + .36, t0 + .6, t0 + .84], TXT = ['H', 'Ha', 'Har', 'Harb']
+  const form = h('div', 'd-form', s.cam, `<div class="hd"><span>INVOICE <b>1</b> OF 500</span><span>BY HAND</span></div>
+    <div class="lb">Supplier name</div><div class="in"><span class="tx"></span><span class="caret"></span></div>
+    <div class="gh"><div></div><div></div></div>`)
+  const tx = form.querySelector('.tx'), caret = form.querySelector('.caret')
+  const capA = cap(s.cam, `<span class="w">Typed in.</span> <span class="w">By hand${STOP}</span>`)
+  const [wa, wb] = capA.querySelectorAll('.w')
+  KEYS.forEach(k => cue('key', k, { v: 2.4 }))
   return t => {
-    const k = Math.min(3, Math.max(0, Math.floor((t - cuts[0]) / B + 1e-6)))
-    bds.forEach((e, i) => { e.style.display = i === k ? 'block' : 'none' })
-    const ck = P(t, cuts[k], cuts[k] + .45, E.out)
-    bds[k].style.transform = `scale(${lerp(1.1, 1, ck).toFixed(4)})`
-    bds[k].style.filter = ck < .99 ? `blur(${((1 - ck) * 8).toFixed(1)}px)` : 'none'
-    const col = k === 3 ? '#F0E7D8' : '#FFFDF9'
-    ps.forEach((p, i) => {
-      const d = P(t, cuts[i], cuts[i] + .3, E.out)
-      p.style.stroke = col
-      p.style.strokeDasharray = d < 1 ? '1 2' : ''; p.style.strokeDashoffset = d < 1 ? (1 - d).toFixed(4) : ''
-      p.style.opacity = d > 0 ? 1 : 0
-    })
-    const dp = P(t, cuts[3], cuts[3] + .35, E.back)
-    dot.style.transformOrigin = '84.5px 75.5px'; dot.style.transform = `scale(${dp.toFixed(3)})`; dot.style.opacity = dp > 0 ? 1 : 0
-    svg.style.filter = k < 3 ? 'drop-shadow(0 8px 24px rgba(23,19,15,.35))' : 'drop-shadow(0 0 30px rgba(233,172,87,.25))'
-    const pulse = bell(t, cuts[k], cuts[k] + .05, cuts[k] + .35)
-    put(mark, { x: (52 - 54.5) * MK * BIG, y: yM + (50 - 51.75) * MK * BIG, s: 1 + .04 * pulse })
-    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1], [t1, 0, 0, 40, 0, 0, 0, 1]]), t)
+    let n = 0; KEYS.forEach(k => { if (t >= k) n++ })
+    tx.textContent = n ? TXT[n - 1] : ''
+    const since = n ? t - KEYS[n - 1] : t - t0
+    caret.style.opacity = since < .12 || (since % .5) < .28 ? 1 : 0
+    put(form, { y: MIDY + 10, s: M({ land: 1.06, def: 1 }) })
+    put(capA, { y: CAPY })
+    rise(wa, t, t0 + .01, { dur: .22, dy: 26, blur: 12 })
+    rise(wb, t, KEYS[2] - .02, { dur: .22, dy: 26, blur: 12 })
+    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1], [t1, 0, 30, 0, 0, 0, 0, 1.07]]), t)
     lens(s, {})
   }
 }
 
 /* ============================================================
-   END: on paper, the n. becomes the name; Document AI; the line; the address
+   WEEK: the calendar flips on the plucks; a whole week, gone
+   ============================================================ */
+function buildWeek(s) {
+  widen(s)
+  const t0 = s.t0
+  const DAYS = ['Tue', 'Wed', 'Thu', 'Fri'], FLIP = [bt(8), bt(8.5), bt(9)], DONE = [6, 11, 15, 19]
+  const cal = h('div', 'd-cal', s.cam)
+  const pages = DAYS.map((d, i) => { const p = h('div', 'pg', cal, `<div class="bar">THIS WEEK<i></i></div><div class="dn">${d}</div>`); p.style.zIndex = 10 - i; return p })
+  const prog = h('div', 'd-prog', s.cam, '<div class="tx"><span>Typed in</span><span><b>6</b> of 500</span></div><div class="tr"><i></i></div>')
+  const pn = prog.querySelector('b'), bar = prog.querySelector('.tr i')
+  const capA = cap(s.cam, `<span class="w">A whole week,</span> <span class="w">gone${STOP}</span>`, M({ land: 132, def: 104 }))
+  const [wa, wb] = capA.querySelectorAll('.w')
+  const CY = M({ land: -40, sq: -60, tall: -70, port: -90 }), CK = M({ land: .92, sq: .9, tall: 1, port: 1.12 })
+  const PY = CY + 260 * CK + 60, PY2 = M({ land: 150, def: 170 })
+  FLIP.forEach(f => cue('flip', f - .02, { v: .7 }))
+  cue('whoosh', bt(10), { d: .4, v: .35 })
+  return t => {
+    // each page tears up and away on its pluck
+    pages.forEach((p, i) => {
+      const f = i < FLIP.length ? P(t, FLIP[i] - .1, FLIP[i] + .06, E.in2) : 0
+      p.style.transform = `rotateX(${(f * 110).toFixed(1)}deg) translateY(${(-f * 40).toFixed(1)}px)`
+      p.style.opacity = f < .95 ? 1 : 0
+    })
+    let k = 0; FLIP.forEach(f => { if (t >= f - .02) k++ })
+    pn.textContent = DONE[k]; bar.style.width = (DONE[k] / 500 * 100).toFixed(2) + '%'
+    const kb = k ? bell(t, FLIP[k - 1] - .02, FLIP[k - 1] + .02, FLIP[k - 1] + .22) : 0
+    // on the swell the calendar drops away, and the line takes its place
+    const gone = P(t, bt(10) - .08, bt(10) + .3, E.in2)
+    put(cal, { y: CY + gone * 700, s: CK * (1 + .03 * kb), r: gone * 8, o: (1 - P(t, bt(10) + .1, bt(10) + .3)), blur: gone * 6 })
+    const pm = P(t, bt(10), bt(10) + .35, E.out)
+    put(prog, { y: lerp(PY, PY2, pm), s: CK, o: P(t, t0, t0 + .15) })
+    pn.style.color = kb > .05 ? '#F2C57E' : ''
+    put(capA, { y: M({ land: -50, def: -60 }), s: 1 + .03 * P(t, bt(12) - .02, s.t1, E.out) })
+    rise(wa, t, bt(10) - .02, { dur: .26, dy: 40, blur: 16 })
+    rise(wb, t, bt(11) - .02, { dur: .26, dy: 40, blur: 16, s0: 1.2 })
+    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1.02], [bt(10), 0, 0, 0, 0, 0, 0, 1], [s.t1, 0, 0, 0, 0, 0, 0, 1.05]]), t)
+    lens(s, {})
+  }
+}
+
+/* ============================================================
+   FLASH: the three build hits, n.abl Document AI on each
+   ============================================================ */
+function lockup(parent, ink) {
+  const e = h('div', 'd-lock', parent, `${WORDMARK()}<div class="ai">DOCUMENT AI</div>`)
+  const svg = e.querySelector('svg'); svg.setAttribute('width', M({ land: 760, def: 640 })); svg.setAttribute('height', M({ land: 760, def: 640 }) * 100 / 273)
+  svg.querySelector('g').setAttribute('stroke', ink ? '#14110E' : '#FBF6EC')
+  svg.querySelector('[data-k="dot"]').setAttribute('fill', ink ? '#B87718' : '#E9AC57')
+  e.querySelector('.ai').style.color = ink ? '#14110E' : '#F2C57E'
+  if (!ink) svg.style.filter = 'drop-shadow(0 0 40px rgba(233,172,87,.35))'
+  return e
+}
+function buildFlash(s) {
+  widen(s)
+  const HITS = [s.t0, bt(13) - .01, bt(13.5) - .01], SC = [1, 1.28, 1.62]
+  const flood = h('div', 'd-flood', s.root); s.root.insertBefore(flood, s.rig)
+  const ink = lockup(s.cam, true), cr = lockup(s.cam, false)
+  return t => {
+    let k = 0; HITS.forEach((a, i) => { if (t >= a) k = i })
+    const dt = t - HITS[k], f = Math.exp(-dt / .075), l = Math.exp(-dt / .13)
+    const light = k !== 1
+    vis(flood, light ? f : 0)
+    put(ink, { s: SC[k] * (1 + .05 * dt / .27), o: light ? l : 0, blur: dt > .12 ? (dt - .12) * 30 : 0 })
+    put(cr, { s: SC[k] * (1 + .05 * dt / .27), o: light ? 0 : l, blur: dt > .12 ? (dt - .12) * 30 : 0 })
+    shoot(s, path([[s.t0, 0, 0, 0, 0, 0, 0, 1], [s.t1, 0, 0, 0, 0, 0, 0, 1]]), t)
+    lens(s, {})
+  }
+}
+
+/* ============================================================
+   FIX: the drop. Monday, 9am again: the pile goes in; read, checked,
+   filed; done by 9:02
+   ============================================================ */
+const INV = `
+  <div class="top"><div class="f" data-k="sup"><span class="hl"></span><span class="sup">Harbour Foods Ltd</span></div><div class="kind">INVOICE</div></div>
+  <div class="meta"><div><span class="k">Invoice</span><div class="f" data-k="no"><span class="hl"></span><b>INV-2291</b></div></div><div><span class="k">Order</span><b>PO-0417</b></div></div>
+  <div class="it"><span>Plum tomatoes, 2.5 kg</span><b>£186.00</b></div>
+  <div class="it"><span>Olive oil, 5 L</span><b>£214.20</b></div>
+  <div class="it"><span>Flour, 16 kg</span><b>£142.50</b></div>
+  <div class="tot">Total<div class="f" data-k="tot"><span class="hl"></span><b>£542.70</b></div></div>`
+const FOLDER = '<svg viewBox="0 0 64 52"><path d="M2 8a6 6 0 016-6h14l6 7h28a6 6 0 016 6v29a6 6 0 01-6 6H8a6 6 0 01-6-6z" fill="rgba(233,172,87,.16)" stroke="#E9AC57" stroke-width="2.5"/></svg>'
+const FOLDERS = [['Accounts', 312], ['Deliveries', 141], ['People', 47]]
+function buildFix(s) {
+  widen(s)
+  const t0 = s.t0, t1 = s.t1
+  const r = rng(23)
+  const flood = h('div', 'd-flood', s.root); s.root.insertBefore(flood, s.rig)
+  // the pile, from the first shot, goes into Document AI on the drop
+  const pile = HEAP.slice(N - 30).map((p, j) => ({ e: sheet(s.cam, N - 30 + j), p, d: .012 * j + r() * .05 }))
+  const pill = h('div', 'd-pill', s.cam, '<span class="sq"></span><span>Reading <span class="n">500</span> documents</span><span class="sp"></span>')
+  const spin = pill.querySelector('.sp')
+  const inv = h('div', 'd-inv', s.cam, INV)
+  const hls = ['sup', 'no', 'tot'].map(k => inv.querySelector(`.f[data-k="${k}"] .hl`))
+  const stamp = h('div', 'd-stampx', inv, `<span class="ck">${CHECK(26)}</span>Matched to order`)
+  stamp.style.fontSize = '28px'
+  const fl = FOLDERS.map(([nm]) => h('div', 'd-folder', s.cam, `<div class="ic">${FOLDER}</div><div class="nm">${nm}</div><div class="ct"><span class="n">0</span><span class="ok">${CHECK(20)}</span></div>`))
+  const fn = fl.map(e => e.querySelector('.n')), fok = fl.map(e => e.querySelector('.ok'))
+  const FK = M({ land: 1, sq: .82, tall: .84, port: 1.04 })
+  const FP = M({ land: [[-420, 0], [0, 0], [420, 0]], sq: [[-330, 0], [0, 0], [330, 0]], tall: [[-330, 0], [0, 0], [330, 0]], port: [[0, -290], [0, 0], [0, 290]] }).map(([x, y]) => [x, MIDY + y + M({ land: 20, def: 30 })])
+  const minis = Array.from({ length: 18 }, (_, j) => ({ e: h('div', 'd-mini', s.cam), f: j % 3, a: bt(17.25) + j * B / 8, x0: (r() < .5 ? -1 : 1) * (W / 2 + 80), y0: (r() - .5) * H * .8, rot: (r() - .5) * 60 }))
+  const row = h('div', 'd-row', s.cam), clk = clock(row)
+  const capM = cap(s.cam, `Monday, 9am${STOP}`)
+  const capR = cap(s.cam, '<span class="w">Read.</span> <span class="w">Checked.</span> <span class="w">Filed.</span>')
+  const ws = capR.querySelectorAll('.w')
+  const capD = cap(s.cam, `Done by 9:02${STOP}`)
+  const IK = M({ land: 1, sq: .9, tall: .96, port: 1.16 })
+  const tIn = bt(15), tHl = [bt(15.25), bt(15.5), bt(15.75)], tStamp = bt(16), tFile = bt(17), tDone = bt(19)
+  cue('whoosh', t0 + .3, { d: .55, v: .55 })
+  cue('pop', t0 + .42, { v: .5 })
+  cue('pop', tIn, { v: .45 })
+  tHl.forEach(a => cue('blip', a, { v: .55 }))
+  cue('stamp', tStamp, { v: 1 })
+  cue('swish', tFile + .05, { v: .4 })
+  minis.forEach((m, j) => { if (j % 2 === 0) cue('tick', m.a + .32, { v: .28 }) })
+  cue('confirm', tDone, { n: 2, deg: 3, v: .6 })
+  return t => {
+    vis(flood, Math.exp(-Math.max(0, t - t0) / .09) * .9)
+    // the pile lifts and is pulled into the pill, the outermost last
+    pile.forEach(q => {
+      const u = P(t, t0 + q.d, t0 + q.d + .34, E.in2)
+      put(q.e, { x: lerp(q.p.x, 0, u), y: lerp(q.p.y, MIDY, u), r: lerp(q.p.r, 0, u), s: lerp(q.p.s, .1, u), o: 1 - P(u, .8, 1, E.lin), blur: u * 4 })
+    })
+    const pin = P(t, t0, t0 + .28, E.back), pout = P(t, tIn - .05, tIn + .08, E.in2)
+    const gulp = bell(t, t0 + .36, t0 + .42, t0 + .62)
+    put(pill, { y: MIDY, s: lerp(.6, 1, pin) * (1 + .08 * gulp) * lerp(1, 1.3, pout), o: Math.min(1, pin * 2) * (1 - pout) })
+    spin.style.transform = `rotate(${(t * 480).toFixed(1)}deg)`
+    // the invoice opens out of the pill and is read, a field a sixteenth
+    const iin = P(t, tIn - .05, tIn + .18, E.out), go = P(t, tFile, tFile + .32, E.in2)
+    put(inv, { x: lerp(0, FP[0][0], go), y: lerp(MIDY, FP[0][1], go), s: IK * lerp(.4, 1, iin) * lerp(1, .12, go), o: Math.min(1, iin * 2) * (1 - P(go, .8, 1, E.lin)), blur: (1 - iin) * 8 })
+    hls.forEach((e, i) => { const a = P(t, tHl[i] - .02, tHl[i] + .1, E.out); e.style.opacity = a.toFixed(3); e.style.transform = `scale(${lerp(.7, 1, P(t, tHl[i] - .02, tHl[i] + .16, E.back)).toFixed(3)})` })
+    // checked: the stamp slams down on the beat
+    const sm = P(t, tStamp - .09, tStamp, E.in2), sb = bell(t, tStamp, tStamp + .03, tStamp + .2)
+    put(stamp, { y: 22, r: -7, s: lerp(2.2, 1, sm) * (1 - .04 * sb), o: sm > 0 ? Math.min(1, sm * 3) : 0 })
+    // filed: the folders, and the rest of the pile into them
+    let got = [0, 0, 0]
+    minis.forEach(m => {
+      const u = P(t, m.a, m.a + .34, E.io), [fx, fy] = FP[m.f]
+      put(m.e, { x: lerp(m.x0, fx, u), y: lerp(m.y0, fy - 20, u) - 120 * Math.sin(Math.PI * u), r: lerp(m.rot, 0, u), s: lerp(1.2, .5, u), o: t >= m.a && u < 1 ? 1 : 0 })
+      if (u >= 1) got[m.f]++
+    })
+    fl.forEach((e, i) => {
+      blurIn(e, t, tFile - .04 + i * .05, { x: FP[i][0], y: FP[i][1], s: FK * (1 + .05 * bell(t, tDone + i * .05, tDone + i * .05 + .04, tDone + i * .05 + .25)), dur: .3, s0: .9, blur: 12, dy: 40 })
+      fn[i].textContent = Math.round(FOLDERS[i][1] * Math.min(1, (got[i] + (t >= tFile + .3 && i === 0 ? 1 : 0)) / 6))
+      const c = P(t, tDone + i * .05, tDone + i * .05 + .25, E.back); fok[i].style.transform = `scale(${c.toFixed(3)})`; fok[i].style.opacity = c > 0 ? 1 : 0
+    })
+    // the clock: nine o'clock, then two minutes past
+    const tk = P(t, tDone - .12, tDone + .05, E.io)
+    clk.set('MON', 540 + 2 * tk)
+    const glow = bell(t, tDone - .05, tDone + .05, tDone + .6)
+    clk.style.borderColor = glow > .01 ? `rgba(233,172,87,${(.2 + .7 * glow).toFixed(3)})` : ''
+    blurIn(row, t, t0 + .04, { y: TOPY, dur: .3, s0: 1, blur: 10, dy: -14, s: 1 + .08 * bell(t, tDone - .03, tDone + .05, tDone + .4) })
+    // the words, one a clap
+    capAt(capM, t, t0 + .03, tIn)
+    put(capR, { y: CAPY, o: 1 - P(t, tDone - .1, tDone + .02) })
+    ;[tIn, tStamp, tFile].forEach((a, i) => rise(ws[i], t, a - .03, { dur: .22, dy: 30, blur: 12 }))
+    capAt(capD, t, tDone, null)
+    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1.04], [tFile, 0, 0, 0, 0, 0, 0, 1], [tDone, 0, 0, 0, 0, 0, 0, 1], [t1, 0, 0, 0, 0, 0, 0, 1.05]]), t)
+    lens(s, {})
+  }
+}
+
+/* ============================================================
+   END: the name, drawn on the new phrase; Document AI; the line; the address
    ============================================================ */
 function buildEnd(s) {
-  widen(s); paper(s)
+  widen(s)
   const t0 = s.t0, t1 = s.t1
-  const wm = h('div', 'd-mark', s.cam, WORDMARK()); wm.firstChild.setAttribute('width', 273 * MK)
-  wm.querySelector('g').setAttribute('stroke', '#17130F')
+  const WMW = M({ land: 760, def: 640 }), MK = WMW / 273
+  const wm = h('div', 'd-mark', s.cam, WORDMARK()); wm.firstChild.setAttribute('width', WMW); wm.firstChild.setAttribute('height', 100 * MK)
+  wm.firstChild.style.filter = 'drop-shadow(0 0 40px rgba(251,246,236,.08))'
+  const n = wm.querySelector('[data-k="n"]'), dot = wm.querySelector('[data-k="dot"]')
   const abl = ['ab', 'as', 'bs', 'bb', 'l'].map(k => wm.querySelector(`[data-k="${k}"]`))
-  const eb = h('div', 'd-eyebrow', s.cam, `<svg width="20" height="20" viewBox="-10 -10 20 20"><path d="M0 -10 C1 -2.5 2.5 -1 10 0 C2.5 1 1 2.5 0 10 C-1 2.5 -2.5 1 -10 0 C-2.5 -1 -1 -2.5 0 -10 Z" fill="#E9AC57"/></svg><span>Document AI</span>`)
-  const tg = h('div', 'd-tag2', s.cam, 'Paperwork, read and filed<span class="d-stop" style="display:inline-block;width:.2em;height:.2em;margin-left:.04em"></span>')
+  const eb = h('div', 'd-eyebrow', s.cam, `${SPARK(22)}<span>Document AI</span>`)
+  const tg = h('div', 'd-tag2', s.cam, `Paperwork, read and filed${STOP}`)
   const url = h('div', 'd-url', s.cam, 'nabl.agency')
-  const yM = M({ land: -50, def: -60 })
-  const tA = t0 + .12, tS = t0 + .1
-  cue('draw', tA, { d: .5, v: .3 })
-  cue('shimmer', tA + .4, { d: 1.6, v: .3 })
-  drop(t0 + B * 1.25, 2, { wet: .5, v: .35 })
+  const yM = M({ land: -60, def: -70 })
+  const top = yM + (6 - 50) * MK, base = yM + (82 - 50) * MK
+  const tN = t0, tDot = t0 + .2, tAbl = bt(22.5), tEb = bt(23), tTg = bt(24), tUrl = bt(25)
+  cue('draw', tN, { d: .3 })
+  cue('pop', tDot, { v: .45 })
+  cue('draw', tAbl, { d: .45 })
+  cue('pop', tEb, { v: .3 })
+  cue('shimmer', tTg, { d: 1.8, v: .28 })
+  const dash = (e, d) => { e.style.opacity = d > 0 ? 1 : 0; e.style.strokeDasharray = d < 1 ? '1 2' : ''; e.style.strokeDashoffset = d < 1 ? (1 - d).toFixed(4) : '' }
   return t => {
-    // the n. where the mark was, sliding left as the rest of the name draws in
-    const sl = P(t, tS, tS + .55, E.io)
-    const ax = lerp(54.5, 136.5, sl), ay = lerp(51.75, 44, sl)
-    const k = lerp(BIG, 1, sl)
-    put(wm, { x: (136.5 - ax) * MK * k, y: yM + (50 - ay) * MK * k, s: k })
-    abl.forEach((e, i) => {
-      const d = P(t, tA + i * .07, tA + i * .07 + .4, E.out)
-      e.style.opacity = d > 0 ? 1 : 0; e.style.strokeDasharray = d < 1 ? '1 2' : ''; e.style.strokeDashoffset = d < 1 ? (1 - d).toFixed(4) : ''
-    })
-    const top = yM + (6 - 44) * MK, base = yM + (82 - 44) * MK
-    blurIn(eb, t, t0 + B * .9, { y: top - M({ land: 64, def: 60 }), dur: .35, s0: 1, blur: 10, dy: 12 })
-    blurIn(tg, t, t0 + B * 1.25, { y: base + M({ land: 96, def: 90 }), dur: .4, s0: 1, blur: 14, dy: 16 })
-    blurIn(url, t, t0 + B * 1.75, { y: base + M({ land: 178, def: 168 }), dur: .35, s0: 1, blur: 10, dy: 10 })
-    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1], [t1, 0, 0, 50, 0, 0, 0, 1]]), t)
+    dash(n, P(t, tN - .02, tN + .24, E.out))
+    abl.forEach((e, i) => dash(e, P(t, tAbl + i * .06 - .02, tAbl + i * .06 + .32, E.out)))
+    const dp = P(t, tDot - .02, tDot + .26, E.back), pulse = bell(t, bt(25), bt(25) + .04, bt(25) + .4) + bell(t, bt(27), bt(27) + .04, bt(27) + .4)
+    dot.style.transformOrigin = '84.5px 75.5px'; dot.style.transform = `scale(${(dp * (1 + .15 * pulse)).toFixed(3)})`; dot.style.opacity = dp > 0 ? 1 : 0
+    put(wm, { y: yM, s: 1 + .025 * bell(t, tN, tN + .04, tN + .3) })
+    blurIn(eb, t, tEb - .03, { y: top - M({ land: 76, def: 70 }), dur: .3, s0: 1, blur: 10, dy: 14 })
+    blurIn(tg, t, tTg - .03, { y: base + M({ land: 110, def: 100 }), dur: .34, s0: 1, blur: 14, dy: 18 })
+    blurIn(url, t, tUrl - .03, { y: base + M({ land: 192, def: 180 }), dur: .3, s0: 1, blur: 10, dy: 12 })
+    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1], [t1, 0, 0, 0, 0, 0, 0, 1.04]]), t)
     lens(s, { o: 1 - P(t, t1 - .4, t1, E.in2) })
   }
 }
 
 export default function setup() {
-  document.querySelector('.vignette').style.display = 'none'     // daylight: no vignette
-  scene(['hook'], buildHook)
-  scene(['drop'], buildDrop)
-  scene(['read'], buildRead)
-  scene(['table'], buildTable)
-  scene(['count'], buildCount)
-  scene(['brand'], buildBrand)
+  scene(['pile'], buildPile)
+  scene(['type'], buildType)
+  scene(['week'], buildWeek)
+  scene(['flash'], buildFlash)
+  scene(['fix'], buildFix)
   scene(['end'], buildEnd)
-  const ground = [[0, .5, .5, 0, .5, .5, 0, 0], [TL.duration, .5, .5, 0, .5, .5, 0, 0]]
+  const at = id => TL.scenes.find(x => x.id === id).start
+  // the ground: [t, amber x, y, o, cream x, y, o, grid]. Low and warm through the problem,
+  // nothing under the flashes, amber behind the answer and the name
+  const ground = [
+    [0, .5, .3, .35, .5, .7, .5, 0],
+    [at('type'), .5, .3, .35, .5, .7, .5, 0], [at('type') + .01, .5, .5, .12, .5, .5, .3, 0],
+    [at('week') - .01, .5, .5, .12, .5, .5, .3, 0], [at('week'), .5, .4, .3, .5, .6, .45, 0],
+    [at('flash') - .01, .5, .4, .3, .5, .6, .45, 0], [at('flash'), .5, .5, 0, .5, .5, 0, 0],
+    [at('fix') - .01, .5, .5, 0, .5, .5, 0, 0], [at('fix'), .5, .5, .55, .5, .5, .35, .3],
+    [at('end') - .01, .5, .5, .55, .5, .5, .35, .3], [at('end'), .5, .45, .7, .5, .55, .3, 0],
+    [TL.duration, .5, .45, .7, .5, .55, .3, 0],
+  ]
   return { ground, bug: ['end', 'end'] }
 }
