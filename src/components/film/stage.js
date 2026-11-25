@@ -84,7 +84,11 @@ export function blurIn(e, t, t0, { x = 0, y = 0, z = 0, dur = .32, s0 = 1.12, bl
 }
 export function count(e, t, a, b, to, fmt = v => v) { e.textContent = fmt(Math.round(to * P(t, a, b, E.out))) }
 let RIMS = 0
-export function ringPill(parent, w, hgt, html) {
+/* A pill and the rim that draws in round it. The rim is a cream hairline;
+   `rim: 'calm'` draws it in the brand's warm-to-cool gradient instead, for
+   the one pill a scene is about (brand-guidelines.md, 3.5: one featured
+   border per view). */
+export function ringPill(parent, w, hgt, html, { rim = '' } = {}) {
   const e = h('div', 'r-pill', parent, html)
   e.style.width = w + 'px'; e.style.height = hgt + 'px'
   const ns = 'http://www.w3.org/2000/svg'
@@ -92,13 +96,15 @@ export function ringPill(parent, w, hgt, html) {
   svg.setAttribute('width', w + 16); svg.setAttribute('height', hgt + 16)
   svg.style.width = (w + 16) + 'px'; svg.style.height = (hgt + 16) + 'px'
   const mk = cls => { const r = document.createElementNS(ns, 'rect'); r.setAttribute('x', 8); r.setAttribute('y', 8); r.setAttribute('width', w); r.setAttribute('height', hgt); r.setAttribute('rx', hgt / 2); r.setAttribute('pathLength', 1); if (cls) r.setAttribute('class', cls); svg.appendChild(r); return r }
-  /* the rim draws in the brand's warm-to-cool gradient, rising from the bottom left */
-  const id = `rim${++RIMS}`
-  const defs = document.createElementNS(ns, 'defs')
-  defs.innerHTML = `<linearGradient id="${id}" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#E9AC57"/><stop offset=".55" stop-color="#EFE2C6"/><stop offset="1" stop-color="#7CCBFF"/></linearGradient>`
-  svg.appendChild(defs)
   mk('base'); e._rim = mk('')
-  e._rim.style.stroke = `url(#${id})`
+  if (rim === 'calm') {
+    // amber to cream to ice, rising from the bottom left
+    const id = `rim${++RIMS}`
+    const defs = document.createElementNS(ns, 'defs')
+    defs.innerHTML = `<linearGradient id="${id}" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#E9AC57"/><stop offset=".55" stop-color="#EFE2C6"/><stop offset="1" stop-color="#7CCBFF"/></linearGradient>`
+    svg.insertBefore(defs, svg.firstChild)
+    e._rim.style.stroke = `url(#${id})`
+  }
   e.appendChild(svg)
   return e
 }
@@ -125,14 +131,12 @@ export function centreOf(e, box, bx, by) {
 }
 
 /* ---------- marks and icons ---------- */
-export const SPARK = 'M0 -10 C1 -2.5 2.5 -1 10 0 C2.5 1 1 2.5 0 10 C-1 2.5 -2.5 1 -10 0 C-2.5 -1 -1 -2.5 0 -10 Z'
 /* Every inline SVG in the film carries its size as CSS, not only as width
    and height attributes. Sized by attribute with height:auto, an SVG that
    sits in a flex row (a badge, a label, an ask bar) was drawn many times
    too large on iPhone, and stretched its pill into a circle round it. */
 export const svgSize = (w, h = w) => `width:${w}px;height:${h}px;flex:none;display:block;overflow:visible`
-export const spark = (size, fill = '#E9AC57') => `<svg width="${size}" height="${size}" viewBox="-10 -10 20 20" style="${svgSize(size)}"><path d="${SPARK}" fill="${fill}"/></svg>`
-export const CHECK = (c = '#A9DCFF', s = 16) => `<svg width="${s}" height="${s}" viewBox="0 0 16 16" style="${svgSize(s)}"><path d="M3.2 8.4l3 3 6.6-7" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+export const CHECK = (c = '#A9DCFF', s = 16) => `<svg width="${s}" height="${s}" viewBox="0 0 16 16" style="${svgSize(s)}"><path d="M3.2 8.4l3 3 6.6-7" fill="none" stroke="${c}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`
 /* the wordmark, from public/brand/wordmark.svg: same paths, same 13-unit stroke */
 export const WORDMARK = () => `<svg viewBox="0 0 273 100">
   <g fill="none" stroke="#FBF6EC" stroke-width="13" stroke-linecap="butt">
@@ -145,7 +149,7 @@ export const WORDMARK = () => `<svg viewBox="0 0 273 100">
   </g>
   <rect x="78" y="69" width="13" height="13" fill="#E9AC57"/>
 </svg>`
-/* line icons, one stroke weight */
+/* line icons, one hairline weight (brand-guidelines.md, 6: thin line icons) */
 const I = {
   cal: '<rect x="4" y="6" width="24" height="22" rx="4"/><path d="M4 13h24M11 3v6M21 3v6"/><rect x="18" y="18" width="5" height="5" rx="1" fill="currentColor" stroke="none"/>',
   alert: '<path d="M16 4l13 23H3z"/><path d="M16 12v7M16 23v.5"/>',
@@ -165,8 +169,10 @@ const I = {
   mic: '<rect x="12" y="4" width="8" height="15" rx="4"/><path d="M7 15a9 9 0 0018 0M16 24v4"/>',
   cam: '<rect x="3" y="9" width="18" height="14" rx="3"/><path d="M21 14l8-4v12l-8-4z"/>',
   link: '<path d="M13 19l6-6"/><path d="M11 14l-3 3a4 4 0 006 6l3-3M21 18l3-3a4 4 0 00-6-6l-3 3"/>',
+  /* Manjari has no arrows: one is drawn wherever the words need one */
+  arrow: '<path d="M5 16h21M19 9l7 7-7 7"/>',
 }
-export const icon = k => `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${I[k]}</svg>`
+export const icon = k => `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${I[k]}</svg>`
 
 /* The four layouts the film is composed for, by aspect ratio. */
 export const modeFor = R => (R > 1.3 ? 'land' : R > 0.95 ? 'sq' : R > 0.7 ? 'tall' : 'port')
