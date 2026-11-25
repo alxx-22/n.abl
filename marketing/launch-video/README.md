@@ -12,7 +12,7 @@ and its brief and shot list (`SCRIPT.md`). The finished films are in `out/`.
 | `reel` · AI that works | 36 s | Two AI services (the receptionist and the sales co-pilot), cut to music with no voice, in the style of a reference reel | [`films/reel/SCRIPT.md`](films/reel/SCRIPT.md) |
 | `voice` · Your AI receptionist | 13 s | The AI receptionist taking a booking, ending on a personalised demo; the AI reel's grammar and music | [`films/voice/SCRIPT.md`](films/voice/SCRIPT.md) |
 | `mark` · The full stop | 13 s | The mark revealed, no voice: light gathers into the square full stop, which fires and sets the n; the name ignites, then AI automation specialists; it all burns back into the dot | [`films/mark/SCRIPT.md`](films/mark/SCRIPT.md) |
-| `docs` · Document AI | 16 s | The problem, exaggerated, up to the build (Monday, 9am, the pile, a week gone typing); n.abl Document AI on the three build hits; on the drop, read, checked, filed, done by 9:02. In the 2026-11 brand, cut to a supplied track | [`films/docs/SCRIPT.md`](films/docs/SCRIPT.md) |
+| `docs` · Document AI | 16 s | The tedium, up to the build: one document, 47 fields to fill, One. At. A. Time., Copy. Paste. Check. Repeat.; n.abl Document AI on the three build hits; on the drop the form fills itself, sent to finance and legal, none typed. In the 2026-11 brand, cut to a supplied track | [`films/docs/SCRIPT.md`](films/docs/SCRIPT.md) |
 | `ai-long` · AI, where it earns its place | 58 s | The first, longer cut of the AI film: three jobs in depth | [`films/ai-long/SCRIPT.md`](films/ai-long/SCRIPT.md) |
 
 Every film comes in four formats:

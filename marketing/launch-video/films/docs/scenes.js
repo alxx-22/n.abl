@@ -1,34 +1,36 @@
 /* ============================================================
    THE DOCS REEL: n.abl's Document AI, in 16 seconds
 
-   Problem, then answer, and every move on a hit of the track. In the
-   2026-11 brand: Manjari, the lit ground (ground.js, the brand demo's own
-   shader), and three lights that keep their meaning: ember for the problem,
-   amber for n.abl, ice for the AI at work. Paper is the one light thing.
+   Problem, then answer, and every move on a hit of the track. The problem
+   is the tedium: one document, and the fields finance, legal and ops each
+   need from it, typed in one at a time. In the 2026-11 brand: Manjari, the
+   lit ground (ground.js, the brand demo's own shader), and three lights
+   that keep their meaning: ember for the problem, amber for n.abl, ice for
+   the AI at work.
 
-   pile   Monday, 9am. The paperwork lands on every pluck: one invoice,
-          two, three, then by the dozen, by the hundred. Ember builds
-   type   the track's silence: one supplier's name typed in by hand, a key
-          at a time. Invoice 1 of 500. The light drops low
-   week   the plucks again: the calendar flips Tuesday to Friday, the count
-          barely moves; a whole week, gone. Ember at its height
+   fields One document. 47 fields to fill: the form stacks up on the plucks,
+          finance, then legal, then ops, and scrolls on past the frame
+   type   the track's silence: a VAT number typed a key at a time, and the
+          line a word a key: One. At. A. Time.
+   loop   the plucks again: Copy. Paste. Check. Repeat., a word a pluck,
+          then the whole line again and again, field 8 of 47, 9, 10...
    flash  the three build hits: n.abl Document AI, flashed in and out, the
           light flaring with each and the glass coming in, fine reeds first
-   fix    the drop: Monday, 9am again. The pile goes into Document AI;
-          read, checked, filed, one word a clap, the reeds breathing on the
-          kicks and ice rising as it works; done by 9:02
+   fix    the drop: the same form, all of it, fills itself in one wave.
+          Every field, filled. Sent to finance and legal. 47 fields. None
+          typed. One line a clap; the reeds breathe on the kicks
    end    the aurora rises; the name, Document AI, Paperwork, read and
           filed., the address, held
    The script is films/docs/film.py; the brief is films/docs/SCRIPT.md.
    ============================================================ */
 
-import { E, M, P, TL, W, H, WORDMARK, bell, cue, h, lerp, put, rise, rng, scene, stage, vis } from '../../film/stage.js'
+import { E, M, P, TL, W, H, LAND, WORDMARK, bell, cue, h, lerp, put, rise, rng, scene, stage, vis } from '../../film/stage.js'
 import { ground as groundLayer } from '../../film/stage.js'
-import { blurIn, lens, path, shoot, widen } from '../../film/kit.js'
+import { Z0, blurIn, lens, path, shoot, widen } from '../../film/kit.js'
 import { L, dim, ground, mix, mk } from './ground.js'
 
 // Manjari, before anything is measured
-await Promise.all(['100 100px Manjari', '400 40px Manjari', '700 40px Manjari', '500 26px "JetBrains Mono"'].map(f => document.fonts.load(f)))
+await Promise.all(['100 100px Manjari', '400 40px Manjari', '700 40px Manjari'].map(f => document.fonts.load(f)))
 
 const B = TL.beat, OFF = 0.304
 const bt = k => OFF + k * B                               // the track's own beat k (its first is 0.304 s in)
@@ -36,7 +38,7 @@ const CHECK = (s = 22) => `<svg width="${s}" height="${s}" viewBox="0 0 16 16"><
 const STOP = '<span class="d-stop"></span>'
 
 /* where things sit, per frame */
-const TOPY = M({ land: -428, sq: -432, tall: -548, port: -772 })      // the clock
+const TOPY = M({ land: -428, sq: -432, tall: -548, port: -772 })      // a chip above the caption
 const CAPY = M({ land: -282, sq: -268, tall: -372, port: -552 })      // the caption
 const MIDY = M({ land: 112, sq: 118, tall: 130, port: 110 })          // what it is about
 const CAP = M({ land: 136, sq: 104, tall: 108, port: 112 }), CAPW = M({ land: 1720, def: 980 })
@@ -62,154 +64,176 @@ function capAt(e, t, a, b, { y = CAPY, x = 0, dy = 36 } = {}) {
   put(e, { x, y: y + (1 - pi) * dy - po * 24, s: lerp(.94, 1, pi) * lerp(1, 1.03, po), o: pi * (1 - po), blur: (1 - pi) * 14 + po * 14 })
   if (pi * (1 - po) > .3) shield(e)
 }
-/* the clock: a face, a day and a time; set(day, minutes after midnight) */
-function clock(parent) {
-  const e = h('div', 'd-clock d-glass', parent, '<span class="face"><i class="h"></i><i class="m"></i></span><span class="day">MON</span><span class="tm">09:00</span>')
-  const [hh, mm] = e.querySelectorAll('.face i'), day = e.querySelector('.day'), tm = e.querySelector('.tm')
-  e.set = (d, mins) => {
-    hh.style.transform = `rotate(${(mins / 720 * 360).toFixed(1)}deg)`; mm.style.transform = `rotate(${(mins / 60 * 360).toFixed(1)}deg)`
-    day.textContent = d
-    const m = Math.round(mins); tm.textContent = `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
+/* a line that arrives a word at a time, on given hits, and stays centred on what has arrived */
+function wordLine(parent, words, size) {
+  const e = cap(parent, words.map(w => `<span class="w">${w}</span>`).join(' '), size)
+  Object.assign(e.style, { maxWidth: 'none', whiteSpace: 'nowrap' })
+  const ws = [...e.querySelectorAll('.w')]
+  let WW = null
+  e.at = (t, times, { y = 0, o = 1, x = 0, s = 1 } = {}) => {
+    if (!WW) { const sp = e.offsetWidth - ws.reduce((a, w) => a + w.offsetWidth, 0); WW = ws.map(w => w.offsetWidth + sp / Math.max(1, ws.length - 1)) }
+    let hid = 0
+    times.forEach((a, i) => { rise(ws[i], t, a - .03, { dur: .2, dy: 28, blur: 12 }); hid += (1 - E.io(P(t, a - .03, a + .17, E.lin))) * WW[i] })
+    put(e, { x: x + hid / 2, y, o, s })
+    if (o > .3 && t > times[0]) shield(e)
   }
-  e.set('MON', 540)
   return e
 }
-/* a sheet of paper */
-const KINDS = ['INVOICE', 'DELIVERY NOTE', 'INVOICE', 'FORM', 'INVOICE', 'STATEMENT', 'INVOICE', 'RECEIPT']
+/* a sheet of paper: the document */
 const LW = [62, 44, 90, 84, 70, 92, 58, 80, 40, 66]
-function sheet(parent, i) {
-  const lines = LW.map((w, j) => `<i class="${j === 1 || j === 8 ? 'd' : ''}" style="width:${(w + (i * 7 + j * 13) % 17) % 100}%"></i>`).join('')
-  return h('div', 'd-sheet ' + ['', 'b', 'c'][i % 3], parent, `<div class="h">${KINDS[i % KINDS.length]}</div>${lines}`)
+function sheet(parent, label) {
+  const lines = LW.map((w, j) => `<i class="${j === 1 || j === 8 ? 'd' : ''}" style="width:${w}%"></i>`).join('')
+  return h('div', 'd-sheet', parent, `<div class="h">${label}</div>${lines}`)
 }
-/* the pile: where each sheet lands. The first three big and in the middle;
-   the rest heap up from the bottom, wider and higher as it grows, and stop
-   short of the words: copy sits on a dark field, never on the paper */
-const N = 46
-const YMIN = M({ land: 40, sq: 96, tall: -10, port: -190 })        // the highest a sheet's centre comes
-const HEAP = (() => {
-  const r = rng(11), out = []
-  const first = [[0, 150, -4, 1.24], [46, 128, 6, 1.24], [-38, 110, -9, 1.24]]
-  for (let i = 0; i < N; i++) {
-    if (i < 3) { const [x, y, rot, s] = first[i]; out.push({ x, y, r: rot, s }); continue }
-    const f = (i - 3) / (N - 4)
-    const top = H / 2 - 70 - Math.pow(f, .85) * (H / 2 - 70 - YMIN)
-    const spread = lerp(320, W / 2 + 40, Math.pow(f, .5))
-    out.push({ x: (r() * 2 - 1) * spread, y: top + r() * 150, r: (r() - .5) * 56, s: .86 + r() * .34 })
-  }
-  return out
-})()
+
+/* every field finance, legal and ops want from one supplier's paperwork (all props) */
+const FORM = [
+  ['Finance', [['Supplier', 'Harbour Foods Ltd'], ['Supplier ID', 'HF-0093'], ['Invoice number', 'INV-2291'], ['Invoice date', '03/10/2026'], ['Due date', '02/11/2026'],
+    ['PO number', 'PO-0417'], ['VAT number', 'GB 241 7735 08'], ['Currency', 'GBP'], ['Net', '£452.25'], ['VAT', '£90.45'], ['Total', '£542.70'], ['Tax code', 'T1'],
+    ['Nominal code', '5000'], ['Cost centre', 'Kitchen'], ['GL account', '5000-KIT'], ['Payment terms', '30 days'], ['Sort code', '20-45-77'], ['Account number', '••••4417'],
+    ['Remittance email', 'ap@harbourfoods.co.uk'], ['Approver', 'M. Patel']]],
+  ['Legal', [['Contract ref', 'SA-1182'], ['Party', 'Harbour Foods Ltd'], ['Start date', '01/04/2026'], ['Term', '12 months'], ['Renewal', '31/03/2027'], ['Auto-renew', 'Yes'],
+    ['Notice period', '90 days'], ['Liability cap', '£50,000'], ['Governing law', 'England & Wales'], ['Data processing', 'DPA signed'], ['Insurance', '£2m public liability'],
+    ['Termination', '30 days’ notice'], ['Signatory', 'J. Okafor'], ['Signed on', '28/03/2026']]],
+  ['Ops', [['Deliver to', 'Unit 4, Quay Road'], ['Site', 'Kitchen 2'], ['Delivery date', '06/10/2026'], ['Items', '3'], ['Quantity', '14 cases'], ['SKU', 'PT-25'],
+    ['Received by', 'S. Byrne'], ['Condition', 'Good'], ['Temperature', '4°C'], ['Batch', '2291-B'], ['Use by', '14/10/2026'], ['Storage', 'Chilled'], ['Allergens', 'None']]],
+]
+const NF = FORM.reduce((a, [, f]) => a + f.length, 0)          // 47
+/* the form's sections and fields, into a parent; cols per frame */
+function formBody(parent, cols) {
+  const fields = [], secs = []
+  FORM.forEach(([name, fs]) => {
+    const sec = h('div', 'd-sec', parent, `<div class="sh"><i></i>${name}<b>${fs.length} fields</b></div>`)
+    const gr = h('div', 'gr', sec); gr.style.gridTemplateColumns = `repeat(${cols}, 1fr)`
+    secs.push(sec)
+    fs.forEach(([lb, v]) => {
+      const e = h('div', 'd-fd', gr, `<div class="lb">${lb}</div><div class="bx"><span class="v">${v}</span><span class="ok">${CHECK(12)}</span></div>`)
+      fields.push({ e, v: e.querySelector('.v'), ok: e.querySelector('.ok'), sec })
+    })
+  })
+  return { fields, secs }
+}
 
 /* ============================================================
-   PILE: Monday, 9am, and the paperwork lands on every pluck
+   FIELDS: one document, and 47 fields to fill, stacking up on the plucks
    ============================================================ */
-// [beat, sheets in the burst, the count it brings the pile to]
-const BURSTS = [[0, 1, 1], [.5, 1, 2], [1, 1, 3], [2, 3, 12], [2.5, 4, 40], [3, 6, 95], [3.5, 7, 180], [4, 9, 320], [5, 14, 500]]
-function buildPile(s) {
+// [beat, fields in the group]: 2, 4, 9, 14, 20 (finance done), 27, 34 (legal done), 47 (ops)
+const GROUPS = [[.5, 2], [1, 2], [2, 5], [2.5, 5], [3, 6], [3.5, 7], [4, 7], [5, 13]]
+function buildFields(s) {
   widen(s)
   const t0 = s.t0
-  const r = rng(5)
-  const sheets = [], land = []
-  let i = 0
-  BURSTS.forEach(([b, n]) => { for (let j = 0; j < n; j++, i++) land.push(bt(b) - .012 + j * .022) })
-  for (let k = 0; k < N; k++) {
-    const p = HEAP[k], e = sheet(s.cam, k)
-    // tossed in from the sides, arcing up and landing on the pile on the pluck
-    const side = p.x === 0 ? -1 : Math.sign(p.x) * (r() < .8 ? 1 : -1)
-    sheets.push({ e, p, tl: land[k], x0: side * (W / 2 + 260 + r() * 200), y0: p.y + 140 + r() * 260, arc: 160 + r() * 180, r0: p.r - side * (60 + r() * 90), fall: k < 3 ? .34 : .28 + r() * .06 })
-  }
-  const row = h('div', 'd-row', s.hud), clk = clock(row)
-  const cnt = h('div', 'd-count', row, '<span class="sq"></span><span><b>1</b> <span class="u">document</span></span>'), cn = cnt.querySelector('b'), cw = cnt.querySelector('.u')
-  const capA = cap(s.hud, `Monday, 9am${STOP}`), capB = cap(s.hud, `Here comes the paperwork${STOP}`)
-  BURSTS.forEach(([b, n]) => { for (let j = 0; j < Math.min(3, n); j++) cue('paper', bt(b) + j * .03, { v: Math.min(.85, .45 + n * .03), pan: (j - 1) * .5 }) })
+  const WW = M({ land: 1100, sq: 940, tall: 960, port: 980 }) / Z0, COLS = M({ land: 3, def: 2 })
+  const TOP = M({ land: -176, sq: -150, tall: -246, port: -420 }) / Z0, BOT = M({ land: 520, sq: 520, tall: 655, port: 900 }) / Z0
+  const WX = LAND ? 250 : 0
+  const doc = sheet(s.cam, 'Supplier pack')
+  const win = h('div', 'd-win d-glass', s.cam, `<div class="bar"><span class="sq"></span><span>New supplier</span><span class="ct"><span class="n">0</span> of ${NF} fields</span></div><div class="vp"><div class="sc"></div></div>`)
+  win.style.width = WW + 'px'
+  const vp = win.querySelector('.vp'), sc = win.querySelector('.sc'), ctn = win.querySelector('.ct .n')
+  const { fields } = formBody(sc, COLS)
+  const capA = cap(s.hud, `One document${STOP}`), capB = cap(s.hud, `${NF} fields to fill${STOP}`)
+  // when each field turns up
+  const show = []; GROUPS.forEach(([b, n]) => { for (let j = 0; j < n; j++) show.push(bt(b) - .01 + j * .018) })
+  GROUPS.forEach(([b, n], i) => { cue('pop', bt(b), { v: .3 + .02 * n }); if (n > 6) cue('tick', bt(b) + .05, { v: .25 }) })
+  cue('paper', bt(0), { v: .6 })
+  let LY = null
   return t => {
-    // each sheet falls in and lands on its pluck, with a little settle
-    sheets.forEach(d => {
-      const ts = d.tl - d.fall, u = P(t, ts, d.tl, E.lin), st = bell(t, d.tl, d.tl + .03, d.tl + .2)
-      put(d.e, { x: lerp(d.x0, d.p.x, E.out2(u)), y: lerp(d.y0, d.p.y, u) - d.arc * Math.sin(Math.PI * u), r: lerp(d.r0, d.p.r, P(t, ts, d.tl, E.out)), s: d.p.s * (1 + .05 * st), o: t >= ts ? 1 : 0 })
+    if (!LY) {
+      vp.style.height = (BOT - TOP - win.querySelector('.bar').offsetHeight) + 'px'
+      LY = fields.map(f => f.e.offsetTop + f.e.offsetParent.offsetTop + f.e.offsetHeight)   // each field's bottom in the scroller
+      LY.vh = vp.offsetHeight
+    }
+    // the document lands on the first pluck; in the narrow frames it goes into the form's corner as the fields start
+    const dl = P(t, bt(0) - .26, bt(0), E.lin), dg = LAND ? 0 : P(t, bt(.5) - .05, bt(.5) + .25, E.io)
+    const dx = LAND ? -650 : 0, dy = LAND ? 90 : MIDY
+    put(doc, { x: lerp(-W / 2 - 300, dx, E.out2(dl)) + dg * (-WW / 2 + 60), y: lerp(dy + 260, dy, dl) - 200 * Math.sin(Math.PI * dl) + dg * (TOP + 40 - dy), r: lerp(-60, -5, dl) - 6 * dg,
+      s: (LAND ? 1.25 : 1.35) * lerp(1, .3, dg) * (1 + .05 * bell(t, bt(0), bt(0) + .03, bt(0) + .2)), o: (t >= bt(0) - .26 ? 1 : 0) * (1 - P(dg, .7, 1, E.lin)) })
+    // the form, and its fields stacking up on the plucks; it scrolls to keep the newest in view
+    const wi = P(t, bt(.5) - .06, bt(.5) + .2, E.out)
+    put(win, { x: WX, y: (TOP + BOT) / 2 + (1 - wi) * 40, o: wi, blur: (1 - wi) * 12 })
+    let n = 0, last = 0
+    fields.forEach((f, i) => {
+      const a = P(t, show[i], show[i] + .16, E.out)
+      f.e.style.opacity = a.toFixed(3); f.e.style.transform = `translateY(${((1 - a) * 18).toFixed(1)}px) scale(${lerp(.94, 1, a).toFixed(3)})`
+      f.v.style.opacity = 0; f.ok.style.opacity = 0
+      if (t >= show[i]) { n = i + 1; last = show[i] }
     })
-    // the count jumps with each burst
-    let n = 0, k = -1; BURSTS.forEach(([b, , c], j) => { if (t >= bt(b) - .02) { n = c; k = j } })
-    cn.textContent = n; cw.textContent = n === 1 ? 'document' : 'documents'
-    const kb = k < 0 ? 0 : bell(t, bt(BURSTS[k][0]) - .02, bt(BURSTS[k][0]) + .03, bt(BURSTS[k][0]) + .25)
-    cnt.style.transform = `scale(${(1 + .12 * kb).toFixed(3)})`; cnt.style.opacity = n ? 1 : 0
-    blurIn(row, t, t0 + .02, { y: TOPY, dur: .3, s0: 1, blur: 10, dy: -14 })
-    shield(row, .7)
+    ctn.textContent = n
+    let y = 0
+    GROUPS.forEach(([b], g) => {
+      const k = GROUPS.slice(0, g + 1).reduce((a, x) => a + x[1], 0) - 1
+      const target = Math.max(0, LY[k] - LY.vh + 34)
+      y = lerp(y, target, P(t, bt(b) - .02, bt(b) + .28, E.out))
+    })
+    sc.style.transform = `translateY(${(-y).toFixed(1)}px)`
     capAt(capA, t, bt(0), bt(2))
     capAt(capB, t, bt(2), null)
-    // the camera pulls back as the pile grows, and jolts with each burst
-    let jolt = 0; BURSTS.forEach(([b, nn]) => { jolt += bell(t, bt(b) - .01, bt(b) + .02, bt(b) + .22) * Math.min(1, .25 + nn * .06) })
-    s.rig.style.transform = `scale(${(1 + .018 * jolt).toFixed(4)}) translateY(${(jolt * 4).toFixed(1)}px)`
-    shoot(s, path([[t0, 0, 30, 0, 0, 0, 0, 1.06], [bt(2), 0, 20, 0, 0, 0, 0, 1.04], [s.t1, 0, 0, 0, 0, 0, 0, .94]]), t)
+    // a little jolt with each group
+    let jolt = 0; GROUPS.forEach(([b, nn]) => { jolt += bell(t, bt(b) - .01, bt(b) + .02, bt(b) + .2) * Math.min(1, .3 + nn * .05) })
+    s.rig.style.transform = `scale(${(1 + .012 * jolt).toFixed(4)})`
+    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1.04], [s.t1, 0, 0, 0, 0, 0, 0, 1]]), t)
     lens(s, {})
   }
 }
 
 /* ============================================================
-   TYPE: the silence. One name, typed in by hand, a key at a time
+   TYPE: the silence. A VAT number, a key at a time; One. At. A. Time.
    ============================================================ */
 function buildType(s) {
   widen(s)
   const t0 = s.t0, t1 = s.t1
-  const KEYS = [t0 + .12, t0 + .36, t0 + .6, t0 + .84], TXT = ['H', 'Ha', 'Har', 'Harb']
-  const form = h('div', 'd-form d-glass', s.cam, `<div class="hd"><span>Invoice 1 of 500</span><span class="pr"><i></i>By hand</span></div>
-    <div class="lb">Supplier name</div><div class="in"><span class="tx"></span><span class="caret"></span></div>
+  const KEYS = [t0 + .12, t0 + .36, t0 + .6, t0 + .84], TXT = ['G', 'GB', 'GB 2', 'GB 24']
+  const form = h('div', 'd-form d-glass', s.cam, `<div class="hd"><span>Field 7 of ${NF}</span><span class="pr"><i></i>By hand</span></div>
+    <div class="lb">VAT number</div><div class="in"><span class="tx"></span><span class="caret"></span></div>
     <div class="gh"><div></div><div></div></div>`)
   const tx = form.querySelector('.tx'), caret = form.querySelector('.caret')
-  const capA = cap(s.hud, `<span class="w">Typed in.</span> <span class="w">By hand${STOP}</span>`)
-  const [wa, wb] = capA.querySelectorAll('.w')
+  const line = wordLine(s.hud, ['One.', 'At.', 'A.', `Time${STOP}`])
   KEYS.forEach(k => cue('key', k, { v: 2.4 }))
   return t => {
     let n = 0; KEYS.forEach(k => { if (t >= k) n++ })
     tx.textContent = n ? TXT[n - 1] : ''
     const since = n ? t - KEYS[n - 1] : t - t0
     caret.style.opacity = since < .12 || (since % .5) < .28 ? 1 : 0
-    put(form, { y: MIDY + 10, s: M({ land: 1.06, def: 1 }) })
-    put(capA, { y: CAPY }); shield(capA)
-    rise(wa, t, t0 + .01, { dur: .22, dy: 26, blur: 12 })
-    rise(wb, t, KEYS[2] - .02, { dur: .22, dy: 26, blur: 12 })
-    shield(form, .6)
+    put(form, { y: MIDY + 10, s: M({ land: 1.06, def: 1 }) }); shield(form, .6)
+    line.at(t, KEYS, { y: CAPY })
     shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1], [t1, 0, 30, 0, 0, 0, 0, 1.07]]), t)
     lens(s, {})
   }
 }
 
 /* ============================================================
-   WEEK: the calendar flips on the plucks; a whole week, gone
+   LOOP: Copy. Paste. Check. Repeat., a word a pluck; then again, and again
    ============================================================ */
-function buildWeek(s) {
+function buildLoop(s) {
   widen(s)
   const t0 = s.t0
-  const DAYS = ['Tue', 'Wed', 'Thu', 'Fri'], FLIP = [bt(8), bt(8.5), bt(9)], DONE = [6, 11, 15, 19]
-  const cal = h('div', 'd-cal', s.cam)
-  const pages = DAYS.map((d, i) => { const p = h('div', 'pg', cal, `<div class="bar"><i></i>THIS WEEK</div><div class="dn">${d}</div>`); p.style.zIndex = 10 - i; return p })
-  const prog = h('div', 'd-prog', s.cam, '<div class="tx"><span>Typed in</span><span class="n"><b>6</b> of 500</span></div><div class="tr"><i></i></div>')
-  const pn = prog.querySelector('b'), bar = prog.querySelector('.tr i')
-  const capA = cap(s.cam, `<span class="w">A whole week,</span> <span class="w">gone${STOP}</span>`, M({ land: 164, def: 120 }))
-  const [wa, wb] = capA.querySelectorAll('.w')
-  const CY = M({ land: -40, sq: -60, tall: -70, port: -90 }), CK = M({ land: .92, sq: .9, tall: 1, port: 1.12 })
-  const PY = CY + 260 * CK + 64, PY2 = M({ land: 170, def: 190 })
-  FLIP.forEach(f => cue('flip', f - .02, { v: .7 }))
-  cue('whoosh', bt(10), { d: .4, v: .35 })
+  const W4 = ['Copy.', 'Paste.', 'Check.', `Repeat${STOP}`], T4 = [bt(7.5), bt(8), bt(8.5), bt(9)]
+  const AGAIN = [bt(10), bt(10.5), bt(11), bt(11.5), bt(12)]
+  const SZ = M({ land: 150, def: 118 }), LH = SZ * 1.16
+  const ROWS = LAND ? [[0, 1, 2, 3]] : [[0, 1], [2, 3]], NR = ROWS.length, BH = NR * LH     // a block: the whole line, on one row or two
+  const ry = r => (r - (NR - 1) / 2) * LH
+  const first = ROWS.map(ix => wordLine(s.cam, ix.map(i => W4[i]), SZ))
+  const more = AGAIN.map(() => ROWS.map(ix => { const e = cap(s.cam, ix.map(i => W4[i]).join(' '), SZ); Object.assign(e.style, { maxWidth: 'none', whiteSpace: 'nowrap' }); return e }))
+  const chip = h('div', 'd-chip', s.hud, `<span class="sq"></span><span>Field <b>8</b> of ${NF}</span>`), cb = chip.querySelector('b')
+  ;['click', 'pop', 'tick', 'swish'].forEach((k, i) => cue(k, T4[i], { v: .5 }))
+  AGAIN.forEach(a => { cue('flip', a - .01, { v: .55 }); cue('tick', a + .02, { v: .3 }) })
+  const FADE = [1, .42, .24, .14, .08, .05], fa = a => { if (a <= 0) return 1; const i = Math.min(4, Math.floor(a)); return lerp(FADE[i], FADE[i + 1], a - i) }
   return t => {
-    // each page tears up and away on its pluck
-    pages.forEach((p, i) => {
-      const f = i < FLIP.length ? P(t, FLIP[i] - .1, FLIP[i] + .06, E.in2) : 0
-      p.style.transform = `rotateX(${(f * 110).toFixed(1)}deg) translateY(${(-f * 40).toFixed(1)}px)`
-      p.style.opacity = f < .95 ? 1 : 0
+    // each repeat brings the whole line in at the bottom and pushes the rest up, dimmer
+    let k = 0, push = 0
+    AGAIN.forEach((a, i) => { const p = P(t, a - .03, a + .2, E.out); push += p; if (t >= a - .03) k = i + 1 })
+    const Y0 = M({ land: 10, def: 0 })
+    first.forEach((e, r) => e.at(t, ROWS[r].map(i => T4[i]), { y: Y0 + ry(r) - push * BH, o: fa(push) }))
+    more.forEach((blk, i) => {
+      const p = P(t, AGAIN[i] - .03, AGAIN[i] + .2, E.out), age = push - (i + 1)
+      blk.forEach((e, r) => {
+        put(e, { y: Y0 + ry(r) + BH - p * BH - Math.max(0, age) * BH, o: p * fa(age), blur: (1 - p) * 12, s: lerp(1.04, 1, p) })
+        if (p > .5 && age <= .5) shield(e)
+      })
     })
-    let k = 0; FLIP.forEach(f => { if (t >= f - .02) k++ })
-    pn.textContent = DONE[k]; bar.style.width = (DONE[k] / 500 * 100).toFixed(2) + '%'
-    const kb = k ? bell(t, FLIP[k - 1] - .02, FLIP[k - 1] + .02, FLIP[k - 1] + .22) : 0
-    // on the swell the calendar drops away, and the line takes its place
-    const gone = P(t, bt(10) - .08, bt(10) + .3, E.in2)
-    put(cal, { y: CY + gone * 700, s: CK * (1 + .03 * kb), r: gone * 8, o: (1 - P(t, bt(10) + .1, bt(10) + .3)), blur: gone * 6 })
-    const pm = P(t, bt(10), bt(10) + .35, E.out)
-    put(prog, { y: lerp(PY, PY2, pm), s: CK, o: P(t, t0, t0 + .15) })
-    put(capA, { y: M({ land: -50, def: -60 }), s: 1 + .03 * P(t, bt(12) - .02, s.t1, E.out) })
-    rise(wa, t, bt(10) - .02, { dur: .26, dy: 40, blur: 16 })
-    rise(wb, t, bt(11) - .02, { dur: .26, dy: 40, blur: 16, s0: 1.2 })
-    if (t > bt(10)) shield(capA)
-    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1.02], [bt(10), 0, 0, 0, 0, 0, 0, 1], [s.t1, 0, 0, 0, 0, 0, 0, 1.05]]), t)
+    cb.textContent = 8 + k
+    const kb = k ? bell(t, AGAIN[k - 1] - .02, AGAIN[k - 1] + .03, AGAIN[k - 1] + .22) : 0
+    blurIn(chip, t, t0 + .02, { y: TOPY, dur: .3, s0: 1, blur: 10, dy: -14, s: 1 + .1 * kb }); shield(chip, .7)
+    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1.02], [bt(9.5), 0, 0, 0, 0, 0, 0, 1], [s.t1, 0, 0, 0, 0, 0, 0, 1.04]]), t)
     lens(s, {})
   }
 }
@@ -234,99 +258,67 @@ function buildFlash(s) {
   }
 }
 
+
 /* ============================================================
-   FIX: the drop. Monday, 9am again: the pile goes in; read, checked,
-   filed; done by 9:02
+   FIX: the drop. The same form, all of it, fills itself in one wave;
+   every field, filled; sent to finance and legal; 47 fields, none typed
    ============================================================ */
-const INV = `
-  <div class="top"><div class="f" data-k="sup"><span class="hl"></span><span class="sup">Harbour Foods Ltd</span></div><div class="kind">INVOICE</div></div>
-  <div class="meta"><div><span class="k">Invoice</span><div class="f" data-k="no"><span class="hl"></span><b>INV-2291</b></div></div><div><span class="k">Order</span><b>PO-0417</b></div></div>
-  <div class="it"><span>Plum tomatoes, 2.5 kg</span><b>£186.00</b></div>
-  <div class="it"><span>Olive oil, 5 L</span><b>£214.20</b></div>
-  <div class="it"><span>Flour, 16 kg</span><b>£142.50</b></div>
-  <div class="tot">Total<div class="f" data-k="tot"><span class="hl"></span><b>£542.70</b></div></div>`
 const FOLDER = '<svg viewBox="0 0 64 52"><path d="M2 8a6 6 0 016-6h14l6 7h28a6 6 0 016 6v29a6 6 0 01-6 6H8a6 6 0 01-6-6z" fill="rgba(240,231,216,.05)" stroke="#DED2C0" stroke-width="2.5"/><rect x="45" y="35" width="8" height="8" fill="#E9AC57"/></svg>'
-const FOLDERS = [['Accounts', 312], ['Deliveries', 141], ['People', 47]]
-const T_IN = bt(15), T_HL = [bt(15.25), bt(15.5), bt(15.75)], T_STAMP = bt(16), T_FILE = bt(17), T_DONE = bt(19)
+const T_FILL = bt(15), T_SEND = bt(17), T_DONE = bt(19)
 function buildFix(s) {
   widen(s)
   const t0 = s.t0, t1 = s.t1
-  const r = rng(23)
-  // the pile, from the first shot, goes into Document AI on the drop
-  const pile = HEAP.slice(N - 30).map((p, j) => ({ e: sheet(s.cam, N - 30 + j), p, d: .004 * j + r() * .03 }))
-  const pill = h('div', 'd-pill', s.cam, '<span class="dot"></span><span>Reading <b>500</b> documents</span>')
-  const pdot = pill.querySelector('.dot')
-  const inv = h('div', 'd-inv', s.cam, INV)
-  const hls = ['sup', 'no', 'tot'].map(k => inv.querySelector(`.f[data-k="${k}"] .hl`))
-  const stamp = h('div', 'd-stampx', inv, `<span class="ck">${CHECK(28)}</span>Matched to order`)
-  const fl = FOLDERS.map(([nm]) => h('div', 'd-folder d-glass', s.cam, `<div class="ic">${FOLDER}</div><div class="nm">${nm}</div><div class="ct"><span class="n">0</span><span class="ok">${CHECK(22)}</span></div>`))
-  const fn = fl.map(e => e.querySelector('.n')), fok = fl.map(e => e.querySelector('.ok'))
+  const OW = M({ land: 1720, sq: 1000, tall: 1000, port: 1000 }) / Z0, OC = M({ land: 6, def: 4 })
+  const ov = h('div', 'd-ov d-glass', s.cam, `<div class="bar"><span class="sq"></span><span>New supplier</span><span class="ct"><span class="n">0</span> of ${NF} fields</span></div><div class="body"></div>`)
+  ov.style.width = OW + 'px'
+  const ctn = ov.querySelector('.ct .n')
+  const { fields } = formBody(ov.querySelector('.body'), OC)
+  fields.forEach(f => f.e.classList.add('ai'))
+  // the wave: a field every 1/86 of a second, top to bottom, from just after the drop
+  const fillAt = i => t0 + .05 + i * (B * .95 / NF)
+  const cards = FORM.map(([name, fs]) => h('div', 'd-folder d-glass', s.cam, `<div class="ic">${FOLDER}</div><div class="nm">${name}</div><div class="ct"><span class="n">${fs.length} fields</span><span class="ok">${CHECK(22)}</span></div>`))
+  cards.forEach(c => { const n = c.querySelector('.n'); n.style.fontSize = '40px'; n.style.fontWeight = 400 })
+  const cok = cards.map(c => c.querySelector('.ok'))
   const FK = M({ land: 1, sq: .82, tall: .84, port: 1.04 })
   const FP = M({ land: [[-420, 0], [0, 0], [420, 0]], sq: [[-330, 0], [0, 0], [330, 0]], tall: [[-330, 0], [0, 0], [330, 0]], port: [[0, -300], [0, 0], [0, 300]] }).map(([x, y]) => [x, MIDY + y + M({ land: 20, def: 30 })])
-  const minis = Array.from({ length: 18 }, (_, j) => ({ e: h('div', 'd-mini', s.cam), f: j % 3, a: bt(17.25) + j * B / 8, x0: (r() < .5 ? -1 : 1) * (W / 2 + 80), y0: (r() - .5) * H * .8, rot: (r() - .5) * 60 }))
-  const row = h('div', 'd-row', s.hud), clk = clock(row)
-  const capM = cap(s.hud, `Monday, 9am${STOP}`)
-  const capR = cap(s.hud, '<span class="w">Read.</span> <span class="w">Checked.</span> <span class="w">Filed.</span>', M({ land: 136, sq: 100, tall: 100, port: 96 }))
-  Object.assign(capR.style, { maxWidth: 'none', whiteSpace: 'nowrap' })
-  const ws = [...capR.querySelectorAll('.w')]
-  const capD = cap(s.hud, `Done by 9:02${STOP}`)
-  const IK = M({ land: 1.12, sq: .9, tall: .96, port: 1.14 })
-  let WW = null
-  cue('whoosh', t0 + .26, { d: .45, v: .55 })
-  cue('pop', t0 + .34, { v: .5 })
-  cue('pop', T_IN, { v: .45 })
-  T_HL.forEach(a => cue('blip', a, { v: .55 }))
-  cue('stamp', T_STAMP, { v: 1 })
-  cue('swish', T_FILE + .05, { v: .4 })
-  minis.forEach((m, j) => { if (j % 2 === 0) cue('tick', m.a + .32, { v: .28 }) })
-  cue('confirm', T_DONE, { n: 2, deg: 3, v: .6 })
+  const capA = cap(s.hud, `Every field, filled${STOP}`)
+  const capB = cap(s.hud, `Sent to finance and legal${STOP}`)
+  const capC = cap(s.hud, `${NF} fields. None typed${STOP}`)
+  cue('whoosh', t0 + .02, { d: .4, v: .5 })
+  cue('scan', t0 + .05, { d: B * .95 })
+  cue('confirm', T_FILL, { n: 2, deg: 3, v: .5 })
+  cue('swish', T_SEND, { v: .45 })
+  FORM.forEach((_, i) => cue('pop', T_SEND + .06 * i, { v: .3 }))
+  cue('confirm', T_DONE, { n: 3, deg: 2, v: .6 })
+  let OH = null
   return t => {
-    // on the drop the whole pile jumps, then is pulled into the live chip, the top of it last
-    const jump = bell(t, t0 - .01, t0 + .05, t0 + .22)
-    pile.forEach(q => {
-      const u = P(t, t0 + .02 + q.d, t0 + .02 + q.d + .3, E.in2)
-      put(q.e, { x: lerp(q.p.x, 0, u), y: lerp(q.p.y - 46 * jump, MIDY, u), r: lerp(q.p.r * (1 + .4 * jump), 0, u), s: lerp(q.p.s * (1 + .07 * jump), .1, u), o: 1 - P(u, .8, 1, E.lin), blur: u * 4 })
+    if (!OH) OH = ov.offsetHeight
+    // the whole form, fitted to the frame below the caption
+    const room = M({ land: 700, sq: 700, tall: 900, port: 1300 }) / Z0, k = Math.min(1, room / OH)
+    const oy = M({ land: 175, sq: 180, tall: 210, port: 130 }) / Z0
+    const jump = bell(t, t0 - .01, t0 + .05, t0 + .25), gone = P(t, T_SEND - .06, T_SEND + .2, E.in2)
+    put(ov, { y: oy, s: k * (1 + .04 * jump) * lerp(1, .86, gone), o: P(t, t0 - .01, t0 + .06) * (1 - gone), blur: gone * 14 })
+    // every field fills, in a wave from the top
+    let n = 0
+    fields.forEach((f, i) => {
+      const a = fillAt(i), p = P(t, a, a + .12, E.out)
+      f.v.style.opacity = p.toFixed(3); f.ok.style.opacity = p > 0 ? 1 : 0; f.ok.style.transform = `scale(${P(t, a, a + .16, E.back).toFixed(3)})`
+      f.e.classList.toggle('ai', t >= a); f.e.style.opacity = 1; f.e.style.transform = ''
+      if (t >= a) n = i + 1
     })
-    s.rig.style.transform = `scale(${(1 + .035 * jump).toFixed(4)})`
-    const pin = P(t, t0, t0 + .28, E.back), pout = P(t, T_IN - .05, T_IN + .08, E.in2)
-    const gulp = bell(t, t0 + .3, t0 + .36, t0 + .56)
-    put(pill, { y: MIDY, s: lerp(.6, 1, pin) * (1 + .08 * gulp) * lerp(1, 1.3, pout), o: Math.min(1, pin * 2) * (1 - pout) })
-    pdot.style.opacity = (.35 + .65 * (.5 + .5 * Math.cos((t - t0) * Math.PI * 2 / 1.6))).toFixed(3)
-    // the invoice opens out of the chip and is read, a field a sixteenth
-    const iin = P(t, T_IN - .05, T_IN + .18, E.out), go = P(t, T_FILE, T_FILE + .32, E.in2)
-    put(inv, { x: lerp(0, FP[0][0], go), y: lerp(MIDY, FP[0][1], go), s: IK * lerp(.4, 1, iin) * lerp(1, .12, go), o: Math.min(1, iin * 2) * (1 - P(go, .8, 1, E.lin)), blur: (1 - iin) * 8 })
-    hls.forEach((e, i) => { const a = P(t, T_HL[i] - .02, T_HL[i] + .1, E.out); e.style.opacity = a.toFixed(3); e.style.transform = `scale(${lerp(.7, 1, P(t, T_HL[i] - .02, T_HL[i] + .16, E.back)).toFixed(3)})` })
-    // checked: the stamp slams down on the beat
-    const sm = P(t, T_STAMP - .09, T_STAMP, E.in2), sb = bell(t, T_STAMP, T_STAMP + .03, T_STAMP + .2)
-    put(stamp, { y: 24, r: -6, s: lerp(2.2, 1, sm) * (1 - .04 * sb), o: sm > 0 ? Math.min(1, sm * 3) : 0 })
-    // filed: the folders, and the rest of the pile into them
-    const got = [0, 0, 0]
-    minis.forEach(m => {
-      const u = P(t, m.a, m.a + .34, E.io), [fx, fy] = FP[m.f]
-      put(m.e, { x: lerp(m.x0, fx, u), y: lerp(m.y0, fy - 20, u) - 120 * Math.sin(Math.PI * u), r: lerp(m.rot, 0, u), s: lerp(1.2, .5, u), o: t >= m.a && u < 1 ? 1 : 0 })
-      if (u >= 1) got[m.f]++
+    ctn.textContent = n
+    // sent: the form goes out to the people who need it
+    cards.forEach((c, i) => {
+      const a = T_SEND + .06 * i
+      blurIn(c, t, a - .02, { x: FP[i][0], y: FP[i][1], s: FK * (1 + .05 * bell(t, T_DONE + i * .05, T_DONE + i * .05 + .04, T_DONE + i * .05 + .25)), dur: .3, s0: .9, blur: 12, dy: 40 })
+      const ck = P(t, T_DONE + i * .05, T_DONE + i * .05 + .25, E.back); cok[i].style.transform = `scale(${ck.toFixed(3)})`; cok[i].style.opacity = ck > 0 ? 1 : 0
     })
-    fl.forEach((e, i) => {
-      const td = T_DONE + i * .05
-      blurIn(e, t, T_FILE - .04 + i * .05, { x: FP[i][0], y: FP[i][1], s: FK * (1 + .05 * bell(t, td, td + .04, td + .25)), dur: .3, s0: .9, blur: 12, dy: 40 })
-      fn[i].textContent = Math.round(FOLDERS[i][1] * Math.min(1, (got[i] + (t >= T_FILE + .3 && i === 0 ? 1 : 0)) / 6))
-      const c = P(t, td, td + .25, E.back); fok[i].style.transform = `scale(${c.toFixed(3)})`; fok[i].style.opacity = c > 0 ? 1 : 0
-    })
-    // the clock: nine o'clock, then two minutes past, in ice
-    const tk = P(t, T_DONE - .12, T_DONE + .05, E.io)
-    clk.set('MON', 540 + 2 * tk); clk.classList.toggle('ice', t >= T_DONE - .02)
-    blurIn(row, t, t0 + .04, { y: TOPY, dur: .3, s0: 1, blur: 10, dy: -14, s: 1 + .08 * bell(t, T_DONE - .03, T_DONE + .05, T_DONE + .4) })
-    shield(row, .7)
-    // the words, one a clap
-    capAt(capM, t, t0 + .03, T_IN)
-    // the line stays centred on the words showing so far
-    if (!WW) { const sp = capR.offsetWidth - ws.reduce((a, e) => a + e.offsetWidth, 0); WW = ws.map(e => e.offsetWidth + sp / 2) }
-    let hid = 0
-    ;[T_IN, T_STAMP, T_FILE].forEach((a, i) => { rise(ws[i], t, a - .03, { dur: .22, dy: 30, blur: 12 }); hid += (1 - E.io(P(t, a - .03, a + .19, E.lin))) * WW[i] })
-    put(capR, { x: hid / 2, y: CAPY, o: 1 - P(t, T_DONE - .1, T_DONE + .02) })
-    if (t > T_IN && t < T_DONE) shield(capR)
-    capAt(capD, t, T_DONE, null)
-    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1.04], [T_FILE, 0, 0, 0, 0, 0, 0, 1], [T_DONE, 0, 0, 0, 0, 0, 0, 1], [t1, 0, 0, 0, 0, 0, 0, 1.05]]), t)
+    // a line a clap
+    capAt(capA, t, T_FILL, T_SEND)
+    capAt(capB, t, T_SEND, T_DONE)
+    capAt(capC, t, T_DONE, null)
+    s.rig.style.transform = `scale(${(1 + .03 * jump).toFixed(4)})`
+    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1.03], [T_SEND, 0, 0, 0, 0, 0, 0, 1], [T_DONE, 0, 0, 0, 0, 0, 0, 1], [t1, 0, 0, 0, 0, 0, 0, 1.05]]), t)
     lens(s, {})
   }
 }
@@ -393,9 +385,9 @@ const G = {
 function buildGround(s) {
   const at = id => TL.scenes.find(x => x.id === id).start
   const KF = [
-    [0, G.open], [bt(2), G.open], [at('type') - .02, G.heat], [at('type'), G.quiet], [at('week') - .02, G.quiet], [at('week'), G.heat], [bt(10), G.peak], [at('flash') - .02, G.peak],
+    [0, G.open], [bt(2), G.open], [at('type') - .02, G.heat], [at('type'), G.quiet], [at('loop') - .02, G.quiet], [at('loop'), G.heat], [bt(10), G.peak], [at('flash') - .02, G.peak],
     [at('flash'), G.dark], [HITS[1] - .01, G.dark], [HITS[1] + .2, G.glassIn], [at('fix') - .02, G.glassIn],
-    [at('fix') + .3, G.fix1], [T_STAMP, G.fix2], [T_FILE, G.fix3], [T_DONE - .1, G.fix3], [T_DONE + .3, G.done], [at('end') - .02, G.done],
+    [at('fix') + .3, G.fix1], [T_FILL, G.fix2], [T_SEND, G.fix3], [T_DONE - .1, G.fix3], [T_DONE + .3, G.done], [at('end') - .02, G.done],
     [at('end') + .5, G.rise], [TL.duration, G.settle],
   ]
   const sample = t => {
@@ -429,13 +421,13 @@ function buildGround(s) {
 
 export default function setup() {
   document.querySelector('.vignette').style.display = 'none'      // the lit ground keeps its own dark
-  scene(['pile'], buildPile)
+  scene(['fields'], buildFields)
   scene(['type'], buildType)
-  scene(['week'], buildWeek)
+  scene(['loop'], buildLoop)
   scene(['flash'], buildFlash)
   scene(['fix'], buildFix)
   scene(['end'], buildEnd)
-  scene(['pile', 'end'], buildGround, { hold: 1 })                   // last, so the words have been placed
+  scene(['fields', 'end'], buildGround, { hold: 1 })                   // last, so the words have been placed
   const ground = [[0, .5, .5, 0, .5, .5, 0, 0], [TL.duration, .5, .5, 0, .5, .5, 0, 0]]
   return { ground, bug: ['end', 'end'] }
 }
