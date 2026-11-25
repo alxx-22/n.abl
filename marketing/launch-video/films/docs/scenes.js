@@ -7,13 +7,10 @@
    ember for the problem, amber for n.abl, ice for the AI at work.
 
    box    a delivery arrives: the box drops on the first pluck, its
-          paperwork taped to the front
-   paper  the slip comes off and goes to the desk by the computer; closer
-          on each pluck: scrawled, crossed out, a coffee ring on it
-   squint the track's silence: Is that a 7? Or a 1? Typed, deleted, typed,
-          deleted, a key at a time
-   pile   onto the pile it goes, with all the others, tossed on with the
-          plucks
+          paperwork taped to the front; one slow push in on it
+   desk   the note put down by the computer, held: Is that a 7 or a 1? In
+          the track's silence a 7 is typed, and deleted; a 1, and deleted
+   pile   onto the pile it goes, and more on top, a toss a beat
    flash  the three build hits: n.abl Document AI, flashed in and out
    upload the drop: a cursor picks the pile up and drops it into Upload
           documents, on the clap
@@ -206,69 +203,45 @@ function buildBox(s) {
     capAt(capA, t, tl, null)
     // the camera eases in on the slip
     const sx = M({ land: -34, def: -30 }), sy = BY + 70 * BK
-    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1], [tl + .2, 0, 0, 0, 0, 0, 0, 1], [t1, sx * .5, sy * .4, 0, 0, 0, 0, 1.16]]), t)
+    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1], [bt(1.5), 0, 0, 0, 0, 0, 0, 1], [t1, sx * .5, sy * .5, 0, 0, 0, 0, 1.22]]), t)
     lens(s, {})
   }
 }
 
 /* ============================================================
-   PAPER: off the box, to the computer; closer on each pluck
+   DESK: the note by the computer, held. Is that a 7 or a 1?
    ============================================================ */
-function buildPaper(s) {
+function buildDesk(s) {
   widen(s)
   const t0 = s.t0, t1 = s.t1
   const mon = monitor(s.cam), sl = slip(s.cam)
-  const capA = cap(s.hud, `Now, to type it in${STOP}`), capB = cap(s.hud, `If you can read it${STOP}`)
-  // where the monitor and the slip sit: side by side, or the slip below in the narrow frames
-  const MX = LAND ? 330 : 0, MY = M({ land: 60, sq: -10, tall: -40, port: -150 }) / Z0, MK = M({ land: .92, sq: .78, tall: .82, port: .88 })
-  const SX = LAND ? -470 : M({ sq: -250, tall: -250, port: -210 }), SY = M({ land: 90, sq: 250, tall: 300, port: 420 }) / Z0, SK = M({ land: 1.3, def: 1 })
-  const tFly = bt(2), tLand = bt(3)
-  // close on the scrawl: the whole slip, its items, its total
-  const ZOOM = [[bt(3.5), 0, -40, 1.5], [bt(4), -10, 30, 2.1], [bt(5), 30, 150, 2.7]]
-  cue('swish', tFly + .05, { v: .4 })
+  const tot = mon.querySelectorAll('.bx')[5]                              // the Total field
+  tot.innerHTML = '<span class="tx">£</span><span class="caret"></span>'
+  const tx = tot.querySelector('.tx'), caret = tot.querySelector('.caret')
+  const capA = cap(s.hud, 'Is that a 7 or a 1?')
+  // in the silence: a 7, deleted; a 1, deleted
+  const KEYS = [bt(5.5) + .1, bt(5.5) + .34, bt(5.5) + .58, bt(5.5) + .82], TXT = ['£7', '£', '£1', '£']
+  const MX = LAND ? 330 : 0, MY = M({ land: 60, sq: 20, tall: 10, port: -60 }) / Z0, MK = M({ land: .92, sq: .74, tall: .8, port: .88 })
+  const SX = LAND ? -470 : M({ sq: -250, tall: -250, port: -210 }), SY = M({ land: 90, sq: 270, tall: 330, port: 480 }) / Z0, SK = M({ land: 1.3, def: 1 })
+  const tLand = t0 + .32, tAsk = bt(5)
+  cue('swish', t0 + .05, { v: .35 })
   cue('paper', tLand, { v: .7 })
-  ZOOM.forEach(([a]) => cue('tick', a, { v: .3 }))
-  return t => {
-    // the slip comes off the box (from where the last shot left it) and lands by the computer
-    const u = P(t, tFly - .02, tLand, E.io), arc = Math.sin(Math.PI * u)
-    put(sl, { x: lerp(SX * .2, SX, u), y: lerp(SY + 300, SY, u) - 180 * arc, r: lerp(-4, -5, u) + 18 * arc, s: SK * lerp(.9, 1, u) * (1 + .03 * bell(t, tLand, tLand + .03, tLand + .2)), o: 1 })
-    put(mon, { x: MX, y: MY + (1 - P(t, t0, t0 + .35, E.out)) * 40, s: MK, o: P(t, t0, t0 + .2) })
-    capAt(capA, t, t0 + .01, ZOOM[0][0])
-    capAt(capB, t, ZOOM[0][0], null)
-    // the camera: wide on both, then a push on the slip at each pluck
-    let cx = 0, cy = 0, cs = 1
-    ZOOM.forEach(([a, dx, dy, k]) => { const p = P(t, a - .02, a + .22, E.out); cx = lerp(cx, SX + dx * SK, p); cy = lerp(cy, SY + dy * SK, p); cs = lerp(cs, k, p) })
-    shoot(s, () => [cx, cy, 0, 0, 0, 0, cs], t)
-    lens(s, {})
-  }
-}
-
-/* ============================================================
-   SQUINT: the silence. Is that a 7? Or a 1?
-   ============================================================ */
-function buildSquint(s) {
-  widen(s)
-  const t0 = s.t0, t1 = s.t1
-  const KEYS = [t0 + .12, t0 + .38, t0 + .62, t0 + .86], TXT = ['£7', '£', '£1', '£']
-  const sl = slip(s.cam)
-  const form = h('div', 'd-form d-glass', s.cam, `<div class="hd"><span>Invoice 1 of 43</span><span class="pr"><i></i>By hand</span></div>
-    <div class="lb">Total</div><div class="in"><span class="tx">£</span><span class="caret"></span></div>`)
-  const tx = form.querySelector('.tx'), caret = form.querySelector('.caret')
-  const line = wordLine(s.hud, ['Is that a 7?', `Or a 1${STOP}`])
   cue('key', KEYS[0], { v: 2.4 }); cue('space', KEYS[1], { v: 1 }); cue('key', KEYS[2], { v: 2.4 }); cue('space', KEYS[3], { v: 1 })
-  // the total, close: the slip big, its total in the middle of the frame
-  const SX = LAND ? -330 : 0, SY = LAND ? 60 : M({ sq: -40, tall: -80, port: -160 }) / Z0, SK = M({ land: 2.6, def: 2.2 })
-  const FX = LAND ? 470 : 0, FY = LAND ? 110 : M({ sq: 300, tall: 360, port: 470 }) / Z0, FK = M({ land: .82, def: .9 })
   return t => {
+    // the note is brought over and put down by the computer
+    const u = P(t, t0 - .02, tLand, E.out)
+    put(sl, { x: lerp(-W / 2 - 360, SX, u), y: lerp(SY - 60, SY, u), r: lerp(-14, -5, u), s: SK * (1 + .02 * bell(t, tLand, tLand + .03, tLand + .2)), o: 1 })
+    put(mon, { x: MX, y: MY + (1 - P(t, t0, t0 + .35, E.out)) * 30, s: MK, o: P(t, t0, t0 + .2) }); shield(mon, .5)
+    // the total, typed and taken back
     let n = 0; KEYS.forEach(k => { if (t >= k) n++ })
     tx.textContent = n ? TXT[n - 1] : '£'
     const since = n ? t - KEYS[n - 1] : t - t0
-    caret.style.opacity = since < .12 || (since % .5) < .28 ? 1 : 0
-    // the slip, held close on its total, drifting a little
-    put(sl, { x: SX - 30 * SK, y: SY - 150 * SK + (t - t0) * 10, r: -5, s: SK })
-    put(form, { x: FX, y: FY, s: FK }); shield(form, .6)
-    line.at(t, [KEYS[0], KEYS[2]], { y: CAPY })
-    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1], [t1, 0, 0, 0, 0, 0, 0, 1.05]]), t)
+    caret.style.opacity = t > tAsk && (since < .12 || (since % .5) < .28) ? 1 : 0
+    tot.classList.toggle('on', t > tAsk)
+    capAt(capA, t, tAsk, null)
+    // one slow push in, between the note's total and the screen's
+    const cx = (SX + MX) / 2 * .35, cy = (SY + MY) / 2 * .3
+    shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1], [t1, cx, cy, 0, 0, 0, 0, 1.12]]), t)
     lens(s, {})
   }
 }
@@ -277,7 +250,7 @@ function buildSquint(s) {
    PILE: onto the pile it goes, with all the others
    ============================================================ */
 // [beat, sheets tossed on]; the pile starts at 18 and the slip lands on it at beat 8
-const TOSS = [[8.5, 3], [9, 3], [10, 4], [10.5, 3], [11, 4], [11.5, 3], [12, 4]]
+const TOSS = [[9, 4], [10, 6], [11, 7], [12, 7]]
 const P0 = 18
 function buildPile(s) {
   widen(s)
@@ -295,7 +268,7 @@ function buildPile(s) {
   TOSS.forEach(([b, n]) => { for (let j = 0; j < n; j++, k++) { const p = HEAP[k], side = Math.sign(p.x || 1) * (r() < .8 ? 1 : -1); sheets.push({ e: sheet(s.cam, k), p, tl: land[k], x0: side * (W / 2 + 260 + r() * 200), y0: p.y + 140 + r() * 260, arc: 160 + r() * 180, r0: p.r - side * (60 + r() * 90), fall: .28 + r() * .06 }) } })
   const total = P0 + 1 + TOSS.reduce((a, [, n]) => a + n, 0)   // 43
   const ch = chip(s.hud, `<b>${P0}</b> to type in`), cb = ch.querySelector('b')
-  const capA = cap(s.hud, `Onto the pile it goes${STOP}`), capB = cap(s.hud, `With all the others${STOP}`)
+  const capA = cap(s.hud, `Onto the pile it goes${STOP}`)
   cue('paper', tSlip, { v: .8 })
   TOSS.forEach(([b, n]) => { for (let j = 0; j < Math.min(2, n); j++) cue('paper', bt(b) + j * .03, { v: .5 + n * .04, pan: (j - .5) * .6 }) })
   return t => {
@@ -311,8 +284,7 @@ function buildPile(s) {
     TOSS.forEach(([b, nn]) => { if (t >= bt(b) - .02) { n += nn; kb = bell(t, bt(b) - .02, bt(b) + .03, bt(b) + .25) } })
     cb.textContent = Math.min(total, n)
     blurIn(ch, t, t0 + .02, { y: TOPY, dur: .3, s0: 1, blur: 10, dy: -14, s: 1 + .1 * kb }); shield(ch, .7)
-    capAt(capA, t, t0 + .02, bt(10))
-    capAt(capB, t, bt(10), null)
+    capAt(capA, t, t0 + .02, null)
     let jolt = 0; TOSS.forEach(([b, nn]) => { jolt += bell(t, bt(b) - .01, bt(b) + .02, bt(b) + .2) * Math.min(1, .3 + nn * .08) })
     s.rig.style.transform = `scale(${(1 + .015 * jolt).toFixed(4)})`
     shoot(s, path([[t0, 0, 0, 0, 0, 0, 0, 1.08], [bt(10), 0, 0, 0, 0, 0, 0, 1.02], [s.t1, 0, 0, 0, 0, 0, 0, .96]]), t)
@@ -574,7 +546,7 @@ const G = {
 function buildGround(s) {
   const at = id => TL.scenes.find(x => x.id === id).start
   const KF = [
-    [0, G.open], [bt(2), G.open], [at('squint') - .02, G.heat], [at('squint'), G.quiet], [at('pile') - .02, G.quiet], [at('pile'), G.heat], [bt(10), G.peak], [at('flash') - .02, G.peak],
+    [0, G.open], [bt(2), G.open], [bt(5.5) - .02, G.heat], [bt(5.5), G.quiet], [at('pile') - .02, G.quiet], [at('pile'), G.heat], [bt(10), G.peak], [at('flash') - .02, G.peak],
     [at('flash'), G.dark], [HITS[1] - .01, G.dark], [HITS[1] + .2, G.glassIn], [at('upload') - .02, G.glassIn],
     [at('upload') + .3, G.fix1], [at('sheet'), G.fix2], [T_WAVE + .5, G.fix3], [at('count') - .05, G.fix3], [at('count') + .3, G.done], [at('end') - .02, G.done],
     [at('end') + .5, G.rise], [TL.duration, G.settle],
@@ -611,8 +583,7 @@ function buildGround(s) {
 export default function setup() {
   document.querySelector('.vignette').style.display = 'none'      // the lit ground keeps its own dark
   scene(['box'], buildBox)
-  scene(['paper'], buildPaper)
-  scene(['squint'], buildSquint)
+  scene(['desk'], buildDesk)
   scene(['pile'], buildPile)
   scene(['flash'], buildFlash)
   scene(['upload'], buildUpload)

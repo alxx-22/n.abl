@@ -195,6 +195,9 @@
 .d-mon .fs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; padding: 26px 34px 0; }
 .d-mon .lb { font: 400 21px var(--f); color: var(--c300); margin-bottom: 10px; }
 .d-mon .bx { height: 60px; border-radius: 12px; background: rgba(var(--cream-rgb), .05); border: 1px solid rgba(var(--cream-rgb), .24); }
+.d-mon .bx { display: flex; align-items: center; padding: 6px 18px 0; font: 400 32px var(--f); color: var(--c100); }
+.d-mon .bx .caret { width: 3px; height: 34px; background: var(--c100); margin: -6px 0 0 3px; }
+.d-mon .bx.on { border-color: rgba(var(--ember-rgb), .7); box-shadow: 0 0 0 4px rgba(var(--ember-rgb), .12); }
 .d-mon .neck { width: 80px; height: 70px; background: linear-gradient(180deg, #221D18, #1A1613); }
 .d-mon .base { width: 320px; height: 22px; border-radius: 11px; background: #2B241E; }
 

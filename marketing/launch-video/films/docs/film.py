@@ -3,10 +3,10 @@ The docs reel: n.abl's Document AI, in 16 seconds, cut to a supplied track
 with no voice.
 
 A story up to the drop, then the answer, every move on a hit of the track. A
-delivery arrives, its paperwork taped to the box; the slip goes to the
-computer, and it is a mess: scrawled, crossed out, a coffee ring on it; in
-the track's silence, Is that a 7? Or a 1?; then onto the pile it goes, with
-all the others. The three build hits flash n.abl Document AI in and out. On
+delivery arrives, its paperwork taped to the box; the note goes by the
+computer, and it is a mess: scrawled, crossed out, a coffee ring on it. Is
+that a 7 or a 1? Then onto the pile it goes. Three shots, one line each,
+held, so the story can be followed. The three build hits flash n.abl Document AI in and out. On
 the drop a cursor picks the pile up and drops it into Upload documents; one
 sheet fills, a row a document and a column a field, in one wave; thousands
 of documents counted up; the name, held. In the 2026-11 brand: Manjari, the
@@ -33,10 +33,9 @@ VOICE_PROVIDER = "none"
 VOICE, LANG, SPEED, SHORT_SPEED = "bm_fable", "en-gb", 1.2, 1.36
 SAY = {"n.abl": "enable"}
 SCENES = [
-    dict(id="box",    beats=2.5625, lines=[]),  # a delivery arrives: the box drops on the first pluck, its paperwork taped to the front
-    dict(id="paper",  beats=3.5, lines=[]),     # the slip comes off and goes to the computer; closer on each pluck: scrawled, crossed out, coffee-ringed
-    dict(id="squint", beats=2, lines=[]),       # the silence: Is that a 7? Or a 1? Typed, deleted, typed, deleted, a key at a time
-    dict(id="pile",   beats=5, lines=[]),       # onto the pile it goes, with all the others, tossed on with the plucks
+    dict(id="box",    beats=4.5625, lines=[]),  # a delivery arrives: the box drops on the first pluck, its paperwork taped to the front; one slow push in
+    dict(id="desk",   beats=3.5, lines=[]),     # the note put down by the computer, held: Is that a 7 or a 1? In the silence a 7 is typed and deleted, a 1 too
+    dict(id="pile",   beats=5, lines=[]),       # onto the pile it goes, and more on top, a toss a beat
     dict(id="flash",  beats=1.5, lines=[]),     # the three build hits: n.abl Document AI, flashed in and out on each
     dict(id="upload", beats=2, lines=[]),       # the drop: a cursor picks the pile up and drops it into Upload documents, on the clap
     dict(id="sheet",  beats=3, lines=[]),       # one sheet, a row a document and a column a field, filling in one wave; the rest stream past

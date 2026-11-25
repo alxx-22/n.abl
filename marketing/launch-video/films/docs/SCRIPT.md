@@ -9,8 +9,9 @@ forms and delivery notes, pulls out what matters and files it.
 
 - **Music:** the first 16 seconds of a supplied clip's audio, used as they
   are (`music/track.wav`).
-- **Story:** up to the drop, a story anyone in a small business knows: a
-  delivery arrives with its paperwork taped to the box; the slip goes to the
+- **Story:** up to the drop, a story anyone in a small business knows, in
+  three held shots with one line each so it can be followed at a glance: a
+  delivery arrives with its paperwork taped to the box; the note goes by the
   computer to be typed in, and it is a mess, scrawled and crossed out; then
   it goes onto the pile with all the others. On the build's fast hits, n.abl
   Document AI flashed in and out on each. On the drop, the answer, after the
@@ -39,10 +40,9 @@ forms and delivery notes, pulls out what matters and files it.
 
 | Time | Shot | What happens, and on what |
 |---|---|---|
-| 0.00 | **Box** | *A delivery arrives.* A cardboard box drops in and lands on the first pluck (0.33), squashing and kicking up dust, a delivery note taped to its front; the note lifts at the tape on the next two plucks as the camera eases in. |
-| 1.39 | **Paper** | *Now, to type it in.* On the swell the note comes off and lands on the next beat by a computer with an empty New invoice form. *If you can read it.* The camera pushes in on the note on each pluck: scrawled handwriting, a crossed-out line, notes up the side, a coffee ring, and a total that might say £74.50 or £14.50. |
-| 3.28 | **Squint** | The track goes silent. *Is that a 7?* on the first key click as a 7 is typed into Total; it is deleted; *Or a 1?* as a 1 is typed; it is deleted too. Invoice 1 of 43, by hand. |
-| 4.36 | **Pile** | *Onto the pile it goes.* The note drops onto a pile of others on the next pluck, and more are tossed on with the plucks after, the chip counting what is left to type in, 18 up to 43. On the swell: *With all the others.* |
+| 0.00 | **Box** | *A delivery arrives.* A cardboard box drops in and lands on the first pluck (0.33), squashing and kicking up dust, a delivery note taped to its front. The line holds while the camera makes one slow push in on the note. |
+| 2.47 | **Desk** | The note is brought over and put down by a computer with an empty New invoice form: scrawled handwriting, a crossed-out line, notes up the side, a coffee ring, and a total that might say £74.50 or £14.50. *Is that a 7 or a 1?* (3.04), held. In the track's silence a 7 is typed into Total and deleted, then a 1, and deleted, a key click each. One slow push in. |
+| 4.36 | **Pile** | *Onto the pile it goes.* The note drops onto a pile of others on the next beat, and more are tossed on top, one big toss a beat, the chip counting what is left to type in, 18 up to 43. |
 | 7.06 | **Flash** | The three build hits: n.abl Document AI flashed in and out on each, larger each time, the light flaring with every hit and the fluted glass coming in, fine reeds first. |
 | 7.87 | **Upload** | The drop: the pile jumps. A cursor comes in, clicks it (8.01), and the whole pile gathers under it and rides across into *Upload documents*, dropped in on the clap (8.41); the box lights ice and reads *Reading 43 documents*. |
 | 8.95 | **Sheet** | *Every field. Every document.* One sheet, Invoices: a row for each document as it came in (IMG_2291.jpg, delivery note.pdf, scan_0012.pdf...) and a column for each field (supplier, date, invoice number, VAT number, net, VAT, total, cost centre, status). It fills in one diagonal wave from the corner, every cell at once rather than one at a time, each value lit ice as it lands and each row ticked *Filed*; then the rest of the 43 rush past, done. |
@@ -82,14 +82,14 @@ The 2026-11 brand, applied as section 8 of the guidelines asks:
 over the last half second.
 
 **Effects,** under the track and on its hits: a whoosh and a thump as the
-box lands; a swish as the note comes off and paper as it lands, a tick at
-each push in; in the silence a key for the 7, a key for its deletion, a key
-for the 1 and another to delete it, the loudest thing there; paper for each
-toss onto the pile; on the drop a whoosh, a click as the cursor takes the
-pile, a swish across, a pop and a drop as it goes in, a chime as it reads; a
-scan and fast typing as the sheet fills, a chime when it is done, a whoosh
-as the rest rush past; typing as the count rolls and a chime as it lands;
-the name drawn and a shimmer under the line.
+box lands; a swish as the note is brought over and paper as it is put down;
+in the silence a key for the 7, a key for its deletion, a key for the 1 and
+another to delete it, the loudest thing there; paper as it lands on the pile
+and for each toss after; on the drop a whoosh, a click as the cursor takes
+the pile, a swish across, a pop and a drop as it goes in, a chime as it
+reads; a scan and fast typing as the sheet fills, a chime when it is done, a
+whoosh as the rest rush past; typing as the count rolls and a chime as it
+lands; the name drawn and a shimmer under the line.
 
 **Mix:** −13.4 LUFS integrated, true peak below −1 dBTP on the delivered AAC
 (the limiter's ceiling is −3 dB for this film, as the track is mastered hot).
