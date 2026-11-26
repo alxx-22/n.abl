@@ -238,3 +238,20 @@
 .d-tile { position: absolute; left: 50%; top: 50%; width: 104px; height: 124px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--c300); }
 .d-tile svg { width: 40px; height: 40px; }
 .d-tile b { font: 400 16px var(--f); letter-spacing: .08em; padding-top: 2px; }
+
+/* the delivery note: printed and plain */
+.d-note { position: absolute; left: 50%; top: 50%; width: 330px; padding: 24px 26px 26px; border-radius: 4px; background: #FBF6EC; color: var(--ink); font-family: var(--f);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, .5), 0 0 0 1px rgba(20, 17, 14, .1); }
+.d-note.on { left: 125px; top: 182px; transform-origin: 50% 0; box-shadow: 0 6px 16px rgba(60, 45, 25, .25), 0 0 0 1px rgba(20, 17, 14, .12); }
+.d-note.on::before { content: ""; position: absolute; left: 50%; top: -14px; width: 110px; height: 30px; margin-left: -55px; background: rgba(201, 186, 160, .6); transform: rotate(-3deg); }
+.d-note .hd { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 10px; border-bottom: 2px solid #D8CCB8; }
+.d-note .hd b { font: 700 16px var(--f); letter-spacing: .12em; }
+.d-note .hd span { font: 400 14px var(--f); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.d-note .sup { font: 700 26px var(--f); margin-top: 16px; }
+.d-note .ad { font: 400 15px var(--f); color: var(--ink-3); margin: 2px 0 14px; }
+.d-note .its { border-top: 1px solid #D8CCB8; border-bottom: 1px solid #D8CCB8; padding: 6px 0; }
+.d-note .its div { display: flex; justify-content: space-between; font: 400 16px var(--f); padding: 6px 0 4px; font-variant-numeric: tabular-nums; }
+.d-note .its b { font-weight: 700; }
+.d-note .tot { display: flex; justify-content: space-between; align-items: baseline; padding-top: 14px; font: 400 16px var(--f); color: var(--ink-3); }
+.d-note .tot b { font: 700 28px var(--f); color: var(--ink); font-variant-numeric: tabular-nums; }
+.d-mon .bx .tx { white-space: nowrap; }
