@@ -14,7 +14,7 @@
    THE INTERFACE IS THE BRAND'S OWN (brand-guidelines.md, sections 3, 5, 6)
    Every window, row, chip and button in the scenes is one of the site's
    components, drawn at stage size:
-   - Panels are glass: espresso at about 0.64 alpha under a faint cream
+   - Panels are glass: espresso at about 0.84 alpha under a faint cream
      wash, a cream hairline, a highlight along the top edge, and the trio
      line on the one panel each scene is about.
    - Type is Manjari Regular, with Thin for the big numbers and the spoken
@@ -46,9 +46,12 @@
   --ember: #FF5A36; --ember300: #FF8F70; --coral-rgb: 255, 90, 54;
   --trio: linear-gradient(90deg, #FF5A36, #E9AC57 42%, #EFE2C6 68%, #7CCBFF);
   /* the glass the panels are made of, and the darker glass set into them */
-  --glass: linear-gradient(180deg, rgba(240, 231, 216, .08), rgba(240, 231, 216, .022) 55%, rgba(240, 231, 216, .012)), rgba(17, 14, 12, .64);
+  /* Firm glass: the scenes cannot blur what is behind them (they live in a
+     3D space where the browser will not), so the glass is tinted deep
+     enough to read as frosted rather than as clear film over the light. */
+  --glass: linear-gradient(180deg, rgba(240, 231, 216, .085), rgba(240, 231, 216, .024) 55%, rgba(240, 231, 216, .012)), rgba(17, 14, 12, .84);
   --glass-in: linear-gradient(170deg, rgba(240, 231, 216, .055), rgba(240, 231, 216, .015)), rgba(8, 7, 6, .34);
-  --glass-deep: linear-gradient(180deg, rgba(240, 231, 216, .075), rgba(240, 231, 216, .02) 55%), rgba(17, 14, 12, .92);
+  --glass-deep: linear-gradient(180deg, rgba(240, 231, 216, .075), rgba(240, 231, 216, .02) 55%), rgba(17, 14, 12, .95);
   --hair: rgba(240, 231, 216, .13);
   --hair-2: rgba(240, 231, 216, .2);
   --rule: rgba(240, 231, 216, .08);
@@ -130,7 +133,7 @@
 .f-stage .st {
   margin-left: auto; display: inline-flex; align-items: center; gap: 10px; flex: none;
   height: 42px; padding: 2px 17px 0 15px; border-radius: 999px; white-space: nowrap;
-  border: 1.5px solid rgba(233, 172, 87, .4); background: rgba(14, 12, 10, .55);
+  border: 1.5px solid rgba(233, 172, 87, .4); background: rgba(14, 12, 10, .82);
   font: 400 15px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--a300);
 }
 /* n.abl's own hand in the work, by default: the amber square */
@@ -147,7 +150,7 @@
 .r-chip, .r-badge, .r-flag, .r-fly, .c-chip, .c-post, .c-ans .srcchip, .c-step .tone .ch, .c-notes .sum {
   display: inline-flex; align-items: center; gap: 12px; white-space: nowrap;
   height: 54px; padding: 2px 24px 0 20px; border-radius: 999px;
-  border: 1.5px solid rgba(240, 231, 216, .18); background: rgba(14, 12, 10, .58);
+  border: 1.5px solid rgba(240, 231, 216, .18); background: rgba(14, 12, 10, .84);
   box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .05);
   font: 400 24px/1 var(--sans); color: var(--c200);
 }
@@ -194,7 +197,7 @@
 /* ---------- documents: frosted glass, not paper ---------- */
 .r-paper, .c-page {
   position: absolute; left: 50%; top: 50%; color: var(--c200);
-  background: linear-gradient(165deg, rgba(240, 231, 216, .15), rgba(240, 231, 216, .06) 45%, rgba(240, 231, 216, .035)), rgba(24, 20, 17, .52);
+  background: linear-gradient(165deg, rgba(240, 231, 216, .15), rgba(240, 231, 216, .06) 45%, rgba(240, 231, 216, .035)), rgba(24, 20, 17, .82);
   border: 1.5px solid rgba(240, 231, 216, .22);
   box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .13), inset 0 0 50px rgba(240, 231, 216, .03), 0 60px 140px -30px rgba(0, 0, 0, .8);
 }
@@ -223,7 +226,7 @@
 .r-fly { height: 58px; font-size: 26px; opacity: 0; }
 .c-post { height: 66px; padding: 2px 28px 0 22px; gap: 14px; font-size: 26px; color: var(--c100); }
 .c-post svg { width: 28px; height: 28px; color: var(--ice300); }
-.c-page { width: 300px; border-radius: 18px; padding: 24px 24px 28px; background-color: rgba(24, 20, 17, .86); }
+.c-page { width: 300px; border-radius: 18px; padding: 24px 24px 28px; background-color: rgba(24, 20, 17, .92); }
 .c-page .ttl { font: 400 21px/1.2 var(--sans); color: var(--c100); margin-bottom: 16px; }
 .c-page i { display: block; height: 9px; border-radius: 5px; background: rgba(240, 231, 216, .14); margin: 11px 0; }
 .c-page .hl { display: block; font: 400 19px/1.4 var(--sans); padding: 9px 11px 7px; margin: 14px -6px; border-radius: 10px; }
@@ -313,7 +316,7 @@
 .r-cap { position: absolute; left: 50%; top: 50%; display: flex; align-items: center; gap: 20px; white-space: nowrap; }
 .r-cap .lang {
   display: inline-flex; align-items: center; gap: 9px; height: 44px; padding: 3px 16px 0; border-radius: 999px;
-  border: 1.5px solid rgba(240, 231, 216, .18); background: rgba(14, 12, 10, .55);
+  border: 1.5px solid rgba(240, 231, 216, .18); background: rgba(14, 12, 10, .82);
   font: 400 16px/1 var(--sans); letter-spacing: .1em; color: var(--c300);
 }
 .r-cap .lang .to { display: none; align-items: center; gap: 9px; color: var(--ice300); }
@@ -340,7 +343,7 @@
 
 /* ---------- a process joined up: glass pills, drawn in by their rims ---------- */
 .r-pill { position: absolute; left: 50%; top: 50%; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 12px;
-  background: linear-gradient(180deg, rgba(240, 231, 216, .085), rgba(240, 231, 216, .025)), rgba(17, 14, 12, .74);
+  background: linear-gradient(180deg, rgba(240, 231, 216, .085), rgba(240, 231, 216, .025)), rgba(17, 14, 12, .88);
   font: 400 26px/1 var(--sans); color: var(--c100); white-space: nowrap; font-variant-numeric: tabular-nums; padding-top: 3px; }
 .r-pill .ic { width: 28px; height: 28px; flex: none; display: flex; align-items: center; justify-content: center; color: var(--c300); margin-top: -3px; }
 .r-pill .ic svg { width: 100%; height: 100%; }
@@ -450,7 +453,7 @@
 .c-pres .av { width: 76px; height: 76px; }
 .c-pres .nm { left: 10px; bottom: 10px; padding: 6px 10px 4px; font-size: 15px; }
 .c-cc { position: absolute; left: 50%; top: 50%; width: 320px; padding: 14px 18px 12px; border-radius: 16px;
-  background: rgba(8, 7, 6, .7); border: 1.5px solid rgba(240, 231, 216, .1); font: 400 22px/1.32 var(--sans); color: var(--c100); }
+  background: rgba(8, 7, 6, .88); border: 1.5px solid rgba(240, 231, 216, .1); font: 400 22px/1.32 var(--sans); color: var(--c100); }
 .c-chip { height: 50px; padding: 3px 20px 0 16px; font-size: 21px; }
 .c-chip svg { width: 22px; height: 22px; color: var(--c400); }
 
