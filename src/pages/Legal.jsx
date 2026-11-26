@@ -1,5 +1,9 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Logo, Reveal } from '../components/ui/index.jsx'
+import { Reveal } from '../components/ui/index.jsx'
+import Nav from '../components/layout/Nav.jsx'
+import Footer from '../components/layout/Footer.jsx'
+import LitGround from '../components/LitGround.jsx'
 import '../styles/legal.css'
 
 /* Drafts only. Every document renders the review notice — these have not
@@ -147,58 +151,111 @@ const DOCS = {
   },
 }
 
+const DOC_LIST = [['privacy', 'Privacy Policy'], ['terms', 'Terms of Service'], ['cookies', 'Cookie Policy']]
+const slug = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+const nn = (i) => String(i + 1).padStart(2, '0')
+
+/* ============================================================
+   THE LEGAL PAGES — in the site, not beside it: its nav and footer, the
+   quiet ground (low light at the edges, dark down the side the words are
+   on), the title in Thin, and the three documents one step from each
+   other. On a desk the contents run down the left and mark the section
+   being read; the draft notice is the one thing in ember, because it is
+   the one thing a reader must not miss.
+   ============================================================ */
 export default function Legal({ doc }) {
-  const d = DOCS[doc] || DOCS.privacy
+  const key = DOCS[doc] ? doc : 'privacy'
+  const d = DOCS[key]
+  const sections = [...d.body.map(([heading]) => heading), 'Contact']
+  const [active, setActive] = useState(slug(sections[0]))
+
+  useEffect(() => { document.title = `${d.title} — n.abl` }, [d.title])
+
+  /* The contents follow the reader: whichever section crosses a band near
+     the top of the screen is the one being read. */
+  useEffect(() => {
+    setActive(slug(sections[0]))
+    const els = sections.map((h) => document.getElementById(`s-${slug(h)}`)).filter(Boolean)
+    const io = new IntersectionObserver((entries) => {
+      const hit = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0]
+      if (hit) setActive(hit.target.id.slice(2))
+    }, { rootMargin: '-16% 0px -72% 0px' })
+    els.forEach((e) => io.observe(e))
+    return () => io.disconnect()
+    // the sections only change with the document
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
 
   return (
-    <div className="grain">
-      <div className="app-top">
-        <Link to="/" aria-label="n.abl home"><Logo size={22} /></Link>
-        <Link to="/" className="app-back">← Back to site</Link>
-      </div>
+    <div className="lit">
+      <LitGround story="quiet" />
+      <Nav home={false} />
+      <main className="shell legal">
+        <header className="legal__head">
+          <Reveal><span className="eyebrow">Legal</span></Reveal>
+          <Reveal delay={0.05}>
+            <h1 className="legal__title">{d.title}<span className="dot" /></h1>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="legal__intro">{d.intro}</p>
+          </Reveal>
+          <Reveal delay={0.14}>
+            <nav className="legal__docs" aria-label="Legal documents">
+              {DOC_LIST.map(([k, label]) => (
+                <Link key={k} to={`/${k}`} className={`legal__doc${k === key ? ' is-on' : ''}`}
+                  aria-current={k === key ? 'page' : undefined}>{label}</Link>
+              ))}
+            </nav>
+          </Reveal>
+        </header>
 
-      <div className="shell legal">
-        <Reveal><span className="eyebrow">{d.label}</span></Reveal>
-        <Reveal delay={0.05}>
-          <h1 className="legal__title">{d.title}<span className="dot" /></h1>
-        </Reveal>
-        <Reveal delay={0.1}>
-          <p className="legal__intro">{d.intro}</p>
-        </Reveal>
-
-        <Reveal delay={0.14}>
-          <aside className="legal__notice" role="note">
-            <strong>Draft — not yet reviewed.</strong> This document is a starting point
-            drafted for n.abl, not legal advice. It must be reviewed and approved by a
-            qualified solicitor before you rely on it or publish it as binding, and the
-            &ldquo;last updated&rdquo; date below needs setting once it is.
+        <div className="legal__grid">
+          <aside className="legal__toc" aria-label="On this page">
+            <span className="legal__toc-k">On this page</span>
+            <ol>
+              {sections.map((h, i) => (
+                <li key={h}>
+                  <a href={`#s-${slug(h)}`} className={active === slug(h) ? 'is-on' : undefined}>
+                    <span className="n">{nn(i)}</span><span>{h}</span>
+                  </a>
+                </li>
+              ))}
+            </ol>
           </aside>
-        </Reveal>
 
-        <div className="legal__body prose">
-          {d.body.map(([heading, paras]) => (
-            <section key={heading} className="legal__section">
-              <h2>{heading}</h2>
-              {paras.map((p, i) => <p key={i}>{p}</p>)}
-            </section>
-          ))}
+          <div className="legal__main">
+            <Reveal delay={0.18}>
+              <aside className="legal__notice" role="note">
+                <span className="legal__notice-k">Draft, not yet reviewed</span>
+                <p>
+                  This document is a starting point drafted for n.abl, not legal advice. It must be
+                  reviewed and approved by a qualified solicitor before you rely on it or publish it
+                  as binding, and the &ldquo;last updated&rdquo; date below needs setting once it is.
+                </p>
+              </aside>
+            </Reveal>
 
-          <section className="legal__section">
-            <h2>Contact</h2>
-            <p>
-              Questions about this document? Email{' '}
-              <a href="mailto:hello@nabl.agency">hello@nabl.agency</a>.
-            </p>
-            <p className="legal__updated">Last updated: {LAST_UPDATED}</p>
-          </section>
+            <div className="legal__body">
+              {d.body.map(([heading, paras], i) => (
+                <section key={heading} id={`s-${slug(heading)}`} className="legal__section">
+                  <h2><span className="n">{nn(i)}</span><span>{heading}</span></h2>
+                  {paras.map((p, j) => <p key={j}>{p}</p>)}
+                </section>
+              ))}
+
+              <section id="s-contact" className="legal__section legal__contact">
+                <h2><span className="n">{nn(d.body.length)}</span><span>Contact</span></h2>
+                <p>
+                  Questions about this document? Email{' '}
+                  <a href="mailto:hello@nabl.agency">hello@nabl.agency</a>.
+                </p>
+                <p className="legal__updated">Last updated {LAST_UPDATED}</p>
+              </section>
+            </div>
+          </div>
         </div>
-
-        <nav className="legal__nav" aria-label="Legal documents">
-          <Link to="/privacy">Privacy Policy</Link>
-          <Link to="/terms">Terms of Service</Link>
-          <Link to="/cookies">Cookie Policy</Link>
-        </nav>
-      </div>
+      </main>
+      <Footer home={false} />
     </div>
   )
 }

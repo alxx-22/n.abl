@@ -181,7 +181,25 @@
 }
 .sys__row:last-child { border-bottom: 1px solid var(--line-faint); }
 @media (min-width: 860px) { .sys__row { grid-template-columns: 17rem 1fr; gap: var(--s-6); align-items: start; } }
-.sys__cat { font-family: var(--font-display); font-weight: 600; color: var(--cream-100); }
+/* the capability's name in Thin, as the brand sets its big words */
+.sys__cat {
+  font-family: var(--font-display); font-weight: 100;
+  font-size: clamp(2rem, 1.6rem + 1.2vw, 2.7rem); line-height: 1.02;
+  letter-spacing: var(--track-display); word-spacing: var(--word-display); color: var(--cream-100);
+}
+/* its scene floats over the page's light, as the products' do: no frame,
+   no ground of its own, and edges that fade rather than stop */
+.sys .scene {
+  position: relative; aspect-ratio: 16 / 9; margin: var(--s-5) 0 0;
+  border: 0; border-radius: 0; background: none; overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent), linear-gradient(180deg, transparent, #000 6%, #000 94%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent), linear-gradient(180deg, transparent, #000 6%, #000 94%, transparent);
+  mask-composite: intersect;
+}
+.sys .scene .f-ground, .sys .scene .f-vignette { display: none; }
+/* on a phone the row is narrow: a taller frame, so the scene is drawn larger */
+@media (max-width: 700px) { .sys .scene { aspect-ratio: 5 / 4; } }
 .sys__badges { display: flex; flex-wrap: wrap; gap: var(--s-2); }
 
 .chip {
@@ -291,12 +309,17 @@
   to   { transform: translateX(7%); }
 }
 .problem.step .problem__stage, .problem.step .problem__tag { position: relative; z-index: 1; }
-/* the scene draws no ground of its own over the aurora */
-.problem.step .f-ground, .problem.step .f-vignette { display: none; }
+/* the scene draws no ground of its own over the aurora, or over a card's glass */
+.problem .f-ground, .problem .f-vignette { display: none; }
+/* Other services' cards turn over to their scene inside the card's own
+   glass, so the page's light shows through it as it does through the face */
+.lit .problem:not(.step) .problem__scene { background: transparent; }
+.problem .problem__cap { display: inline-flex; align-items: center; gap: 8px; }
+.problem .problem__cap::before { content: ''; width: 6px; height: 6px; flex: none; background: var(--accent-400); box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.55); }
+.problem:not(.step) .problem__note { font-size: 0.68rem; letter-spacing: var(--track-label); word-spacing: 0; text-transform: uppercase; color: var(--cream-600); }
 @media (prefers-reduced-motion: reduce) { .problem.step .problem__scene::before { animation: none; } }
 .problem.step .problem__tag { padding: 0.6rem 18px 0.65rem; border-top: 1px solid var(--line-faint); }
-.problem.step .problem__cap { display: inline-flex; align-items: center; gap: 8px; font-size: 0.68rem; color: var(--accent-300); }
-.problem.step .problem__cap::before { content: ''; width: 6px; height: 6px; flex: none; background: var(--accent-400); box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.55); }
+.problem.step .problem__cap { font-size: 0.68rem; color: var(--accent-300); }
 /* the step cards are narrow: the label says what is showing, and "what happens" no longer fits beside it */
 .problem.step .problem__note { display: none; }
 @media (prefers-reduced-motion: reduce) { .step__peek-arrow { transition: none; } }

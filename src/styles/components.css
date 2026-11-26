@@ -86,6 +86,82 @@ a:hover > .nabl-logo .nabl-logo__dot {
 .modal__form .btn { margin-top: var(--s-2); }
 .modal__success { text-align: center; }
 
+/* ---------- The discovery call (DiscoveryModal.jsx) ----------
+   The one featured panel on screen: glass with the trio line along its top.
+   On a desk the reason to book sits beside the form, the three lights low
+   inside its glass as they are inside the main button; the fields pair up
+   so the whole form fits without scrolling. On a phone it stacks. */
+.modal.dmodal {
+  position: relative; max-width: 58rem; max-height: 92dvh; padding: 0;
+  overflow: hidden auto; border-radius: 24px;
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 40px 120px -30px rgba(0, 0, 0, 0.85);
+  animation: dmodal-in .38s cubic-bezier(.2, .9, .25, 1.08) backwards;
+}
+.lit .modal.dmodal { background: rgba(19, 16, 14, 0.9); -webkit-backdrop-filter: blur(18px) saturate(130%); backdrop-filter: blur(18px) saturate(130%); }
+.dmodal::before {
+  content: ''; position: absolute; left: 30px; right: 30px; top: 0; height: 1px; z-index: 2; pointer-events: none;
+  background: var(--grad-trio); opacity: 0.85;
+}
+@keyframes dmodal-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+.dmodal__grid { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); }
+.dmodal__intro {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: flex; flex-direction: column; padding: 46px 40px 40px;
+  border-right: 1px solid var(--line-faint);
+}
+/* the three lights, rising softly from the foot of the pane */
+.dmodal__intro::after {
+  content: ''; position: absolute; left: -20%; right: -20%; bottom: -30%; height: 70%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(34% 46% at 22% 78%, rgba(var(--ember-rgb), 0.55), transparent 70%),
+    radial-gradient(30% 44% at 52% 92%, rgba(var(--accent-rgb), 0.5), transparent 70%),
+    radial-gradient(34% 46% at 82% 78%, rgba(var(--ice-rgb), 0.45), transparent 70%);
+  filter: blur(22px); opacity: 0.55;
+}
+.dmodal__title {
+  margin-top: 20px;
+  font-weight: 100; font-size: clamp(2.2rem, 1.6rem + 1.8vw, 3.1rem); line-height: 1.04;
+  letter-spacing: var(--track-display); word-spacing: var(--word-display); color: var(--cream-100); text-wrap: balance;
+}
+.modal__body.dmodal__body { margin: 18px 0 0; font-size: var(--t-lede); line-height: 1.55; color: var(--cream-300); }
+.dmodal__facts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 34px; }
+.dmodal__facts li {
+  display: inline-flex; align-items: center; gap: 9px; height: 34px; padding: 1px 14px 0;
+  border-radius: 999px; border: 1px solid rgba(var(--cream-rgb), 0.18); background: rgba(14, 12, 10, 0.55);
+  font-size: 14px; line-height: 1; color: var(--cream-200); white-space: nowrap;
+}
+.dmodal__facts li::before { content: ''; width: 6px; height: 6px; flex: none; margin-top: -1px; background: var(--accent-400); box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.55); }
+.modal__form.dmodal__form { gap: 16px; padding: 46px 40px 36px; }
+.dmodal__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+.dmodal .input { background: rgba(8, 7, 6, 0.5); border-color: rgba(var(--cream-rgb), 0.14); border-radius: 12px; }
+.dmodal .input:hover { border-color: rgba(var(--cream-rgb), 0.22); }
+.dmodal .input:focus { border-color: rgba(var(--accent-rgb), 0.55); box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.1); }
+.dmodal textarea.input { min-height: 6.6rem; }
+.dmodal .modal__form .btn { margin-top: 6px; min-height: 52px; }
+.modal__close.dmodal__close {
+  position: absolute; top: 16px; right: 16px; z-index: 3;
+  width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+  border: 1px solid rgba(var(--cream-rgb), 0.14); background: rgba(14, 12, 10, 0.55); color: var(--cream-300);
+  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.modal__close.dmodal__close:hover { color: var(--cream-100); border-color: rgba(var(--cream-rgb), 0.3); }
+/* sent: a smaller panel, the AI's ice on the tick */
+.modal.dmodal.dmodal--done { max-width: 30rem; }
+.dmodal__done { padding: 48px 38px 36px; display: flex; flex-direction: column; align-items: center; }
+.dmodal__done .dmodal__body { margin: 16px 0 28px; }
+.tick.tick--ice { border-color: var(--ice-400); box-shadow: 0 0 26px -4px rgba(var(--ice-rgb), 0.55), inset 0 0 14px rgba(var(--ice-rgb), 0.12); margin-bottom: 22px; }
+.tick.tick--ice::before, .tick.tick--ice::after { background: var(--ice-300); }
+@media (max-width: 860px) {
+  .dmodal__grid { grid-template-columns: 1fr; }
+  .dmodal__intro { padding: 34px 24px 4px; border-right: 0; }
+  .dmodal__intro::after { display: none; }
+  .dmodal__facts { margin-top: 18px; padding-top: 0; }
+  .modal__form.dmodal__form { padding: 22px 24px 26px; }
+  .dmodal__row { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .modal.dmodal { animation: none; } }
+
 /* Animated tick on successful submit */
 .tick {
   width: 54px; height: 54px; margin: 0 auto var(--s-4);

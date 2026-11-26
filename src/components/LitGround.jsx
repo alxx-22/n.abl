@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { prefersReducedMotion, useReducedMotion } from './ui/index.jsx'
 import { createGround } from './ground/engine.js'
-import { homeKeyframes, stillKeyframes } from './ground/story.js'
+import { homeKeyframes, quietKeyframes, servicesKeyframes, stillKeyframes } from './ground/story.js'
 
 /* ============================================================
    LIT GROUND — the light behind the page
@@ -10,8 +10,10 @@ import { homeKeyframes, stillKeyframes } from './ground/story.js'
    grain over it. On the homepage the light follows the story section by
    section (ground/story.js): the opening's wisps, warmth as the work is
    described, fluted glass while the film shows it being done, the reeds
-   widening into an aurora through How we work, and a quiet close. On
-   other pages it holds the opening light.
+   widening into an aurora through How we work, and a quiet close.
+   Other services has a story of its own in the same order ('services');
+   the legal pages and the client portal keep the light low and at the
+   edges ('quiet'); the 404 holds the opening light ('still').
 
    The canvas sits at z-index -1, so it paints above the page's own
    background and below every section. Sections on a lit page must not
@@ -55,7 +57,8 @@ export default function LitGround({ story = 'home' }) {
     const g = createGround(canvas.current, { reduced: prefersReducedMotion(), shields: SHIELDS })
     if (!g) { setStill(true); return }
     ground.current = g
-    g.setStory(() => (story === 'home' ? homeKeyframes(measure()) : stillKeyframes(measure())))
+    const STORIES = { home: homeKeyframes, services: servicesKeyframes, quiet: quietKeyframes, still: stillKeyframes }
+    g.setStory(() => (STORIES[story] || stillKeyframes)(measure()))
 
     /* The page changes height after the first render (the fonts, the film
        taking its length, the cards revealing), and every change moves the

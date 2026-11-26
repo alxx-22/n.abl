@@ -41,7 +41,7 @@ async function run() {
 
     // wrong key
     await page.fill('.portal-key', 'WRONG-KEY-0000')
-    await page.click('button.btn--accent')
+    await page.click('.auth-form button[type=submit]')
     await page.waitForTimeout(900)
     const wrongMsg = (await page.textContent('.auth-error'))?.trim() || ''
     check('rejects an invalid access key', /invalid access key/i.test(wrongMsg), wrongMsg)
@@ -49,7 +49,7 @@ async function run() {
 
     // right key
     await page.fill('.portal-key', 'ACME-DEMO-2026')
-    await page.click('button.btn--accent')
+    await page.click('.auth-form button[type=submit]')
     await page.waitForTimeout(1600)
     const body = await page.evaluate(() => document.body.innerText)
     check('signs in with a valid access key', /Acme Corp/.test(body))

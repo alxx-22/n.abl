@@ -1,41 +1,93 @@
-.legal { padding-block: var(--s-8) var(--s-9); }
-.legal__title { font-size: var(--t-3xl); margin: var(--s-3) 0 var(--s-4); }
-.legal__intro { color: var(--cream-400); font-size: var(--t-lg); max-width: 60ch; }
+/* ============================================================
+   THE LEGAL PAGES — pages/Legal.jsx
 
-/* Draft warning — must stay visually loud enough to not be mistaken for a
-   reviewed, binding document. */
+   Long reading, set the way the brand sets it: the title in Thin, ledes
+   in cream 300, body in cream 200 at a 68-character measure, headings in
+   Regular with the section's number in tracked capitals, and rows divided
+   by hairlines rather than boxes. Glass only where something sits apart
+   from the text: the document switcher and the draft notice.
+   ============================================================ */
+.legal { padding-block: clamp(8rem, 17vh, 11.5rem) clamp(4.5rem, 11vh, 7.5rem); }
+
+.legal__head { max-width: 54rem; }
+.legal__title {
+  margin-top: 22px;
+  font-weight: 100; font-size: clamp(2.8rem, 1.5rem + 4.2vw, 5.4rem); line-height: 1.02;
+  letter-spacing: var(--track-display); word-spacing: var(--word-display);
+  color: var(--cream-100); text-wrap: balance;
+}
+.legal__intro { margin-top: 24px; max-width: 50ch; font-size: var(--t-lede); line-height: 1.6; color: var(--cream-300); text-wrap: pretty; }
+
+/* the three documents, one step from each other: chips, the open one marked with the amber square */
+.legal__docs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 30px; }
+.legal__doc {
+  display: inline-flex; align-items: center; gap: 9px; height: 36px; padding: 1px 16px 0;
+  border-radius: 999px; border: 1px solid rgba(var(--cream-rgb), 0.16); background: rgba(14, 12, 10, 0.55);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  font-size: 14px; line-height: 1; color: var(--cream-300); white-space: nowrap;
+  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.legal__doc:hover { color: var(--cream-100); border-color: rgba(var(--cream-rgb), 0.3); }
+.legal__doc.is-on { color: var(--cream-100); border-color: rgba(var(--accent-rgb), 0.45); }
+.legal__doc.is-on::before { content: ''; width: 6px; height: 6px; flex: none; margin-top: -1px; background: var(--accent-400); box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.55); }
+
+.legal__grid {
+  display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: clamp(2.5rem, 5vw, 5.5rem);
+  margin-top: clamp(3rem, 8vh, 5rem); align-items: start;
+}
+
+/* the contents: hairline rows, the section being read marked in amber */
+.legal__toc { position: sticky; top: 112px; }
+.legal__toc-k, .legal__notice-k, .legal__updated {
+  font-size: 0.72rem; line-height: 1.3; letter-spacing: var(--track-label); word-spacing: 0; text-transform: uppercase;
+}
+.legal__toc-k { display: block; color: var(--cream-600); padding-bottom: 12px; }
+.legal__toc ol { border-bottom: 1px solid var(--line-faint); }
+.legal__toc a {
+  display: grid; grid-template-columns: 2.3em minmax(0, 1fr); align-items: baseline; gap: 4px;
+  padding: 9px 0 8px; border-top: 1px solid var(--line-faint);
+  font-size: 13.5px; line-height: 1.35; color: var(--cream-600);
+  transition: color var(--dur-fast) var(--ease);
+}
+.legal__toc a .n { font-size: 11px; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+.legal__toc a:hover { color: var(--cream-300); }
+.legal__toc a.is-on { color: var(--cream-100); }
+.legal__toc a.is-on .n { color: var(--accent-300); }
+
+.legal__main { min-width: 0; max-width: 68ch; }
+
+/* The draft notice must not be mistaken for a reviewed, binding document:
+   glass with an ember edge and the ember square, the brand's mark for
+   what needs attention. */
 .legal__notice {
-  margin: var(--s-6) 0 var(--s-8);
-  padding: var(--s-4) var(--s-5);
-  border: 1px solid rgba(var(--accent-rgb), 0.4);
-  border-left: 3px solid var(--accent-400);
-  border-radius: var(--r-md);
-  background: rgba(var(--accent-rgb), 0.07);
-  color: var(--cream-300);
-  font-size: var(--t-sm);
-  max-width: 72ch;
+  padding: 20px 22px 20px;
+  border-radius: 18px; border: 1px solid rgba(var(--ember-rgb), 0.42);
+  background: linear-gradient(180deg, rgba(var(--cream-rgb), 0.06), rgba(var(--cream-rgb), 0.02)), rgba(19, 16, 14, 0.66);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 40px -18px rgba(var(--ember-rgb), 0.35);
 }
-.legal__notice strong { color: var(--accent-200); }
+.legal__notice-k { display: inline-flex; align-items: center; gap: 9px; color: var(--ember-300); }
+.legal__notice-k::before { content: ''; width: 7px; height: 7px; flex: none; margin-top: -1px; background: var(--ember-400); box-shadow: 0 0 10px rgba(var(--ember-rgb), 0.65); }
+.legal__notice p { margin-top: 10px; font-size: 14.5px; line-height: 1.6; color: var(--cream-300); }
 
-.legal__body { color: var(--cream-400); }
-.legal__section { margin-bottom: var(--s-7); }
+/* the document: sections between hairlines, each heading carrying its number */
+.legal__body { margin-top: 12px; }
+.legal__section { padding-top: 34px; margin-top: 34px; border-top: 1px solid var(--line); scroll-margin-top: 110px; }
 .legal__section h2 {
-  font-size: var(--t-xl);
-  color: var(--cream-100);
-  margin-bottom: var(--s-3);
-  padding-bottom: var(--s-2);
-  border-bottom: 1px solid var(--line-faint);
+  display: flex; align-items: baseline; gap: 14px; margin-bottom: 16px;
+  font-weight: 400; font-size: clamp(1.3rem, 1.1rem + 0.7vw, 1.65rem); line-height: 1.2;
+  letter-spacing: 0; word-spacing: -0.04em; color: var(--cream-100);
 }
-.legal__section p + p { margin-top: var(--s-3); }
-.legal__section a { color: var(--accent-400); }
-.legal__section a:hover { text-decoration: underline; text-underline-offset: 3px; }
-.legal__updated { color: var(--cream-600); font-size: var(--t-sm); margin-top: var(--s-4); }
+.legal__section h2 .n { flex: none; font-size: 0.72rem; letter-spacing: var(--track-label); color: var(--accent-300); font-variant-numeric: tabular-nums; transform: translateY(-0.2em); }
+.legal__section p { font-size: 16.5px; line-height: 1.7; color: var(--cream-200); text-wrap: pretty; }
+.legal__section p + p { margin-top: 14px; }
+.legal__section a { color: var(--accent-300); text-decoration: underline; text-decoration-color: rgba(var(--accent-rgb), 0.4); text-underline-offset: 3px; }
+.legal__section a:hover { text-decoration-color: var(--accent-300); }
+.legal__updated { margin-top: 22px; color: var(--cream-600); }
 
-.legal__nav {
-  display: flex; gap: var(--s-5); flex-wrap: wrap;
-  padding-top: var(--s-5);
-  border-top: 1px solid var(--line);
-  font-size: var(--t-sm);
+/* a phone, or a narrow window: one column, and no contents beside it */
+@media (max-width: 980px) {
+  .legal__grid { grid-template-columns: 1fr; margin-top: 2.5rem; }
+  .legal__toc { display: none; }
+  .legal__section { padding-top: 28px; margin-top: 28px; }
 }
-.legal__nav a { color: var(--cream-600); transition: color var(--dur-fast) var(--ease); }
-.legal__nav a:hover { color: var(--accent-400); }

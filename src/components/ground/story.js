@@ -166,7 +166,66 @@ export function homeKeyframes(page) {
   return kf
 }
 
-/* A page with no story: the opening light, held. Other services, legal pages. */
+/* A page with no story: the opening light, held. The 404. */
 export function stillKeyframes({ portrait }) {
   return [[0, portrait ? portraitOf(ST.hero) : ST.hero]]
+}
+
+/* Shared by the stories below: keyframes in scroll order, never two at the
+   same place. */
+const ordered = (kf) => {
+  kf.sort((a, b) => a[0] - b[0])
+  for (let j = 1; j < kf.length; j++) if (kf[j][0] <= kf[j - 1][0]) kf[j][0] = kf[j - 1][0] + 1
+  return kf
+}
+
+/* ------------------------------------------------------------
+   Other services (/services), told the way the homepage is: the opening
+   light, warmth while the problems are read, the fluted glass arriving
+   with what we build (one layout of light per capability), the aurora
+   for the examples, and the quiet close. Each section gets a dark field
+   on the side its words are on, instead of the opening's light held
+   behind everything.
+   ------------------------------------------------------------ */
+export function servicesKeyframes(page) {
+  const { vh, maxY, portrait, sec } = page
+  const A = portrait ? portraitOf : (s) => s
+  const mid = (id) => { const s = sec(id); return s ? s.top + s.h / 2 - vh / 2 : null }
+  const kf = [[0, A(ST.hero)]]
+  const push = (y, s) => { if (y != null && isFinite(y)) kf.push([y, A(s)]) }
+
+  const p = sec('problems')
+  if (p) {
+    push(p.top - vh * 0.6, ST.hero)
+    push(p.top - vh * 0.05, ST.heatStart)
+    push(p.top + p.h - vh * 0.6, ST.heatPeak)
+  }
+  const t = sec('toolkit')
+  if (t) {
+    push(t.top - vh * 0.35, ST.glassIn)
+    const rows = [...document.querySelectorAll('#toolkit .sys__row')].map((r) => r.getBoundingClientRect().top + window.scrollY)
+    const looks = [ST.fix1, ST.fix2, ST.fix3]
+    if (rows.length) rows.forEach((y, i) => push(y - vh * 0.25, looks[i % looks.length]))
+    else push(t.top + vh * 0.2, ST.fix1)
+    push(t.top + t.h - vh * 0.5, ST.glass)
+  }
+  push(mid('cases'), ST.cases)
+  push(mid('cost'), ST.pricing)
+  const c = mid('contact')
+  if (c != null) push(Math.min(maxY, c), ST.contact)
+  return ordered(kf)
+}
+
+/* ------------------------------------------------------------
+   The quiet pages: the legal documents and the client portal. Something
+   to read or to work in, so the light stays low and at the edges: a
+   dimmed opening behind the title, settling as the page goes on into
+   the close's layout, dimmer still, with the dark kept down the side the
+   words are on.
+   ------------------------------------------------------------ */
+const QUIET_TOP = mk({ ...CALM, k: 0.72, vig: 0.34, heat: 0.22, drift: 0.16, pace: 0.7 }, dim(L.hero, 0.8))
+const QUIET = mk({ tau: 0.55, spread: 0.7, g: 0.9, a: 0, cy: 0.6, k: 0.58, drift: 0.2, pace: 0.6, shd: 0.6, vig: 0.36, tone: 0.45, hp: 0.25, sat: 0.95, heat: 0.2 }, dim(L.contact, 0.9))
+export function quietKeyframes({ vh, maxY, portrait }) {
+  const A = portrait ? portraitOf : (s) => s
+  return ordered([[0, A(QUIET_TOP)], [Math.min(maxY, vh * 0.9), A(QUIET)]])
 }
