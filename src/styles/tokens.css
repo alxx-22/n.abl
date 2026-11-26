@@ -1,9 +1,10 @@
 /* ============================================================
-   n.abl — DESIGN TOKENS  (rebrand v2)
-   Warm espresso base · cream light · low-opacity cream glow
+   n.abl — DESIGN TOKENS  (rebrand v2, revised 2026-11)
+   Warm espresso base · cream light · ember, amber and ice light
    ------------------------------------------------------------
    Direction: modern, minimal, anti-corporate. No pure black,
-   no neon. Depth comes from warm greys and soft cream bloom.
+   no neon. The ground stays dark; colour arrives as light on it.
+   Specification: business/02-brand/brand-guidelines.md
    ============================================================ */
 
 :root {
@@ -47,7 +48,33 @@
   --accent-600:  #B87718;
   --accent-rgb:  233, 172, 87;
 
-  /* ---------- Support ---------- */
+  /* ---------- The colourway: ember, amber, ice (2026-11) ----------
+     Three lights on the espresso ground, in the order the story runs:
+     ember is the problem, amber is n.abl (the accent above: the full stop,
+     links, focus), ice is the AI at work. Contrast for every step is in
+     business/02-brand/brand-guidelines.md, section 3. On light grounds only
+     the 600 steps are used. */
+  --ember-300:   #FF8F70;
+  --ember-400:   #FF5A36;   /* the problem            */
+  --ember-600:   #C9381A;   /* ember on light grounds */
+  --ember-rgb:   255, 90, 54;
+  --ice-300:     #A9DCFF;
+  --ice-400:     #7CCBFF;   /* the AI at work         */
+  --ice-600:     #3E8FCC;   /* ice on light grounds, large text and marks only */
+  --ice-rgb:     124, 203, 255;
+  /* Where amber turns to ice: a cream, so the middle of the gradient never greys. */
+  --calm-mid:    #EFE2C6;
+
+  /* Gradients run warm to cool, the way the story goes: left to right, or
+     bottom to top. Never on the logo, never behind body text. */
+  --grad-heat:   linear-gradient(90deg, var(--ember-400), var(--accent-400));
+  --grad-calm:   linear-gradient(90deg, var(--accent-400), var(--calm-mid) 48%, var(--ice-400));
+  --grad-trio:   linear-gradient(90deg, var(--ember-400), var(--accent-400) 42%, var(--calm-mid) 68%, var(--ice-400));
+
+  /* ---------- Support ----------
+     Errors keep their own red. Ember never signals an error, and an error
+     always carries words and an icon, so the two are never told apart by
+     colour alone. */
   --danger:      #E0796D;   /* AA on every surface for small text */
   --danger-deep: #8E3128;   /* fill behind cream text             */
   --danger-soft: rgba(224, 121, 109, 0.13);
@@ -67,10 +94,22 @@
   --glow-accent: 0 0 32px rgba(var(--accent-rgb), 0.20);
   --glow-inset:  inset 0 1px 0 rgba(var(--cream-rgb), 0.06);
 
-  /* ---------- Type ---------- */
-  --font-display: 'Space Grotesk', 'Inter Tight', system-ui, sans-serif;
-  --font-sans:    'Inter Tight', system-ui, -apple-system, sans-serif;
-  --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  /* ---------- Type ----------
+     Manjari, one family for everything: Thin 100 for display, Regular 400
+     for text and labels, Bold 700 for emphasis. It has no 500 or 600: a
+     declared 500 renders Regular and a 600 renders Bold, which is the
+     intended reading of the older weights in the app surfaces. JetBrains
+     Mono stays for keys and codes only. */
+  --font-brand:   'Manjari', system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-brand);
+  --font-sans:    var(--font-brand);
+  --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', monospace;   /* keys and codes only */
+
+  /* Manjari's spacing, measured: the hairline display closed up a touch and
+     its wide word space tightened; text opened slightly; labels in capitals. */
+  --track-display: -0.006em;  --word-display: -0.08em;
+  --track-body:     0.006em;  --word-body:    -0.025em;
+  --track-label:    0.08em;
 
   /* Fluid type scale */
   --t-xs:   0.75rem;
@@ -82,10 +121,17 @@
   --t-3xl:  clamp(2.1rem,  1.6rem + 2.4vw,  3.25rem);
   --t-4xl:  clamp(2.8rem,  1.9rem + 4.2vw,  5rem);
   --t-5xl:  clamp(3.4rem,  2.0rem + 6.4vw,  7rem);
+  /* The marketing display sizes, from the reference demo. Thin type needs
+     size to hold up: never Thin below about 32px. */
+  --t-hero: clamp(3rem,    1.4rem + 6.4vw,  7.6rem);
+  --t-h2:   clamp(2.4rem,  1.4rem + 3.4vw,  4.6rem);
+  --t-lede: clamp(1.06rem, 1rem   + 0.3vw,  1.22rem);
 
-  --track-tight: -0.03em;
-  --track-snug:  -0.015em;
-  --track-wide:   0.14em;
+  /* The older tracking tokens, retuned for Manjari: its letters are already
+     open, so the tight settings that suited the grotesques would crowd it. */
+  --track-tight: -0.006em;
+  --track-snug:   0em;
+  --track-wide:   0.08em;   /* capitals: eyebrows and labels (was 0.14em, for the mono face) */
 
   /* ---------- Space ---------- */
   --s-1: 0.25rem; --s-2: 0.5rem;  --s-3: 0.75rem; --s-4: 1rem;

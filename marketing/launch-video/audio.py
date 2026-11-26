@@ -1736,6 +1736,15 @@ def sfx_drop(deg, n=1, step=2, gap=0.05, wet=0.6, v=0.6, seed=0):
     return out * v
 
 
+def sfx_drop_click(m, v=1.0):
+    """The front of a drop, kept dry and bright: a click a few milliseconds
+    long and a tiny ping three octaves up, for a crisper, clickier drop."""
+    nz = noise(0.03); x = np.arange(len(nz)) / SR
+    click = bp(nz, 2500, 9000) * np.exp(-x / 0.0015)
+    ping = np.sin(2 * np.pi * mtof(m + 36) * x) * np.exp(-x / 0.006) * 0.5
+    return (click + ping) * v
+
+
 def sfx_msgin(v=1.0):
     """A message arrives: two soft notes, a fifth up."""
     y = np.zeros(at(0.6))
@@ -1811,6 +1820,128 @@ def drown(x, cut=1400, wobble=0.0035, room=0.45):
         y[:, c] = np.interp(n - dl, n, y[:, c])
     return reverb(y, IR_POOL, room)
 
+
+
+
+# ------------------------------------------------------------------ cinematic
+# Sound design without music, for a film that wants the weight of a trailer
+# but not a synth in it (MUSIC = "none"): moving air for a bed, whooshes,
+# reverse swells and the hall drawn in backwards before each hit, short
+# punchy impacts in a natural room, crystalline glitter for light, crackle
+# for embers, the clatter of a split-flap board for type. All of it noise
+# shaped into things, nothing held on a pitch.
+
+IR_BIG = make_ir(5.5, 1.7, 3600, pre=0.02)
+
+def cine_noise(d, seed):
+    return np.random.default_rng(seed).standard_normal(int(d * SR))
+
+def pink(d, seed):
+    """Pink noise, shaped in the frequency domain: the spectrum of wind and air."""
+    w = cine_noise(d, seed); n = len(w)
+    X = np.fft.rfft(w); f = np.maximum(np.fft.rfftfreq(n, 1 / SR), 20.)
+    y = np.fft.irfft(X / np.sqrt(f), n)
+    return y / (np.abs(y).max() + 1e-9)
+
+def drift(d, rate, seed):
+    """A smooth random wander, 0 to 1, about `rate` times a second."""
+    r = np.random.default_rng(seed); k = max(4, int(d * rate) + 3)
+    pts = r.random(k); x = np.linspace(0, k - 1, int(d * SR))
+    i = np.minimum(x.astype(int), k - 2); f = x - i; f = f * f * (3 - 2 * f)
+    return pts[i] * (1 - f) + pts[i + 1] * f
+
+def sfx_air(d, v=1.0, rise=0.0, seed=0):
+    """The bed: air moving in a large space, a wind that gathers and falls away; with rise, it builds and brightens."""
+    x = tt(d); p = x / d
+    out = np.zeros((len(x), 2))
+    for c in range(2):
+        nz = hp(pink(d, seed + 31 + c), 90)
+        cut = (700 + 1500 * drift(d, .5, seed + 41 + c)) * (1 + 2.2 * rise * p ** 1.6)
+        out[:, c] = sweep_lp(nz, cut, q=.75) * (.55 + .45 * drift(d, .7, seed + 51 + c)) + hp(cine_noise(d, seed + 61 + c), 6000) * .015 * (1 + 4 * rise * p ** 2)
+    env = np.minimum(1, x / min(.8, d * .3)) * np.minimum(1, (d - x) / min(1.0, d * .3)) * (1 + 1.6 * rise * p ** 2)
+    return out * env[:, None] * v * .9
+
+def sfx_punch(v=1.0, d=2.2, seed=0):
+    """An impact you feel in the chest, not a doom: a short thump, a whump of air, a crack, in a real room."""
+    x = tt(d)
+    thump = np.sin(2 * np.pi * np.cumsum(50 + 60 * np.exp(-x / 0.03)) / SR) * np.exp(-x / 0.16)
+    whump = lp(pink(d, seed + 1), 1100, 2) * np.exp(-x / 0.07) * 2.2
+    crack = bp(cine_noise(d, seed + 2), 2200, 9000) * np.exp(-x / 0.006) * .8 + bp(cine_noise(d, seed + 3), 700, 3200) * np.exp(-x / 0.025) * .7
+    y = np.tanh(1.3 * (thump * .9 + whump + crack)) * np.minimum(1, x / 0.0015)     # (a soft front: sharp ones overshoot the encoder)
+    return reverb(y, IR_HALL, 0.32) * v
+
+def sfx_glitter(d, v=1.0, density=150, shape="even", seed=0):
+    """Light as sound: crystalline grains, tiny resonant ticks high up, scattered across the stereo field,
+    never on a note."""
+    r = np.random.default_rng(seed + 71); n = int(density * d)
+    out = np.zeros((at(d) + at(0.1), 2))
+    for _ in range(n):
+        u = r.random()
+        t0 = (u ** .45 if shape == "rise" else u ** 2.2 if shape == "burst" else u) * d
+        L = int(r.uniform(.002, .012) * SR); g = np.arange(L) / SR
+        fc = r.uniform(4500, 10000)
+        grain = bp(r.standard_normal(L + 96), fc * .85, fc * 1.12, 2)[96:] * np.exp(-g / (L / SR * .25)) * np.minimum(1, g / .0004)
+        amp = r.uniform(.15, 1.0) * ((t0 / d) ** .8 if shape == "rise" else 1.0)
+        pan = r.uniform(-1, 1); i = at(t0)
+        seg = np.stack([grain * np.cos((pan + 1) * np.pi / 4), grain * np.sin((pan + 1) * np.pi / 4)], 1) * amp
+        out[i:i + len(seg)] += seg[: len(out) - i]
+    return reverb(out, IR_ROOM, .5) * v * 1.25
+
+def sfx_flap(d, v=1.0, seed=0):
+    """Type decoding: the clatter of a split-flap board, quick at first, slowing, with a firmer clack as it settles."""
+    r = np.random.default_rng(seed + 81)
+    out = np.zeros((at(d) + at(0.2), 2)); t0 = 0.0
+    while t0 < d:
+        p = t0 / d; L = int(.03 * SR); g = np.arange(L) / SR
+        hit = hp(r.standard_normal(L), 1500) * np.exp(-g / .0012) * .8
+        body = bp(r.standard_normal(L + 64), r.uniform(1700, 3200), 4200, 2)[64:] * np.exp(-g / .012)
+        low = np.sin(2 * np.pi * r.uniform(260, 380) * g) * np.exp(-g / .008) * .4
+        c = (hit + body + low) * r.uniform(.45, 1.0)
+        pan = r.uniform(-.5, .5); i = at(t0)
+        out[i:i + L, 0] += c * np.cos((pan + 1) * np.pi / 4); out[i:i + L, 1] += c * np.sin((pan + 1) * np.pi / 4)
+        t0 += r.uniform(.016, .028) * (1 + 1.8 * p * p)
+    i = at(d); L = int(.06 * SR); g = np.arange(L) / SR
+    clack = (hp(r.standard_normal(L), 1000) * np.exp(-g / .002) + bp(r.standard_normal(L + 64), 1200, 2600, 2)[64:] * np.exp(-g / .02)) * 1.3
+    out[i:i + L] += clack[:, None]
+    return reverb(out, IR_ROOM, .35) * v * .5
+
+def sfx_swell(d, v=1.0, seed=0):
+    """A reverse cymbal: bright noise swelling into the hit and stopping dead on it."""
+    x = tt(d); p = x / d
+    out = np.zeros((len(x), 2))
+    for c in range(2):
+        nz = cine_noise(d, seed + 11 + c)
+        out[:, c] = sweep_lp(hp(nz, 1800), 2500 + 12000 * p ** 2, q=0.9) * 0.8 + bp(nz, 300, 2000) * 0.25 * p
+    return out * (p ** 3.2)[:, None] * v
+
+def sfx_suck(d, v=1.0, seed=0):
+    """A breath in: a hit's own tail in the big hall, played backwards, so the hall gathers into the moment."""
+    L = 3.0; x = tt(L)
+    burst = lp(cine_noise(L, seed + 21), 3500) * np.exp(-x / 0.05)
+    tail = reverb(burst, IR_BIG, 1.0)[::-1]
+    return tail[-at(d):] * v * .6
+
+def sfx_crackle(d, v=1.0, density=90, seed=0):
+    """Embers: dry crackle over a low breath of flame and a hiss."""
+    r = np.random.default_rng(seed + 61); x = tt(d)
+    out = np.zeros((len(x), 2))
+    for _ in range(int(density * d)):
+        L = int(r.uniform(.0008, .004) * SR); i = int(r.random() * (len(x) - L))
+        click = bp(r.standard_normal(L + 64), 900, 7000)[:L] * r.uniform(.2, 1) * np.exp(-np.arange(L) / (L * .3))
+        pan = r.uniform(-.9, .9)
+        out[i:i + L, 0] += click * np.cos((pan + 1) * np.pi / 4); out[i:i + L, 1] += click * np.sin((pan + 1) * np.pi / 4)
+    for c in range(2):
+        out[:, c] += lp(pink(d, seed + 71 + c), 500) * .3 * (0.6 + 0.4 * drift(d, 2, seed + 75 + c))
+        out[:, c] += hp(cine_noise(d, seed + 81 + c), 6500) * .05
+    env = np.minimum(1, x / .08) * np.minimum(1, (d - x) / .35)
+    return reverb(out * env[:, None], IR_ROOM, .25) * v
+
+def sfx_ignite(v=1.0, seed=0):
+    """A stroke catching fire: a quick rush of flame up the spectrum and a soft thump."""
+    d = .55; x = tt(d); p = np.clip(x / .2, 0, 1)
+    rush = sweep_lp(hp(pink(d, seed + 91), 250), 400 + 6000 * p ** 1.5, q=.9) * np.minimum(1, x / .01) * np.exp(-np.maximum(x - .18, 0) / .08)
+    thump = lp(pink(d, seed + 93), 300) * np.exp(-x / .05) * 1.5
+    return reverb(np.tanh(1.4 * (rush * 1.2 + thump * .6)), IR_ROOM, .3) * v
 
 
 # ------------------------------------------------------------------ reel: four directions
@@ -2201,6 +2332,22 @@ def build_reel_dark(variant="d2"):
     return out[0] * 1.3, out[1] * 1.0, out[2] * 1.3, out[3] * 0.75
 
 
+def build_music_track():
+    """A finished track played as it is: MUSIC_FILE in films/<id>/music from
+    MUSIC_AT seconds into the file at film time 0, brought to the same
+    loudness as the generated takes, easing out over the last seconds. No
+    marks, no filters, no hits: the track is the cut's own."""
+    y, sr = sf.read(os.path.join(HERE, "films", FILM_ID, "music", F.MUSIC_FILE), dtype="float64", always_2d=True)
+    y = np.repeat(y, 2, 1) if y.shape[1] == 1 else y[:, :2]
+    g = np.gcd(SR, sr); y = signal.resample_poly(y, SR // g, sr // g, axis=0)
+    music = np.zeros((N, 2)); a = at(getattr(F, "MUSIC_AT", 0.0)); n = min(N, len(y) - a)
+    music[:n] = y[a:a + n]
+    tail = np.clip((DUR - np.arange(N) / SR) / getattr(F, "MUSIC_TAIL", 0.6), 0, 1)
+    music *= tail[:, None]
+    music *= 10 ** ((-12.7 - pyln.Meter(SR).integrated_loudness(music[: int(DUR * SR)])) / 20)
+    return music, buf(), buf(), buf()
+
+
 def build_music_file():
     """A generated track (musicgen.py) fitted to the cut. film.py names it,
     MUSIC_FILE in films/<id>/music, and MUSIC_AT, the downbeat in the file
@@ -2211,7 +2358,9 @@ def build_music_file():
     name. If the file runs out, it loops back whole bars (MUSIC_LOOP, 4).
     MUSIC_DROPS lists more drops inside the take (file seconds), each given a
     rush of air into it and a low hit."""
-    y, sr = sf.read(os.path.join(HERE, "films", FILM_ID, "music", F.MUSIC_FILE), dtype="float64", always_2d=True)
+    # a take kept with another film is named from films/ ("reel/music/...")
+    src = F.MUSIC_FILE if "/" in F.MUSIC_FILE else os.path.join(FILM_ID, "music", F.MUSIC_FILE)
+    y, sr = sf.read(os.path.join(HERE, "films", src), dtype="float64", always_2d=True)
     y = np.repeat(y, 2, 1) if y.shape[1] == 1 else y[:, :2]
     g = np.gcd(SR, sr)
     y = signal.resample_poly(y, SR // g, sr // g, axis=0)
@@ -2260,7 +2409,8 @@ def build_music_file():
 
 
 def build_sfx():
-    out = buf()
+    out, clicks = buf(), buf()
+    clicky = getattr(F, "DROP_CLICK", 0)            # per film: how loud the dry click on each drop is
     trims = getattr(F, "SFX_TRIM", {})             # per film, in dB, by cue type
     for c in CUES:
         t, v = c["t"], c.get("v", 1.0)
@@ -2330,6 +2480,9 @@ def build_sfx():
             add(out, reverb(sfx_star(v), IR_HALL, 0.3), t, 0.35)
         elif k == "drop":
             add(out, sfx_drop(c["deg"], c.get("n", 1), c.get("step", 2), c.get("gap", 0.05), c.get("wet", 0.6), v, seed=int(t * 1000)), t, 0.5)
+            for i in range(c.get("n", 1) if clicky else 0):         # DROP_CLICK: a dry click on the front of each drop
+                m = DROP_SCALE[int(np.clip(c["deg"] + i * c.get("step", 2), 0, len(DROP_SCALE) - 1))]
+                add(clicks, sfx_drop_click(m, v * clicky), t + i * c.get("gap", 0.05), 0.5, pan=0.3 * np.sin(t * 7 + i))
         elif k == "msgin":
             add(out, sfx_msgin(v), t, 0.35, pan=-0.2)
         elif k == "msgout":
@@ -2346,6 +2499,22 @@ def build_sfx():
             add(out, sfx_hum(c["d"], v), t, 0.3)
         elif k == "glitch":
             add(out, sfx_glitch(c["d"]), t, 0.3)
+        elif k == "air":
+            add(out, sfx_air(c["d"], v, c.get("rise", 0.0), seed=int(t * 100)), t, 0.45)
+        elif k == "punch":
+            add(out, sfx_punch(v, c.get("d", 2.2), seed=int(t * 100)), t - .002, 0.55)
+        elif k == "glitter":
+            add(out, sfx_glitter(c["d"], v, c.get("density", 150), c.get("shape", "even"), seed=int(t * 100)), t, 0.4)
+        elif k == "flap":
+            add(out, sfx_flap(c["d"], v, seed=int(t * 100)), t, 0.4)
+        elif k == "swell":
+            d = c["d"]; add(out, sfx_swell(d, v, seed=int(t * 100)), t - d, 0.3)
+        elif k == "suck":
+            d = c["d"]; add(out, sfx_suck(d, v, seed=int(t * 100)), t - d, 0.5)
+        elif k == "crackle":
+            add(out, sfx_crackle(c["d"], v, c.get("density", 90), seed=int(t * 100)), t, 0.4)
+        elif k == "ignite":
+            add(out, sfx_ignite(v, seed=int(t * 100)), t - .05, 0.45)
         elif k == "thud":
             # the hit is the moment, but the tagline follows it within a second
             th = sfx_thud(v); th *= np.exp(-np.arange(len(th)) / SR / 0.5)
@@ -2355,7 +2524,7 @@ def build_sfx():
     dr = getattr(F, "SFX_DROWN", None)
     if dr:
         out = drown(out, **dr)
-    return out
+    return out + reverb(np.pad(clicks, ((0, at(0.4)), (0, 0))), IR_ROOM, 0.15)[:N]
 
 
 # ------------------------------------------------------------------ voice
@@ -2408,9 +2577,10 @@ def main():
     style = getattr(F, "MUSIC", "synth")
     drum_led = style in ("drums", "band", "garage", "perc", "electronica", "reel", "file")
     pads, bass, keys, drums = {"drums": build_music_drums, "band": build_music_band, "garage": build_music_garage, "perc": build_music_perc,
-                               "electronica": build_music_electronica, "reel": reel_style(), "file": build_music_file}.get(style, build_music)()
+                               "electronica": build_music_electronica, "reel": reel_style(), "file": build_music_file,
+                               "none": lambda: (buf(), buf(), buf(), buf()), "track": build_music_track}.get(style, build_music)()   # none: sound design only
     music = pads * 1.0 + bass * 1.0 + keys * 1.0 + drums * (1.0 if drum_led else 0.9)
-    if style != "file":                                     # a generated track comes mixed
+    if style not in ("file", "none", "track"):              # a generated or supplied track comes mixed
         music = peak_eq(music, 2800, 3.0, 0.6)
         music = peak_eq(music, 90, -2.0, 0.8)
     sfx = build_sfx()
@@ -2434,11 +2604,11 @@ def main():
         sf.write(os.path.join(BUILD, "stems", name + ".wav"), st[: int(DUR * SR)], SR, subtype="PCM_24")
     meter = pyln.Meter(SR)
     # a little over -14: package.py trims the AAC by about this much to hold its true peak
-    target = -13.4
+    target = getattr(F, "LOUDNESS", -13.4)
     for _ in range(3):
         loud = meter.integrated_loudness(mix)
         mix = mix * 10 ** ((target - loud) / 20)
-        mix = limiter(mix, -2.0)
+        mix = limiter(mix, getattr(F, "CEILING", -2.0))
     loud = meter.integrated_loudness(mix)
     tp = 20 * np.log10(np.abs(signal.resample_poly(mix, 4, 1, axis=0)).max())
     sf.write(os.path.join(BUILD, "mix.wav"), mix, SR, subtype="PCM_24")

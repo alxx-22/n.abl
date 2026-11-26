@@ -1,6 +1,7 @@
 # Brand asset inventory
 
-Last checked against the repository: 2026-08-15.
+Last checked against the repository: 2026-11-25 (fonts and the reference demo).
+Sections 1 to 3 were last checked on 2026-08-15 and have not changed since.
 
 What is actually in `public/brand/`, `public/fonts/` and `logos/` today, file by
 file, and what is missing. This is a stock list, not a wish list. If a file is
@@ -17,12 +18,15 @@ regenerated or deleted.
 |---|---|---|---|
 | `wordmark.svg` | 2,203 B | `viewBox 0 0 273 100` | **The master.** The full wordmark, drawn as stroked paths and one filled square. Strokes take `currentColor`; the dot takes `var(--mark-accent, #E9AC57)`. Carries the construction and the 7 / 7 / 13 / 10 spacing reasoning in comments. |
 | `mark.svg` | 580 B | `viewBox 0 0 104 100` | **The master** for the short mark: the `n` and the dot only, same geometry. Used for avatars and small placements. |
-| `og.png` | 308,534 B | 1200 × 630 | The social card. Espresso ground, amber and cream bloom, a noise layer at 0.035, the drawn wordmark at 270 px and a Space Grotesk headline. Referenced from `index.html` as `og:image`. Generated. |
+| `og.png` | 572,709 B | 1200 × 630 | The social card (2026-11). The site's own lit ground in its opening layout, the grain, the drawn wordmark at 210 px, the hero's line "AI, built into your business" in Manjari Thin with the amber square, and the descriptor in the calm gradient. Referenced from `index.html` as `og:image`. Generated. |
 | `wordmark-email.png` | 10,538 B | 632 × 244 | Cream wordmark on transparent, for the six email templates. Used at `width="150"`, so it has roughly 4× the pixels it needs and stays sharp on a retina mail client. |
 
 `og.png` is regenerated with `node scripts/build-og.mjs`. That script inlines the
-two woff2 files as base64 data URIs, so the card never depends on a font CDN
-either.
+three Manjari Latin files as base64 data URIs, so the card never depends on a font
+CDN either, and draws the ground with the site's own shader
+(`src/components/ground/`) in a headless browser, so the card's light is the
+site's light. It needs WebGL there; without it the script stops and writes
+nothing rather than a card with no ground.
 
 ## 2. `public/` — adjacent, and brand-owned
 
@@ -50,6 +54,28 @@ Two of these are currently wrong. See item 6.1.
 
 ## 4. `public/fonts/` — the self-hosted type
 
+**Manjari, the brand face from 2026-11.** Static files, one per weight, Google's
+own v14 subsets unchanged. Sources are in `public/fonts/README.md`.
+
+| File | Size | Weight | Subset |
+|---|---|---|---|
+| `Manjari-Thin-latin.woff2` | 12,208 B | 100 | Latin |
+| `Manjari-Thin-latin-ext.woff2` | 13,520 B | 100 | Latin Extended |
+| `Manjari-Regular-latin.woff2` | 12,400 B | 400 | Latin |
+| `Manjari-Regular-latin-ext.woff2` | 13,608 B | 400 | Latin Extended |
+| `Manjari-Bold-latin.woff2` | 12,732 B | 700 | Latin |
+| `Manjari-Bold-latin-ext.woff2` | 14,136 B | 700 | Latin Extended |
+
+**Manjari total: 78,604 bytes. A Latin-only page needs 37,340 bytes for all three
+weights.** Every Manjari block in `fonts.css` carries the metric overrides
+(ascent 85.5%, descent 26.5%, line gap 0) described in the guidelines, section
+5.4.
+
+**The August families.** Variable fonts. The site no longer requests Space
+Grotesk or Inter Tight; their files stay because the launch films
+(`marketing/launch-video/film/`) load them directly. JetBrains Mono stays for keys
+and codes in the product.
+
 | File | Size | Family | Subset |
 |---|---|---|---|
 | `SpaceGrotesk-latin.woff2` | 22,288 B | Space Grotesk | Latin |
@@ -58,19 +84,21 @@ Two of these are currently wrong. See item 6.1.
 | `InterTight-latin-ext.woff2` | 89,800 B | Inter Tight | Latin Extended |
 | `JetBrainsMono-latin.woff2` | 31,432 B | JetBrains Mono | Latin |
 | `JetBrainsMono-latin-ext.woff2` | 11,624 B | JetBrains Mono | Latin Extended |
-| `fonts.css` | 7,782 B | — | 18 `@font-face` blocks |
 
-**Total font payload: 218,956 bytes, about 214 KB.** A Latin-only page downloads
-considerably less, because the subsets are split by `unicode-range`.
+Every August file is a variable font, which is why eighteen of their `@font-face`
+blocks are served by six files: Space Grotesk 400 / 500 / 600 / 700, Inter Tight
+400 / 500 / 600, JetBrains Mono 400 / 500, each in both subsets.
 
-Every file is a variable font, which is why eighteen `@font-face` blocks are
-served by six files. The blocks declare: Space Grotesk 400 / 500 / 600 / 700,
-Inter Tight 400 / 500 / 600, JetBrains Mono 400 / 500, each in both subsets. No
-italics ship. Every block sets `font-display: swap`.
+**Licences and sources.** `Manjari-OFL.txt`, `SpaceGrotesk-OFL.txt`,
+`InterTight-OFL.txt` and `JetBrainsMono-OFL.txt` (SIL Open Font License 1.1, from
+`google/fonts`), and `README.md`, which names each family, its files, version,
+source and licence.
 
-`index.html` preloads `SpaceGrotesk-latin.woff2` and `InterTight-latin.woff2`
-with `crossorigin`, and links `/fonts/fonts.css`. There is no reference to any
-external font host anywhere in the repository, which is the point.
+`fonts.css` holds 24 `@font-face` blocks, all with `font-display: swap`. No
+italics ship. `index.html` preloads `Manjari-Thin-latin.woff2` and
+`Manjari-Regular-latin.woff2` with `crossorigin`. A face that no rule uses is never
+downloaded, so the August blocks cost a visitor nothing. There is no reference to
+any external font host anywhere in the site, which is the point.
 
 ## 5. Where the brand lives in code
 
@@ -85,12 +113,14 @@ Not assets, but the places that must move together with them.
 | `scripts/build-logos.mjs` | Generates the six PNGs in `logos/`. |
 | `scripts/build-og.mjs` | Generates `public/brand/og.png`. |
 | `scripts/check-email-contrast.mjs` | `npm run test:emails`. Renders each email template and measures resolved contrast against the first opaque ancestor background. |
+| `business/02-brand/reference/nabl-scroll-story.html` | The 2026-11 look, working: the homepage as a scroll story with the lit ground, self-contained, about 130 KB. Not served by the site. |
 
 ---
 
 ## 6. What is missing or wrong
 
-Six open items. None of them is a design decision; all of them are jobs.
+Six items, four still open (6.2 and 6.3 were resolved on 2026-11-25). None of
+them is a design decision; all of them are jobs.
 
 ### 6.1 The light-ground exports use the wrong amber — **fix first**
 
@@ -116,7 +146,11 @@ to an SVG loaded through an `<img>` tag. So `<img src="/brand/wordmark.svg">` on
 a light page renders the pale fallback. Either add a light-ground master, or
 document that the masters must be inlined when the ground is light.
 
-### 6.2 `scripts/fetch-fonts.sh` does not exist
+### 6.2 `scripts/fetch-fonts.sh` does not exist — resolved 2026-11-25
+
+The comment in `fonts.css` no longer names the script. `public/fonts/README.md`
+records where each file came from instead, with the exact URLs for Manjari. The
+original finding is kept below for the record.
 
 The header of `public/fonts/fonts.css` says:
 
@@ -131,7 +165,10 @@ anywhere.
 **Fix:** write the script, or amend the comment to describe how the files were
 actually produced.
 
-### 6.3 No font licences ship with the fonts
+### 6.3 No font licences ship with the fonts — resolved 2026-11-25
+
+All four families' licences now sit beside their files as `*-OFL.txt`, with
+`public/fonts/README.md`. The original finding is kept below for the record.
 
 Space Grotesk, Inter Tight and JetBrains Mono are all released under the SIL Open
 Font License 1.1, which requires the licence to accompany the font files. There

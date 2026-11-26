@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { Field } from './ui/index.jsx'
 import { track } from '../lib/analytics.js'
 
+/* How long the discovery call is. The assistant quotes it too, and
+   scripts/build-knowledge.mjs fails the build if its knowledge file gives a
+   different length, so this is the one place it is set. */
+export const CALL_MINUTES = 30
+
 const BUSINESS_TYPES = [
   'Retail', 'Professional Services', 'Technology',
   'Manufacturing', 'Healthcare', 'Finance', 'Other',
@@ -102,53 +107,73 @@ export default function DiscoveryModal({ open, onClose, prefill = '' }) {
 
   return (
     <div className="overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose?.() }}>
+      {/* The brand's one featured panel on screen: glass with the trio line
+          along its top. On a desk the reason to book sits beside the form,
+          in front of the aurora; on a phone it sits above it. */}
       <div
-        className="modal modal--wide edge"
+        className={`modal modal--wide dmodal ${done ? 'dmodal--done' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="discovery-heading"
         ref={dialogRef}
       >
-        <button className="modal__close" onClick={onClose} aria-label="Close">&times;</button>
+        <button className="modal__close dmodal__close" onClick={onClose} aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6"
+            strokeLinecap="round" aria-hidden="true" focusable="false"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" /></svg>
+        </button>
 
         {done ? (
-          <div className="modal__success">
-            <div className="tick" aria-hidden="true" />
-            <h2 id="discovery-heading" className="modal__title">You&rsquo;re on the list<span className="dot" /></h2>
+          <div className="modal__success dmodal__done">
+            <div className="tick tick--ice" aria-hidden="true" />
+            <span className="eyebrow">Discovery call</span>
+            <h2 id="discovery-heading" className="dmodal__title">You&rsquo;re on the list<span className="dot" /></h2>
             {/* No response-time promise: nothing measures one, and this
                 is the moment a visitor is most likely to hold us to it. */}
-            <p className="modal__body">
-              We&rsquo;ll be in touch to find a time. Nothing to prepare — just bring the
+            <p className="modal__body dmodal__body">
+              We&rsquo;ll be in touch to find a time. Nothing to prepare, just bring the
               thing that&rsquo;s getting in the way.
             </p>
-            <button className="btn btn--primary btn--block" onClick={onClose}>Close</button>
+            <button className="btn btn--primary btn--block" onClick={onClose}>
+              <span className="ring" aria-hidden="true" /><span className="lbl">Close</span>
+            </button>
           </div>
         ) : (
-          <>
-            <span className="eyebrow">Discovery call</span>
-            <h2 id="discovery-heading" className="modal__title modal__title--lg">
-              Let&rsquo;s find out what&rsquo;s possible<span className="dot" />
-            </h2>
-            <p className="modal__body">
-              Free, 30 minutes, no pitch. Tell us a little and we&rsquo;ll come prepared.
-            </p>
+          <div className="dmodal__grid">
+            <div className="dmodal__intro">
+              <span className="eyebrow">Discovery call</span>
+              <h2 id="discovery-heading" className="dmodal__title">
+                Let&rsquo;s find out what&rsquo;s possible<span className="dot" />
+              </h2>
+              <p className="modal__body dmodal__body">
+                Tell us a little and we&rsquo;ll come prepared.
+              </p>
+              <ul className="dmodal__facts" aria-label="What to expect">
+                <li>Free</li>
+                <li>{CALL_MINUTES} minutes</li>
+                <li>No pitch</li>
+              </ul>
+            </div>
 
-            <form onSubmit={onSubmit} noValidate className="modal__form">
-              <Field label="Your name" required htmlFor="d-name">
-                <input ref={firstFieldRef} id="d-name" name="fullName" className="input" required autoComplete="name" />
-              </Field>
-              <Field label="Business name" required htmlFor="d-business">
-                <input id="d-business" name="businessName" className="input" required autoComplete="organization" />
-              </Field>
-              <Field label="Email" required htmlFor="d-email">
-                <input id="d-email" name="email" type="email" className="input" required autoComplete="email" />
-              </Field>
-              <Field label="Business type" required htmlFor="d-type">
-                <select id="d-type" name="businessType" className="input" required defaultValue="">
-                  <option value="" disabled>Select one…</option>
-                  {BUSINESS_TYPES.map((t) => <option key={t}>{t}</option>)}
-                </select>
-              </Field>
+            <form onSubmit={onSubmit} noValidate className="modal__form dmodal__form">
+              <div className="dmodal__row">
+                <Field label="Your name" required htmlFor="d-name">
+                  <input ref={firstFieldRef} id="d-name" name="fullName" className="input" required autoComplete="name" />
+                </Field>
+                <Field label="Business name" required htmlFor="d-business">
+                  <input id="d-business" name="businessName" className="input" required autoComplete="organization" />
+                </Field>
+              </div>
+              <div className="dmodal__row">
+                <Field label="Email" required htmlFor="d-email">
+                  <input id="d-email" name="email" type="email" className="input" required autoComplete="email" />
+                </Field>
+                <Field label="Business type" required htmlFor="d-type">
+                  <select id="d-type" name="businessType" className="input" required defaultValue="">
+                    <option value="" disabled>Select one…</option>
+                    {BUSINESS_TYPES.map((t) => <option key={t}>{t}</option>)}
+                  </select>
+                </Field>
+              </div>
               <Field label="What's getting in the way?" htmlFor="d-challenge">
                 <textarea id="d-challenge" name="challenge" className="input" rows={4}
                   key={prefill}
@@ -169,12 +194,13 @@ export default function DiscoveryModal({ open, onClose, prefill = '' }) {
                 />
               </div>
 
-              <button type="submit" className="btn btn--accent btn--block" disabled={sending}>
-                {sending ? 'Sending…' : 'Book my discovery call'}
+              <button type="submit" className="btn btn--primary btn--block" disabled={sending}>
+                <span className="ring" aria-hidden="true" />
+                <span className="lbl">{sending ? 'Sending…' : 'Book my discovery call'}</span>
               </button>
               {error && <p className="auth-error" role="alert">{error}</p>}
             </form>
-          </>
+          </div>
         )}
       </div>
     </div>

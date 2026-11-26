@@ -15,7 +15,6 @@ import { useReducedMotion } from './ui/index.jsx'
    are part of the section above them and do not earn a rail stop. */
 export const CHAPTERS = [
   { id: 'hero', label: 'Start' },
-  { id: 'see-it-work', label: 'See it work' },
   { id: 'what-we-do', label: 'What it can do' },
   { id: 'how-we-work', label: 'How we work' },
   { id: 'cases', label: 'In practice' },

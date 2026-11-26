@@ -1,0 +1,78 @@
+{
+ "file": "mark-3.wav",
+ "model": "models/lyria-realtime-exp",
+ "bpm": 120,
+ "scale": "F_MAJOR_D_MINOR",
+ "seconds": 22.0,
+ "seed": 3,
+ "temperature": 1.1,
+ "guidance": 4.0,
+ "lead": 2.0,
+ "plan": [
+  {
+   "beat": 0,
+   "section": "type",
+   "prompts": {
+    "Dark Minimal Tech House, minor key": 1.0,
+    "Ticking Hi-hats": 0.9,
+    "Rimshots": 0.6,
+    "Atmospheric Pads": 0.5
+   },
+   "density": 0.3,
+   "brightness": 0.45,
+   "mute_bass": true
+  },
+  {
+   "beat": 8,
+   "section": "draw",
+   "prompts": {
+    "Dark Minimal Tech House, minor key": 1.0,
+    "Punchy Kick": 0.9,
+    "Deep Rolling Bassline": 0.9,
+    "Crisp Clicky Percussion": 0.8,
+    "Analog Plucks": 0.6
+   },
+   "density": 0.6,
+   "brightness": 0.5
+  },
+  {
+   "beat": 14,
+   "section": "rise",
+   "prompts": {
+    "Dark Minimal Tech House, minor key": 1.0,
+    "Rising Tension": 0.8,
+    "Deep Rolling Bassline": 0.7,
+    "Crisp Clicky Percussion": 0.7
+   },
+   "density": 0.75,
+   "brightness": 0.6
+  },
+  {
+   "beat": 16,
+   "section": "reveal",
+   "prompts": {
+    "Dark Minimal Tech House, minor key": 1.0,
+    "Huge Drop": 0.7,
+    "Punchy Kick": 0.9,
+    "Deep Rolling Bassline": 0.9,
+    "Analog Plucks": 0.7,
+    "Crisp Clicky Percussion": 0.8
+   },
+   "density": 0.7,
+   "brightness": 0.55
+  },
+  {
+   "beat": 24,
+   "section": "name",
+   "prompts": {
+    "Dark Minimal Tech House, minor key": 1.0,
+    "Atmospheric Pads": 0.9,
+    "Deep Rolling Bassline": 0.5,
+    "Analog Plucks": 0.4
+   },
+   "density": 0.35,
+   "brightness": 0.45
+  }
+ ],
+ "raw_peak": 1.0
+}

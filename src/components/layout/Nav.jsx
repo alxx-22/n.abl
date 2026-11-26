@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { Logo } from '../ui/index.jsx'
 
 const LINKS = [
-  { id: 'see-it-work', label: 'See It Work' },
   { id: 'what-we-do', label: 'What We Do' },
   { id: 'how-we-work', label: 'How We Work' },
   { id: 'pricing', label: 'Pricing' },
@@ -50,7 +49,7 @@ export default function Nav({ home = true }) {
         ))}
         <Link to="/services" className="nav__link" onClick={() => setOpen(false)}>Other Services</Link>
         <Link to="/portal" className="btn btn--ghost btn--sm" onClick={() => setOpen(false)}>
-          Client Portal
+          <span className="lbl">Client Portal</span>
         </Link>
       </nav>
 

@@ -3,6 +3,122 @@
 What has changed on the public site, newest first. Commit hashes are from this
 repository, so any entry can be read in full with `git show <hash>`.
 
+## 2026-11-26 · The rest of the site in the 2026-11 brand (on `claude/modest-wright-2zlwat`)
+
+- **One rule for the ground (`ground/story.js`):** the wisps seen bare, the
+  soft blurred light, belong to the homepage's opening alone. Everywhere
+  else the ground is the fluted glass (the light seen through its reeds) or
+  the aurora on its own. On the homepage the glass now arrives as the hero
+  is left, and the stretch from the prices to the close is the aurora.
+  Other services opens on the glass and ends in the aurora; the legal
+  pages and the client portal are the aurora, its curtain high behind the
+  title; the discovery call's left pane shows the aurora drawing
+  (`assets/aurora.svg`) instead of blurred light.
+
+- **Other services (`pages/Services.jsx`):** the page tells its own story on
+  the lit ground, in the homepage's order (`ground/story.js`,
+  `servicesKeyframes`): the opening, warmth while the problems are read, the
+  fluted glass for what we build (one layout of light per capability), the
+  aurora for the examples, the quiet close. It used to hold the opening light
+  behind every section. The three grey wireframe animations are replaced by
+  scenes in the products' glass language (`film/cards.js`: `automate`,
+  `analyse`, `booking`): a morning sync between three systems, three sheets
+  that disagree made into one set of numbers, and a booking taken, paid for
+  and put in the diary. Each is drawn small behind its problem card and
+  large in its capability row, where it floats over the light unframed. The
+  capability names are set in Thin; Manjari has no 600.
+- **Legal pages (`pages/Legal.jsx`):** in the site's nav and footer over the
+  quiet ground (`quietKeyframes`), the title in Thin, the three documents one
+  step apart as chips, a contents list on a desk that marks the section
+  being read, sections numbered between hairlines, and the draft notice as
+  ember glass, the brand's mark for what must not be missed.
+- **Client portal (`pages/Portal.jsx`, `styles/portal.css`):** the sign-in is
+  the featured glass card with the trio line, the key in the mono face it is
+  reserved for, and the frosted main button. The dashboard sits on the quiet
+  ground under a glass bar, opens with four tiles at a glance (quotes waiting
+  for review, projects being built, the next meeting, files), and shows each
+  record's state as a brand chip: ember for what waits on the client, ice for
+  live and done, amber for what n.abl has arranged. Prices, days and counts
+  are in Thin; progress fills warm to cool; typed arrows are drawn.
+- **Book a discovery call (`DiscoveryModal.jsx`):** two panes on a desk, the
+  reason to book beside the form with the three lights low in its glass, the
+  fields paired so it fits without scrolling; stacked on a phone. The close
+  is drawn, and the sent state's tick is ice. The call length is now one
+  constant (`CALL_MINUTES`), which `scripts/build-knowledge.mjs` checks the
+  assistant's knowledge file against.
+
+## 2026-11-25 · The 2026-11 brand, and a chapter for each product (on `claude/modest-wright-2zlwat`)
+
+The brand moved to Manjari and the ember, amber and ice colourway
+(`../02-brand/brand-guidelines.md`), and the homepage's middle was rebuilt
+around the products.
+
+- **Look:** Manjari throughout, the lit ground behind the page
+  (`src/components/ground`), glass buttons and cards, problem, fix and result
+  in ember, amber and ice. A new social card, drawn from the site's own ground.
+- **What it can do, one chapter per product (`sections/Products.jsx`):** the
+  See it work film and the grid of seven solution cards are replaced by one
+  chapter for each of the seven products. The words on one side; on the
+  other, the product's own scene (the card scenes from
+  `src/components/film/cards.js`), pinned and played by the scroll, leaning
+  towards the pointer. Between products the scene folds into the amber
+  square, which carries the light down to the next one, across the page when
+  the next one sits on the other side. Reduced motion gets each product's
+  outcome as a still beside its words.
+- **The scenes' interface is the brand's own (`src/styles/film.css`, THE
+  PIECES):** every window, row, chip and button in the product and How we
+  work scenes is now a brand component rather than the reel's dark cards
+  recoloured. Glass panels with the trio line, Manjari Regular with Thin
+  for big numbers and spoken lines, labels in tracked capitals, line icons
+  in hairline circles, rows between hairlines, chips with the brand's
+  markers (the breathing ice dot for the AI at work, the amber square for
+  n.abl, the ember square for the problem and anything waiting on a
+  person), frosted main buttons with the three lights inside, and
+  documents as frosted glass. n.abl is marked with its square rather than
+  a generic sparkle, and the typed ticks and arrows are drawn.
+- **The assistant's mark (`src/components/AssistantMark.jsx`):** the flat
+  amber sparkle on the Ask a question launcher (and the portal's) is
+  replaced by a small sphere of dark glass with the brand's three lights
+  inside it and a white spark at its centre. Its lights turn once as the
+  launcher arrives and for as long as the pointer is on it; open, the spark
+  turns to a cross.
+- **The ring on the main buttons (`global.css`, THE RING):** under the
+  pointer, Ask a question and the Book a discovery call buttons are now
+  circled from outside by a ring of the brand gradient, with an arc of
+  light running round it and a glow, in place of an edge that was easy to
+  miss. The main button no longer clips its contents to make room for it;
+  its inner light is clipped to the glass instead.
+- **How we work, the five cards (`sections/Process.jsx`, `home.css` Steps):**
+  in the brand's card language: the step number in Thin, the step's line
+  icon in a hairline circle, and at the foot what the card turns over to
+  show, with the amber square and a drawn arrow. A line runs along the top
+  of the five, ember at the first step to ice at the last, and holds still
+  while a card turns over to its scene. Turned over, a card shows its step
+  in front of the aurora, drawn as the lit ground draws it
+  (`src/assets/aurora.svg`): a wavy hem of warm light, ember into amber
+  and cream, a haze with faint rays rising from it, dark below. Each card
+  shows a different stretch of it, the later steps a little cooler, and it
+  drifts while the card is open.
+- **Firmer glass in every scene:** the scenes cannot blur what is behind
+  them, so their glass is now tinted deeper (espresso at 0.84, the pills,
+  chips and documents to match) to read as frosted rather than clear.
+- **Room between the words and the animations:** on a desk the text column
+  and the animation's box added up to more than the page's width and
+  overlapped by about 32px. The text is now at most 42% of the shell and
+  the box at most 600px, hanging up to 3rem into the margin, which leaves
+  at least 84px between them at every width.
+- **New copy:** each product now says what it is useful for and what you get.
+  Every line is drawn from words the site or `assistant-knowledge.md` already
+  used: the film's captions, the cases' results, the assistant's
+  descriptions. No number, no client. The quotes and descriptions are the
+  cards', unchanged. The copy is in `src/components/products/data.js`.
+- **Navigation:** "See It Work" leaves the nav and the footer, since its
+  content is now the products; `#see-it-work` still lands on them. The rail
+  loses its See it work stop and the chapters renumber.
+- **Retired:** the film's site version (`FilmSection.jsx`, `film/reel.js`)
+  and `Solutions.jsx`. The launch films are untouched in
+  `marketing/launch-video`.
+
 ## 2026-09-29 · AI implementation (on the `dev` branch)
 
 The site repositioned as an AI implementation business for small and mid-sized

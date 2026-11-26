@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useReducedMotion } from '../ui/index.jsx'
 import { track } from '../../lib/analytics.js'
-import { NodeField } from '../Visuals.jsx'
 
 /* ============================================================
    01 — HERO
@@ -38,8 +37,8 @@ export default function Hero({ onBook }) {
 
   return (
     <section id="hero" className="hero">
-      <div className="hero__glow" aria-hidden="true" />
-      <NodeField />
+      {/* No ground of its own: the lit ground behind the page (LitGround)
+          is the hero's light, and it keeps the copy's side dark. */}
       <div className="shell hero__inner" ref={heroRef}>
         {/* The descriptor is the eyebrow, not the headline. It names the
             category, so a visitor knows what kind of business this is in the
@@ -56,17 +55,19 @@ export default function Hero({ onBook }) {
           improving, month after month.
         </p>
         <div className="hero__cta">
+          {/* The label sits in its own span so it can be trimmed to its
+              capitals and centred in the pill in every browser (.lbl). */}
           <button className="btn btn--primary" onClick={onBook}>
-            Book a free discovery call
+            <span className="ring" aria-hidden="true" />
+            <span className="lbl">Book a free discovery call</span>
           </button>
-          <a className="btn btn--ghost" href="#see-it-work" onClick={() => track('cta_secondary')}>See it work</a>
+          <a className="btn btn--ghost" href="#see-it-work" onClick={() => track('cta_secondary')}><span className="lbl">See it work</span></a>
         </div>
         <p className="hero__note">Built around you. Looked after every month.</p>
       </div>
       <a href="#see-it-work" className="hero__scroll" aria-label="Scroll to content">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        <span className="hero__scroll-word" aria-hidden="true">Scroll</span>
+        <i aria-hidden="true" />
       </a>
     </section>
   )

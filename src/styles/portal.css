@@ -1,0 +1,188 @@
+/* ============================================================
+   THE CLIENT PORTAL — pages/Portal.jsx
+
+   A client's own space, in the brand's working clothes: the quiet ground
+   (low light at the edges), glass cards and a glass bar over it, the big
+   figures in Thin, labels in tracked capitals, and each record's state as
+   one of the brand's chips. The colours keep their meanings: ember for
+   what waits on the client, ice for work that is live or done, amber for
+   what n.abl has arranged. Scoped under .portal, so the team space and
+   the CRM, which share the app shell, are untouched.
+   ============================================================ */
+.portal { min-height: 100vh; min-height: 100svh; }
+
+/* ---------- the bar along the top: glass over the light ---------- */
+.portal .p-top {
+  background: rgba(14, 12, 10, 0.6);
+  -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
+  border-bottom: 1px solid var(--line);
+}
+.p-back {
+  display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 1px 15px 0 12px;
+  border-radius: 999px; border: 1px solid rgba(var(--cream-rgb), 0.14); background: rgba(var(--cream-rgb), 0.035);
+  font-size: 14px; line-height: 1; color: var(--cream-300);
+  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.p-back:hover { color: var(--cream-100); border-color: rgba(var(--cream-rgb), 0.3); }
+.p-arrow { flex: none; margin-top: -1px; }
+.p-top__right { display: flex; align-items: center; gap: 16px; }
+.p-top__who {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-size: 0.72rem; letter-spacing: var(--track-label); text-transform: uppercase; color: var(--cream-400);
+}
+.p-top__who::before { content: ''; width: 6px; height: 6px; flex: none; background: var(--accent-400); box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.55); }
+@media (max-width: 560px) { .p-top__who { display: none; } }
+
+/* ---------- signing in: the one featured card, with the trio line along its top ---------- */
+.p-auth {
+  position: relative; max-width: 28.5rem; padding: 40px 34px 30px; border-radius: 22px;
+  background: rgba(19, 16, 14, 0.66);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 30px 80px -30px rgba(0, 0, 0, 0.8);
+}
+.p-auth::before {
+  content: ''; position: absolute; left: 26px; right: 26px; top: -1px; height: 1px; pointer-events: none;
+  background: var(--grad-trio); opacity: 0.85;
+}
+.p-auth h1 {
+  font-weight: 100; font-size: clamp(2.3rem, 1.6rem + 2.4vw, 3.2rem); line-height: 1.04;
+  letter-spacing: var(--track-display); word-spacing: var(--word-display); color: var(--cream-100); text-wrap: balance;
+}
+/* the key itself is a code, so it is the one thing set in the mono face */
+.portal .portal-key {
+  height: 3.6rem; border-radius: 14px; font-size: 1.12rem; letter-spacing: 0.16em;
+  background: rgba(8, 7, 6, 0.5); border-color: rgba(var(--cream-rgb), 0.16);
+}
+.portal .portal-key:focus { border-color: rgba(var(--accent-rgb), 0.55); }
+.portal .auth-form .btn { min-height: 52px; gap: 10px; }
+.portal .auth-help a { color: var(--accent-300); }
+
+/* ---------- the dashboard ---------- */
+.p-shell { padding-block: clamp(3rem, 8vh, 5rem) clamp(5rem, 12vh, 8rem); }
+.p-head__title {
+  margin-top: 20px;
+  font-weight: 100; font-size: clamp(2.8rem, 1.5rem + 4.2vw, 5.2rem); line-height: 1.02;
+  letter-spacing: var(--track-display); word-spacing: var(--word-display); color: var(--cream-100); text-wrap: balance;
+}
+.p-head__sub { margin-top: 14px; font-size: var(--t-lede); color: var(--cream-300); }
+
+/* at a glance: four glass tiles, each a number in Thin and what it means */
+.p-glance { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: clamp(2.2rem, 6vh, 3.4rem); }
+.p-glance > * { display: flex; }
+.p-stat {
+  flex: 1; display: flex; flex-direction: column; min-height: 9.8rem; padding: 18px 20px 18px;
+  border-radius: 18px; border: 1px solid var(--line); background: rgba(19, 16, 14, 0.62);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.p-stat:hover { border-color: rgba(var(--cream-rgb), 0.18); transform: translateY(-2px); }
+.p-stat__k {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-size: 0.72rem; letter-spacing: var(--track-label); text-transform: uppercase; color: var(--cream-400);
+}
+.p-stat__k::before { content: ''; width: 6px; height: 6px; flex: none; margin-top: -1px; background: rgba(var(--cream-rgb), 0.35); }
+.p-stat__k.is-wait { color: var(--ember-300); }
+.p-stat__k.is-wait::before { background: var(--ember-400); box-shadow: 0 0 10px rgba(var(--ember-rgb), 0.65); }
+.p-stat__k.is-live { color: var(--ice-300); }
+.p-stat__k.is-live::before { width: 7px; height: 7px; border-radius: 50%; background: var(--ice-400); box-shadow: 0 0 10px var(--ice-400); animation: p-pulse 1.6s ease-in-out infinite; }
+.p-stat__k.is-nabl { color: var(--accent-300); }
+.p-stat__k.is-nabl::before { background: var(--accent-400); box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.55); }
+.p-stat__n {
+  margin-top: auto; padding-top: 18px;
+  font-weight: 100; font-size: clamp(2.3rem, 1.9rem + 1.2vw, 3rem); line-height: 1;
+  letter-spacing: -0.01em; color: var(--cream-100); font-variant-numeric: tabular-nums;
+}
+.p-stat__s { margin-top: 8px; font-size: 13.5px; line-height: 1.4; color: var(--cream-400); }
+@keyframes p-pulse { 50% { opacity: 0.35; } }
+
+/* sections: the label, a count, and the heading in Thin */
+.p-section { padding-top: clamp(3.2rem, 9vh, 5rem); scroll-margin-top: 80px; }
+.p-section__head { display: flex; align-items: center; gap: 12px; }
+.p-section__count {
+  display: inline-flex; align-items: center; height: 22px; padding: 1px 9px 0; border-radius: 999px;
+  border: 1px solid var(--line); font-size: 11px; letter-spacing: 0.06em; color: var(--cream-600); font-variant-numeric: tabular-nums;
+}
+.p-section__title {
+  margin-top: 16px;
+  font-weight: 100; font-size: clamp(2rem, 1.5rem + 1.8vw, 2.9rem); line-height: 1.04;
+  letter-spacing: var(--track-display); word-spacing: var(--word-display); color: var(--cream-100);
+}
+.p-section__body { margin-top: 24px; }
+
+/* ---------- cards ---------- */
+.p-card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.p-ref { font-size: 0.72rem; line-height: 1.3; letter-spacing: var(--track-label); text-transform: uppercase; color: var(--cream-600); padding-top: 4px; }
+.p-card__title { font-weight: 400; font-size: clamp(1.15rem, 1.05rem + 0.4vw, 1.35rem); line-height: 1.25; word-spacing: -0.04em; color: var(--cream-100); }
+.p-card__title--sm { font-size: 1.05rem; }
+.p-quote .p-card__title { margin-top: 16px; }
+.p-amount {
+  margin-top: 14px;
+  font-weight: 100; font-size: clamp(2.4rem, 2rem + 1.2vw, 3rem); line-height: 1;
+  letter-spacing: -0.01em; color: var(--cream-100); font-variant-numeric: tabular-nums;
+}
+.p-meta { margin-top: 8px; font-size: 13.5px; line-height: 1.45; color: var(--cream-600); }
+.p-card__body { margin-top: 12px; font-size: 15px; line-height: 1.55; color: var(--cream-400); }
+.portal .card-actions .btn { gap: 8px; }
+
+/* a record's state, as one of the brand's chips */
+.pchip {
+  display: inline-flex; align-items: center; gap: 8px; flex: none; height: 28px; padding: 1px 11px 0 10px;
+  border-radius: 999px; border: 1px solid rgba(var(--cream-rgb), 0.18); background: rgba(14, 12, 10, 0.55);
+  font-size: 11px; line-height: 1; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream-300); white-space: nowrap;
+}
+.pchip::before { content: ''; width: 6px; height: 6px; flex: none; margin-top: -1px; background: rgba(var(--cream-rgb), 0.45); }
+.pchip--wait { border-color: rgba(var(--ember-rgb), 0.45); color: var(--ember-300); }
+.pchip--wait::before { background: var(--ember-400); box-shadow: 0 0 10px rgba(var(--ember-rgb), 0.65); }
+.pchip--live, .pchip--done { border-color: rgba(var(--ice-rgb), 0.45); color: var(--ice-300); }
+.pchip--live::before, .pchip--done::before { width: 7px; height: 7px; border-radius: 50%; background: var(--ice-400); box-shadow: 0 0 10px var(--ice-400); }
+.pchip--live::before { animation: p-pulse 1.6s ease-in-out infinite; }
+.pchip--nabl { border-color: rgba(var(--accent-rgb), 0.42); color: var(--accent-300); }
+.pchip--nabl::before { background: var(--accent-400); box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.55); }
+
+/* progress: a hairline track, filled warm to cool like the journey */
+.p-progress { margin-top: 22px; }
+.p-progress__row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.p-progress__k { font-size: 0.72rem; letter-spacing: var(--track-label); text-transform: uppercase; color: var(--cream-600); }
+.p-progress__v { font-size: 14px; color: var(--cream-200); font-variant-numeric: tabular-nums; }
+.portal .progress { height: 3px; overflow: visible; border-radius: 2px; background: rgba(var(--cream-rgb), 0.08); }
+.portal .progress__fill { border-radius: 2px; background: var(--grad-trio); box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.35); }
+.p-next { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line-faint); }
+.p-next__k {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-size: 0.72rem; letter-spacing: var(--track-label); text-transform: uppercase; color: var(--accent-300);
+}
+.p-next__k::before { content: ''; width: 6px; height: 6px; flex: none; margin-top: -1px; background: var(--accent-400); box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.55); }
+.p-next__t { margin-top: 8px; font-size: 16px; line-height: 1.4; color: var(--cream-100); }
+
+/* meetings: the day in Thin; past ones step back */
+.portal .meeting__day {
+  font-weight: 100; font-size: clamp(2.4rem, 2rem + 1vw, 2.9rem); line-height: 1;
+  color: var(--cream-100); font-variant-numeric: tabular-nums;
+}
+.portal .meeting__my { margin-top: 6px; font-size: 0.68rem; letter-spacing: var(--track-label); color: var(--cream-600); }
+.portal .meeting--past { opacity: 0.55; }
+.portal .meeting__right .btn { gap: 8px; }
+
+/* documents: a line icon in a hairline circle */
+.portal .doc__icon {
+  width: 46px; height: 46px; border-radius: 50%;
+  border: 1px solid rgba(var(--cream-rgb), 0.2); background: rgba(var(--cream-rgb), 0.03); color: var(--cream-300);
+}
+.portal .doc .p-ref { display: block; margin-top: 6px; padding-top: 0; }
+.portal .doc__right .p-meta { margin-top: 0; }
+
+/* nothing yet: dashed glass, not a hole in the page */
+.portal .empty {
+  border: 1px dashed rgba(var(--cream-rgb), 0.16); border-radius: 18px; color: var(--cream-400);
+  background: rgba(19, 16, 14, 0.4); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.portal .empty a { color: var(--accent-300); }
+
+@media (max-width: 980px) { .p-glance { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 380px) { .p-glance { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) {
+  .p-stat__k.is-live::before, .pchip--live::before { animation: none; }
+  .p-stat { transition: none; }
+}

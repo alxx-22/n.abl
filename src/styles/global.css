@@ -21,16 +21,26 @@ body {
   background: var(--bg);
   color: var(--cream-200);
   line-height: 1.6;
-  font-size: var(--t-base);
+  /* Manjari sets a little small for its size: 16.5px reads like 16px did */
+  font-size: 1.03125rem;
+  letter-spacing: var(--track-body);
+  word-spacing: var(--word-body);
+  /* No faux bold or italic: Manjari ships 100, 400 and 700 upright only */
+  font-synthesis: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
-  /* Warm ambient bloom so the ground is never a flat dead black */
+  /* The ground is never a flat dead black. On the lit pages the canvas
+     covers this; everywhere else a faint version of the same three lights
+     stays put behind the page: amber above, ember low, ice to the right. */
   background-image:
     radial-gradient(90ch 60ch at 12% -10%, rgba(var(--accent-rgb), 0.05), transparent 60%),
-    radial-gradient(80ch 55ch at 92% 4%,  rgba(var(--cream-rgb),  0.045), transparent 62%);
+    radial-gradient(70ch 50ch at 4% 108%,  rgba(var(--ember-rgb),  0.035), transparent 62%),
+    radial-gradient(80ch 55ch at 96% 8%,   rgba(var(--ice-rgb),    0.035), transparent 62%);
   background-attachment: fixed;
 }
+/* Emphasis without an italic: brighter, not slanted. */
+em { font-style: normal; color: var(--cream-100); }
 
 img, svg, video { display: block; max-width: 100%; height: auto; }
 a { color: inherit; text-decoration: none; }
@@ -38,13 +48,22 @@ ul, ol { list-style: none; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { background: none; border: none; cursor: pointer; }
 
+/* Headings default to Regular: the app surfaces set them small, where the
+   Thin would break up. The marketing display sizes opt into Thin 100 (.display). */
 h1, h2, h3, h4 {
   font-family: var(--font-display);
-  font-weight: 600;
-  line-height: 1.04;
+  font-weight: 400;
+  line-height: 1.08;
   letter-spacing: var(--track-tight);
+  word-spacing: -0.04em;
   color: var(--cream-100);
   text-wrap: balance;
+}
+.display {
+  font-weight: 100;
+  line-height: 1.02;
+  letter-spacing: var(--track-display);
+  word-spacing: var(--word-display);
 }
 p { text-wrap: pretty; }
 
@@ -74,30 +93,40 @@ p { text-wrap: pretty; }
 .stack > * + * { margin-top: var(--s-4); }
 .prose { max-width: var(--maxw-prose); }
 
-/* Eyebrow label — small caps, accent, wide tracking */
+/* Eyebrow label — capitals, tracked, the amber square before it and the
+   calm gradient (amber, through cream, to ice) in the letters. --heat is
+   the problem's version: an ember square and ember into amber. */
 .eyebrow {
-  display: inline-flex; align-items: center; gap: var(--s-2);
-  font-size: var(--t-xs);
-  font-weight: 500;
-  letter-spacing: var(--track-wide);
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: var(--track-label);
+  word-spacing: 0;
   text-transform: uppercase;
-  color: var(--accent-400);
+  color: var(--accent-300);
+  background: linear-gradient(90deg, var(--accent-300), var(--calm-mid) 55%, var(--ice-300)) text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 .eyebrow::before {
   content: '';
-  width: 6px; height: 6px;
+  width: 6px; height: 6px; flex: none;
   background: var(--accent-400);
-  box-shadow: var(--glow-accent);
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.55);
 }
+.eyebrow--heat { background-image: linear-gradient(90deg, var(--ember-300), var(--accent-300)); }
+.eyebrow--heat::before { background: var(--ember-400); box-shadow: 0 0 12px rgba(var(--ember-rgb), 0.6); }
 
-/* The brand signature: a square "full stop" that glows */
+/* The brand signature: a square "full stop" that glows. Always amber.
+   Sized for Manjari's hairline: 0.2em sits like a full stop beside it. */
 .dot {
   display: inline-block;
-  width: 0.28em; height: 0.28em;
+  width: 0.2em; height: 0.2em;
   background: var(--accent-400);
   vertical-align: baseline;
-  margin-left: 0.08em;
-  box-shadow: 0 0 18px rgba(var(--accent-rgb), 0.45);
+  margin-left: 0.06em;
+  box-shadow: 0 0 0.35em rgba(var(--accent-rgb), 0.55);
 }
 
 /* Read by a screen reader and a crawler, not drawn. */
@@ -130,12 +159,14 @@ p { text-wrap: pretty; }
   inset: 0;
   border-radius: inherit;
   padding: 1px;
+  /* warm to cool across the card, the way the gradients run: amber at the
+     top left, ice at the bottom right */
   background: linear-gradient(
     140deg,
-    rgba(var(--cream-rgb), 0.30),
-    rgba(var(--cream-rgb), 0) 32%,
-    rgba(var(--cream-rgb), 0) 68%,
-    rgba(var(--accent-rgb), 0.28)
+    rgba(var(--accent-rgb), 0.34),
+    rgba(var(--accent-rgb), 0) 32%,
+    rgba(var(--ice-rgb), 0) 68%,
+    rgba(var(--ice-rgb), 0.32)
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
@@ -150,6 +181,18 @@ p { text-wrap: pretty; }
   box-shadow: var(--glow-md);
 }
 .edge:hover::before { opacity: 1; }
+
+/* On a lit page (the canvas behind it, see LitGround) the cards are glass
+   over the light: espresso at 0.62 with a blur, so their text keeps its
+   contrast whatever the light does behind them. The app surfaces keep the
+   solid surface above. */
+.lit .edge {
+  border-radius: 18px;
+  background: rgba(19, 16, 14, 0.62);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.lit .edge:hover { box-shadow: 0 18px 50px -24px rgba(0, 0, 0, 0.8); }
 .edge--lift:hover { transform: translateY(-4px); }
 
 /* Rotating conic variant — for the one or two hero moments */
@@ -177,10 +220,12 @@ p { text-wrap: pretty; }
   position: absolute;
   inset: -1px;
   border-radius: inherit;
+  /* wide and faint: a wash of light across the card, not a spot on it */
   background: radial-gradient(
-    22rem circle at var(--mx, 50%) var(--my, 0%),
-    rgba(var(--cream-rgb), 0.10),
-    transparent 62%
+    44rem circle at var(--mx, 50%) var(--my, 0%),
+    rgba(var(--cream-rgb), 0.035),
+    rgba(var(--cream-rgb), 0.012) 45%,
+    transparent 72%
   );
   opacity: 0;
   transition: opacity var(--dur) var(--ease);
@@ -204,54 +249,194 @@ p { text-wrap: pretty; }
 }
 
 /* ============================================================
+   THE LIT GROUND — components/LitGround.jsx
+
+   Three fixed layers under the page, in this order: the WebGL canvas,
+   its still CSS stand-in (shown only where WebGL is missing), and the
+   grain. All at z-index -1: above the body's own background, below every
+   section. On a lit page nothing between them and the content may paint
+   an opaque background.
+   ============================================================ */
+.ground, .ground__still, .ground__grain {
+  position: fixed; left: 0; top: 0; width: 100vw;
+  height: 100vh; height: 100lvh;
+  z-index: -1; pointer-events: none;
+}
+.ground { display: block; }
+.ground--off { display: none; }
+/* The opening's layout of light, drawn in gradients: ember low and right,
+   amber in the middle right, ice top right and at the left edge. */
+.ground__still {
+  display: none;
+  background:
+    radial-gradient(42vmax 30vmax at 86% 84%, rgba(var(--ember-rgb), 0.22), transparent 70%),
+    radial-gradient(30vmax 22vmax at 16% 96%, rgba(var(--ember-rgb), 0.15), transparent 70%),
+    radial-gradient(22vmax 18vmax at 75% 48%, rgba(var(--accent-rgb), 0.18), transparent 70%),
+    radial-gradient(34vmax 26vmax at 97% 8%,  rgba(var(--ice-rgb), 0.17), transparent 70%),
+    radial-gradient(24vmax 20vmax at 2% 45%,  rgba(var(--ice-rgb), 0.10), transparent 70%);
+}
+.ground__still--on { display: block; }
+.ground__grain {
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* Bands that used to be told apart by a lighter ground are told apart by
+   the light instead: on a lit page they are clear. */
+.lit .section--alt, .lit .section--impact { background: transparent; border-color: transparent; }
+
+/* ============================================================
    BUTTONS
+
+   Pills. The label sits in a .lbl span, trimmed to its capitals and
+   baseline, so it centres in the pill in every browser: Safari ignores the
+   font's metric overrides, and without the trim its labels sat high.
+
+   The main button (.btn--primary) is frosted glass with light inside it:
+   ember, amber and ice glowing softly from below the label, a spot of
+   light following the pointer (--bx/--by, set by LitGround). No outline
+   gradient and no solid fill. .btn--accent, the amber fill, stays for the
+   app surfaces' working buttons.
    ============================================================ */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2);
+  box-sizing: border-box;
+  min-height: 46px;
+  padding: 0 1.4rem;
   font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: var(--t-sm);
-  letter-spacing: var(--track-snug);
-  padding: 0.85rem 1.5rem;
-  border-radius: var(--r-md);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1;
+  letter-spacing: 0;
+  word-spacing: 0;
+  border-radius: var(--r-full);
   border: 1px solid transparent;
   position: relative;
   white-space: nowrap;
+  text-decoration: none;
   transition: background var(--dur-fast) var(--ease),
               color var(--dur-fast) var(--ease),
               border-color var(--dur-fast) var(--ease),
               box-shadow var(--dur) var(--ease),
               transform var(--dur-fast) var(--ease);
 }
+.btn > .lbl { display: block; text-box: trim-both cap alphabetic; padding-bottom: 0.09em; }
+@supports not (text-box: trim-both cap alphabetic) { .btn > .lbl { padding-bottom: 0; } }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn:not(:disabled):active { transform: translateY(1px); }
 
 .btn--primary {
-  background: var(--cream-200);
-  color: var(--bg);
-  box-shadow: var(--glow-sm);
+  min-height: 50px;
+  padding: 0 1.55rem;
+  isolation: isolate;
+  color: var(--cream-100);
+  font-weight: 700;
+  background: linear-gradient(180deg, rgba(var(--cream-rgb), 0.10), rgba(var(--cream-rgb), 0.035));
+  border-color: rgba(var(--cream-rgb), 0.16);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -12px 22px -14px rgba(0, 0, 0, 0.55), 0 14px 34px -16px rgba(0, 0, 0, 0.75);
 }
-.btn--primary:not(:disabled):hover {
-  background: var(--cream-100);
-  box-shadow: var(--glow-lg);
+.btn--primary::before {
+  content: ''; position: absolute; inset: -60% -20%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(34% 46% at 18% 92%, rgba(var(--ember-rgb), 0.9), transparent 70%),
+    radial-gradient(30% 44% at 52% 104%, rgba(var(--accent-rgb), 0.85), transparent 70%),
+    radial-gradient(34% 46% at 86% 92%, rgba(var(--ice-rgb), 0.8), transparent 70%);
+  background-repeat: no-repeat;
+  filter: blur(12px);
+  opacity: 0.58;
+  /* The light stays inside the glass. The button itself does not clip (its
+     ring sits outside it), so the light is cut to the button's own shape:
+     the inset is the button's edge measured inside this larger box. */
+  clip-path: inset(calc(60% / 2.2) calc(20% / 1.4) round 999px);
+  transition: opacity 0.35s var(--ease), background-position 0.6s var(--ease);
+}
+.btn--primary::after {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
+  background: radial-gradient(90px circle at var(--bx, 50%) var(--by, 50%), rgba(255, 255, 255, 0.14), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+}
+.btn--primary:not(:disabled):hover { border-color: rgba(var(--cream-rgb), 0.30); }
+/* the light rises: moved within its box, so the cut it is clipped to stays put */
+.btn--primary:not(:disabled):hover::before { opacity: 0.85; background-position: 0 -9px; }
+.btn--primary:not(:disabled):hover::after { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .btn--primary::before, .btn--primary::after { transition: none; } }
+
+/* ------------------------------------------------------------
+   THE RING — the main calls to action, and Ask a question
+
+   A <span class="ring"> inside the button draws a ring of the brand's light
+   just outside it. Under the pointer the ring opens out round the button,
+   an arc of the brand gradient (ember, amber, cream, then a white head)
+   circles it for as long as the pointer stays, and the whole ring glows.
+   It holds where it stopped, so the next visit carries on from there.
+   Without @property the arc holds still; with reduced motion the ring and
+   its glow show without the arc.
+   ------------------------------------------------------------ */
+@property --ring-a { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+/* scoped to the buttons: the scenes have status rings of their own */
+:is(.btn, .assistant-fab) > .ring {
+  position: absolute; inset: -6px; border-radius: 999px; pointer-events: none; z-index: 1;
+  opacity: 0; transform: scale(0.94);
+  filter: drop-shadow(0 0 4px rgba(var(--accent-rgb), 0.55)) drop-shadow(0 0 12px rgba(var(--ice-rgb), 0.3));
+  transition: opacity 0.35s var(--ease), transform 0.5s var(--ease-out);
+}
+:is(.btn, .assistant-fab) > .ring::before, :is(.btn, .assistant-fab) > .ring::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+}
+/* the whole ring, soft: the brand gradient end to end */
+:is(.btn, .assistant-fab) > .ring::after {
+  padding: 1.5px;
+  background: linear-gradient(100deg, rgba(var(--ember-rgb), 0.6), rgba(var(--accent-rgb), 0.6) 38%, rgba(239, 226, 198, 0.5) 62%, rgba(var(--ice-rgb), 0.6));
+}
+/* the arc of light that circles it, warm at its tail and brightest at its head */
+:is(.btn, .assistant-fab) > .ring::before {
+  padding: 2px;
+  background: conic-gradient(from var(--ring-a),
+    transparent 0deg, transparent 170deg,
+    rgba(var(--ember-rgb), 0.9) 240deg, var(--accent-300) 292deg, var(--calm-mid) 326deg, var(--ice-300) 346deg, #fff 357deg, transparent 360deg);
+  animation: ring-orbit 2.2s linear infinite paused;
+}
+@keyframes ring-orbit { from { --ring-a: 0deg; } to { --ring-a: 360deg; } }
+@media (hover: hover) {
+  :is(.btn, .assistant-fab):not(:disabled):hover > .ring { opacity: 1; transform: none; }
+  :is(.btn, .assistant-fab):not(:disabled):hover > .ring::before { animation-play-state: running; }
+  /* and a low glow stays on the glass itself */
+  .btn--primary:has(> .ring):not(:disabled):hover {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -12px 22px -14px rgba(0, 0, 0, 0.55),
+                0 0 30px -6px rgba(var(--accent-rgb), 0.38), 0 0 50px -12px rgba(var(--ice-rgb), 0.32);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.btn, .assistant-fab) > .ring { transition: opacity 0.2s linear; transform: none; }
+  :is(.btn, .assistant-fab) > .ring::before { animation: none; opacity: 0; }
 }
 
 .btn--accent {
   background: var(--accent-400);
   color: var(--on-accent);
+  font-weight: 700;
   box-shadow: var(--glow-accent);
 }
 .btn--accent:not(:disabled):hover { background: var(--accent-300); }
 
 .btn--ghost {
-  background: transparent;
-  color: var(--cream-200);
-  border-color: var(--line-strong);
+  color: var(--cream-100);
+  background: rgba(var(--cream-rgb), 0.035);
+  border-color: rgba(var(--cream-rgb), 0.14);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 .btn--ghost:not(:disabled):hover {
-  border-color: rgba(var(--cream-rgb), 0.45);
-  background: rgba(var(--cream-rgb), 0.04);
-  box-shadow: var(--glow-sm);
+  border-color: rgba(var(--cream-rgb), 0.30);
+  background: rgba(var(--cream-rgb), 0.06);
 }
 
 .btn--danger {
@@ -261,7 +446,7 @@ p { text-wrap: pretty; }
 }
 .btn--danger:not(:disabled):hover { background: #A03A30; }
 
-.btn--sm { padding: 0.55rem 0.95rem; font-size: var(--t-xs); }
+.btn--sm, .btn--primary.btn--sm { min-height: 36px; padding: 0 1rem; font-size: 14px; }
 .btn--block { width: 100%; }
 
 /* ============================================================
@@ -269,9 +454,10 @@ p { text-wrap: pretty; }
    ============================================================ */
 .field { display: flex; flex-direction: column; gap: 0.45rem; }
 .label {
-  font-size: var(--t-xs);
-  font-weight: 500;
-  letter-spacing: var(--track-wide);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: var(--track-label);
+  word-spacing: 0;
   text-transform: uppercase;
   color: var(--cream-600);
 }

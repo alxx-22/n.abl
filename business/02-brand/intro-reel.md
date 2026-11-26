@@ -1,5 +1,13 @@
 # The introduction reel
 
+> **Type and colour in this file are replaced (2026-11-25).**
+> The brand moved to Manjari and to the ember, amber and ice colourway, with
+> gradients and a lit ground. Wherever this file names Space Grotesk, Inter
+> Tight or JetBrains Mono, or says "no gradient" or "no second accent", follow
+> [`brand-guidelines.md`](brand-guidelines.md) sections 3 to 8 instead, and see
+> the working reference in [`reference/`](reference/). The tempo protocol, the
+> safe zones and the checks below still stand.
+
 A brand film for n.abl. One idea, eight bars, no cuts.
 
 This file is the plan and the specification. It sits in `02-brand` because a

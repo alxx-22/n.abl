@@ -75,13 +75,14 @@ const missing = cats.filter((cat) => {
   return !new RegExp(`\\b${key}\\b`, 'i').test(knowledge)
 })
 
-/* Since the move to AI implementation the offer itself is the solution
-   cards on the home page, and those are what a visitor will ask about
-   first. Their titles are short and specific, so they are compared whole. */
-const solutions = readFileSync(new URL('../src/components/sections/Solutions.jsx', import.meta.url), 'utf8')
+/* Since the move to AI implementation the offer itself is the products on
+   the home page, one chapter each, and those are what a visitor will ask
+   about first. Their titles are short and specific, so they are compared
+   whole. */
+const solutions = readFileSync(new URL('../src/components/products/data.js', import.meta.url), 'utf8')
 const titles = [...solutions.matchAll(/title:\s*'([^']+)'/g)].map((m) => m[1])
 if (titles.length < 3) {
-  console.error('\n  Could not read the solution titles out of Solutions.jsx — the check that\n  keeps them in step with the assistant is now blind. Fix the pattern.\n')
+  console.error('\n  Could not read the product titles out of products/data.js — the check that\n  keeps them in step with the assistant is now blind. Fix the pattern.\n')
   process.exit(1)
 }
 for (const t of titles) {
@@ -105,7 +106,7 @@ if (missing.length) {
    number to anyone who asked. The modal is the source of truth because it is
    what someone reads as they book. */
 const modal = readFileSync(new URL('../src/components/DiscoveryModal.jsx', import.meta.url), 'utf8')
-const onSite = modal.match(/Free,\s*(\d+)\s*minutes/i)?.[1]
+const onSite = modal.match(/CALL_MINUTES\s*=\s*(\d+)/)?.[1]
 if (!onSite) {
   console.error('\n  Could not find the call length in DiscoveryModal.jsx — the check that\n  keeps it in step with the assistant is now blind. Fix the pattern.\n')
   process.exit(1)

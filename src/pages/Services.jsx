@@ -6,8 +6,9 @@ import DiscoveryModal from '../components/DiscoveryModal.jsx'
 import { Reveal, EdgeCard } from '../components/ui/index.jsx'
 import { Chapter } from '../components/Journey.jsx'
 import { WipeGrid } from '../components/WipeCard.jsx'
+import LitGround from '../components/LitGround.jsx'
 import Capabilities from '../components/sections/Capabilities.jsx'
-import { automation, data, web } from '../components/scenes/index.js'
+import { automate, analyse, booking } from '../components/film/cards.js'
 import { track } from '../lib/analytics.js'
 
 import '../styles/home.css'
@@ -25,13 +26,13 @@ import '../styles/home.css'
    and illustrative examples labelled as such.
    ============================================================ */
 export const OTHER_CARDS = [
-  { n: '01', title: 'Save time', glyph: 'time', scene: automation, label: 'Automation',
+  { n: '01', title: 'Save time', glyph: 'time', scene: automate, label: 'Automation',
     quote: 'We lose a morning a week to work that repeats itself.',
     body: 'The steps that repeat between your systems, set up once and then left to run.' },
-  { n: '02', title: 'Understand your data', glyph: 'data', scene: data, label: 'Data & Analytics',
+  { n: '02', title: 'Understand your data', glyph: 'data', scene: analyse, label: 'Data & Analytics',
     quote: 'We have the data, but not the answers.',
     body: 'The data cleaned up first, then reporting you can actually make a decision from.' },
-  { n: '03', title: 'Build something new', glyph: 'build', scene: web, label: 'Web',
+  { n: '03', title: 'Build something new', glyph: 'build', scene: booking, label: 'Web',
     quote: "Whatever we've got online, it doesn't do anything.",
     body: 'Your first site, or the one that finally does the work: booking, ordering, payments, accounts.' },
 ]
@@ -54,7 +55,11 @@ export default function Services() {
   const book = () => { track('cta_services'); track('form_open'); setModalOpen(true) }
 
   return (
-    <div className="grain">
+    <div className="lit">
+      {/* the light follows this page's own story, in the homepage's order:
+          the opening, warmth for the problems, the glass for what we build,
+          the aurora for the examples, the quiet close (ground/story.js) */}
+      <LitGround story="services" />
       <Nav home={false} />
       <main>
         <section className="section services-hero">
@@ -74,8 +79,8 @@ export default function Services() {
             </Reveal>
             <Reveal delay={0.16}>
               <div className="hero__cta services-hero__cta">
-                <button className="btn btn--primary" onClick={book}>Book a free discovery call</button>
-                <Link className="btn btn--ghost" to="/#what-we-do">See what AI can do</Link>
+                <button className="btn btn--primary" onClick={book}><span className="ring" aria-hidden="true" /><span className="lbl">Book a free discovery call</span></button>
+                <Link className="btn btn--ghost" to="/#what-we-do"><span className="lbl">See what AI can do</span></Link>
               </div>
             </Reveal>
           </div>
@@ -131,7 +136,7 @@ export default function Services() {
           </div>
         </section>
 
-        <section className="section section--impact">
+        <section id="cost" className="section section--impact">
           <div className="shell">
             <Chapter index={4}>What it costs</Chapter>
             <Reveal delay={0.06}>
@@ -148,7 +153,6 @@ export default function Services() {
         </section>
 
         <section id="contact" className="section contact">
-          <div className="contact__glow" aria-hidden="true" />
           <div className="shell contact__inner">
             <Reveal>
               <h2 className="contact__title">Tell us where the time goes<span className="dot" /></h2>
@@ -160,7 +164,7 @@ export default function Services() {
               </p>
             </Reveal>
             <Reveal delay={0.16}>
-              <button className="btn btn--accent contact__btn" onClick={book}>Book a discovery call</button>
+              <button className="btn btn--primary contact__btn" onClick={book}><span className="ring" aria-hidden="true" /><span className="lbl">Book a discovery call</span></button>
             </Reveal>
           </div>
         </section>

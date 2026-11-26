@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useReducedMotion } from '../ui/index.jsx'
 import { EASE_IO } from './engine.js'
-import { mountScene, play, stop, still } from './Scene.jsx'
+import { mountAny, play, stop, still, unmount } from './Scene.jsx'
 
 /* A mouse hovers and a finger cannot, and the difference decides how a card
    is opened — not what happens once it is. Read once, re-read if it changes:
@@ -31,16 +31,8 @@ const WIPE_OUT = 0.40   // leaving should not be laboured
    than as one thing moving. */
 const WIPE_EASE = EASE_IO
 
-/* Two kinds of scene can sit behind a card. The SVG scenes in this folder
-   are strings mounted by the scene host. The film's card scenes
-   (src/components/film/cards.js) build themselves: they carry mount(), and
-   hand back a render and a destroy. Both are driven by the same shared
-   loop, which only ever calls scene.render(els, t). */
-function mount(host, scene) {
-  if (!scene.mount) return mountScene(host, scene)
-  const handle = scene.mount(host)
-  return { scene: { dur: scene.dur, render: (_, t) => handle.render(t) }, els: null, t0: 0, handle }
-}
+/* Two kinds of scene can sit behind a card: the SVG scenes in this folder,
+   and the film's card scenes. Scene.jsx mounts either (mountAny). */
 
 /**
  * Drives one card's wipe. The card's own content is clipped away from the
@@ -77,7 +69,7 @@ export function useWipe(cardRef, hostRef, scene, open) {
     }
     const build = () => {
       if (m) return
-      m = mount(host, scene)
+      m = mountAny(host, scene)
       // reduced motion gets a still of the outcome, not the journey to it
       m.scene.render(m.els, reduced ? still(scene) : 0)
       if (!reduced) play(m)
@@ -85,8 +77,7 @@ export function useWipe(cardRef, hostRef, scene, open) {
     const teardown = () => {
       if (!m) return
       stop(m)
-      if (m.handle) m.handle.destroy()
-      else host.innerHTML = ''
+      unmount(host, m)
       m = null
     }
 

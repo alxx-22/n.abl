@@ -17,7 +17,6 @@ import { track } from '../../lib/analytics.js'
 export default function Contact({ onBook }) {
   return (
     <section id="contact" className="section contact">
-      <div className="contact__glow" aria-hidden="true" />
       <div className="shell contact__inner">
         <Reveal>
           <h2 className="contact__title">
@@ -31,8 +30,9 @@ export default function Contact({ onBook }) {
           </p>
         </Reveal>
         <Reveal delay={0.16}>
-          <button className="btn btn--accent contact__btn" onClick={onBook}>
-            Book a discovery call
+          <button className="btn btn--primary contact__btn" onClick={onBook}>
+            <span className="ring" aria-hidden="true" />
+            <span className="lbl">Book a discovery call</span>
           </button>
         </Reveal>
         <Reveal delay={0.22}>

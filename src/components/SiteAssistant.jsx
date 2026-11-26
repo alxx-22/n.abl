@@ -1,19 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-
-/* The mark on the launcher. Four points rather than a robot or a speech
-   bubble: it reads as "something considered happens here" without promising a
-   person, and it sits in the same family as the dot in the wordmark. */
-function Spark({ size = 20 }) {
-  return (
-    <svg className="spark" width={size} height={size} viewBox="0 0 24 24"
-      fill="none" aria-hidden="true" focusable="false">
-      <path d="M12 2.5c.5 4.2 2.8 6.5 7 7-4.2.5-6.5 2.8-7 7-.5-4.2-2.8-6.5-7-7 4.2-.5 6.5-2.8 7-7Z"
-        fill="currentColor" />
-      <path d="M19 14.5c.25 2 1.3 3.05 3.3 3.3-2 .25-3.05 1.3-3.3 3.3-.25-2-1.3-3.05-3.3-3.3 2-.25 3.05-1.3 3.3-3.3Z"
-        fill="currentColor" opacity=".55" />
-    </svg>
-  )
-}
+import AssistantMark from './AssistantMark.jsx'
 
 /* The assistant on the public site.
 
@@ -128,7 +114,8 @@ export default function SiteAssistant({ onHandoff }) {
         aria-controls="site-assistant"
         onClick={toggle}
       >
-        <Spark />
+        <span className="ring" aria-hidden="true" />
+        <AssistantMark />
         {/* Keyed so React swaps the node rather than the text: the label then
             replays its entrance and the two words cross-fade instead of
             snapping. */}
@@ -139,7 +126,7 @@ export default function SiteAssistant({ onHandoff }) {
 
       {open && (
         <div
-          className={`assistant ${closing ? 'assistant--closing' : ''}`}
+          className={`assistant ${closing ? 'assistant--closing' : ''} ${busy ? 'assistant--thinking' : ''}`}
           id="site-assistant"
           role="dialog"
           aria-label="Ask n.abl a question"
@@ -168,9 +155,9 @@ export default function SiteAssistant({ onHandoff }) {
                 <p>{handoff.intent === 'book_call'
                   ? 'Shall I open the form so you can book a call?'
                   : 'Shall I pass this to the team?'}</p>
-                <button type="button" className="btn btn--accent btn--sm"
+                <button type="button" className="btn btn--primary btn--sm"
                   onClick={() => { onHandoff?.(handoff.enquiry); toggle(); setHandoff(null) }}>
-                  {handoff.intent === 'book_call' ? 'Book a call' : 'Ask the team'}
+                  <span className="lbl">{handoff.intent === 'book_call' ? 'Book a call' : 'Ask the team'}</span>
                 </button>
               </div>
             )}
@@ -193,8 +180,8 @@ export default function SiteAssistant({ onHandoff }) {
               aria-label="Your question"
               maxLength={1000}
             />
-            <button type="submit" className="btn btn--accent btn--sm" disabled={busy || !input.trim()}>
-              Send
+            <button type="submit" className="btn btn--primary btn--sm" disabled={busy || !input.trim()}>
+              <span className="lbl">Send</span>
             </button>
           </form>
 

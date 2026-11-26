@@ -1,0 +1,2 @@
+/* The mark reel is drawn entirely by its WebGL renderer (gl.js), on one canvas over the stage. */
+.k-gl { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }

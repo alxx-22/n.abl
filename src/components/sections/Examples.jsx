@@ -64,7 +64,7 @@ export default function Examples() {
   return (
     <section id="cases" className="section">
       <div className="shell">
-        <Chapter index={4}>In practice</Chapter>
+        <Chapter index={3}>In practice</Chapter>
         <Reveal delay={0.06}>
           <h2 className="section__title">From problem to working AI<span className="dot" /></h2>
         </Reveal>

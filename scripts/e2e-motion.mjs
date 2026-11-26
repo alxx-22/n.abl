@@ -2,11 +2,17 @@
    MOTION end-to-end suite.
 
    The CSS half of the site has always honoured prefers-reduced-motion,
-   because a media query is live. The JS half — the hero canvas, the
-   parallax, the reveals — sampled the preference once at mount, so it
-   only honoured a visitor who had set it before arriving. This proves
-   both halves now agree, and that the canvas is not burning frames on
-   a drawing that is scrolled out of sight.
+   because a media query is live. The JS half — the lit ground behind the
+   page, the parallax, the reveals — sampled the preference once at mount,
+   so it only honoured a visitor who had set it before arriving. This
+   proves both halves now agree, and that with motion off the ground does
+   no work while nothing changes.
+
+   The ground (components/ground) replaced the hero's node canvas in the
+   2026-11 brand. It is the page's background, fixed behind every section,
+   so unlike the hero canvas it is never scrolled out of sight: with motion
+   on it keeps drifting wherever the visitor is; with motion off it draws
+   once for each change and then stops.
 
    Frames are counted by wrapping requestAnimationFrame, so what is
    measured is work actually done rather than intent.
@@ -57,7 +63,12 @@ async function settle(page) {
 
 const browser = await chromium.launch()
 
-// ---------- 1. Idles off-screen and in a background tab ----------
+/* A frame count over 700ms. Not 60fps's 42: a headless browser draws the
+   shader in software, at well under full speed, so "running" is measured as
+   more than a handful of frames, and "stopped" as fewer than five. */
+const RUNNING = 8
+
+// ---------- 1. Runs behind the whole page ----------
 {
   const page = await browser.newPage({ viewport: { width: 1200, height: 900 } })
   const errors = []
@@ -66,21 +77,25 @@ const browser = await chromium.launch()
   await page.goto(BASE, { waitUntil: 'networkidle' })
   await page.waitForTimeout(1400)               // let the intro blind finish
 
-  console.log('\nHERO CANVAS')
+  console.log('\nTHE LIT GROUND')
+  const fill = await page.evaluate(() => {
+    const c = document.querySelector('canvas.ground')
+    if (!c) return null
+    const r = c.getBoundingClientRect(), s = getComputedStyle(c)
+    return { pos: s.position, z: s.zIndex, covers: r.left <= 0 && r.top <= 0 && r.right >= innerWidth && r.bottom >= innerHeight, drawn: c.width > 0 }
+  })
+  check('the ground is there, fixed behind the page', !!fill && fill.pos === 'fixed' && fill.z === '-1', JSON.stringify(fill))
+  check('and covers the screen', !!fill && fill.covers && fill.drawn, JSON.stringify(fill))
   const onScreen = await burn(page)
-  check('runs while the hero is on screen', onScreen > 20, `${onScreen} frames`)
+  check('drifts while the page is open', onScreen > RUNNING, `${onScreen} frames`)
 
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
   await settle(page)
-  const clear = await page.evaluate(() => document.querySelector('canvas.nodefield').getBoundingClientRect().bottom)
-  check('hero canvas is genuinely off screen', clear < 0, `bottom at ${Math.round(clear)}px`)
-  const offScreen = await burn(page)
-  check('stops once the hero is scrolled away', offScreen === 0, `${offScreen} frames`)
-
-  await page.evaluate(() => window.scrollTo(0, 0))
-  await settle(page)
-  const back = await burn(page)
-  check('resumes when the hero returns', back > 20, `${back} frames`)
+  /* At the foot the aurora is lit as well as the wisps, which a software
+     renderer draws at a few frames a second until the ground lowers its own
+     resolution. What matters here is that the loop has not stopped. */
+  const atFoot = await burn(page, 1400)
+  check('and at the foot of the page, which it is still behind', atFoot > 2, `${atFoot} frames`)
 
   check('no page errors', errors.length === 0, errors[0])
   await page.close()
@@ -95,12 +110,18 @@ const browser = await chromium.launch()
 
   console.log('\nREDUCED MOTION — SET AT LOAD')
   const frames = await burn(page)
-  check('canvas never starts', frames < 5, `${frames} frames`)
+  check('the ground does no work while nothing changes', frames < 5, `${frames} frames`)
   const painted = await page.evaluate(() => {
-    const c = document.querySelector('canvas.nodefield')
+    const c = document.querySelector('canvas.ground')
     return !!c && c.width > 0
   })
-  check('canvas is still drawn, just static', painted)
+  check('the ground is still drawn, just static', painted)
+  // a scroll changes the state it should show: it draws for that, then stops again
+  await page.evaluate(() => window.scrollTo({ top: 2400, behavior: 'instant' }))
+  await settle(page)
+  await page.waitForTimeout(300)
+  const after = await burn(page)
+  check('and stops again once the scroll has settled', after < 5, `${after} frames`)
   await page.close()
 }
 
@@ -113,18 +134,18 @@ const browser = await chromium.launch()
 
   console.log('\nREDUCED MOTION — TURNED ON MID-VISIT')
   const before = await burn(page)
-  check('moving beforehand', before > 20, `${before} frames`)
+  check('moving beforehand', before > RUNNING, `${before} frames`)
 
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.waitForTimeout(400)
   const after = await burn(page)
-  check('canvas stops on the change, without a reload', after < 5, `${after} frames`)
+  check('the ground stops on the change, without a reload', after < 5, `${after} frames`)
 
   // And back again, so the preference is not a one-way door.
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.waitForTimeout(400)
   const resumed = await burn(page)
-  check('canvas resumes if the preference is turned back off', resumed > 20, `${resumed} frames`)
+  check('the ground resumes if the preference is turned back off', resumed > RUNNING, `${resumed} frames`)
 
   const heroTransform = await page.evaluate(() => {
     document.querySelector('.hero__inner').style.transform = 'translateY(120px)'

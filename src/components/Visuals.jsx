@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react'
-import { useReducedMotion } from './ui/index.jsx'
+import { useId } from 'react'
 
 /* ============================================================
    VISUALS — brand-native imagery, drawn not photographed.
@@ -7,128 +6,6 @@ import { useReducedMotion } from './ui/index.jsx'
    it themes automatically, weighs almost nothing, needs no CDN
    and never blocks on an external request.
    ============================================================ */
-
-/* ---------- Hero: a constellation of systems wiring together ----------
-   Nodes drift gently; links brighten as they shorten. Reads as
-   "disconnected tools becoming one system" without being literal. */
-export function NodeField({ className = '' }) {
-  const canvasRef = useRef(null)
-  const reduce = useReducedMotion()
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-
-    let w = 0, h = 0, raf = 0
-    let onScreen = true
-    const DPR = Math.min(window.devicePixelRatio || 1, 2)
-    const COUNT = 34
-    const nodes = []
-
-    const seed = () => {
-      nodes.length = 0
-      for (let i = 0; i < COUNT; i++) {
-        nodes.push({
-          x: Math.random(), y: Math.random(),
-          vx: (Math.random() - 0.5) * 0.00035,
-          vy: (Math.random() - 0.5) * 0.00035,
-          r: Math.random() * 1.6 + 0.8,
-        })
-      }
-    }
-
-    const resize = () => {
-      const rect = canvas.getBoundingClientRect()
-      w = rect.width; h = rect.height
-      canvas.width = w * DPR; canvas.height = h * DPR
-      ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
-    }
-
-    const draw = () => {
-      ctx.clearRect(0, 0, w, h)
-
-      // links
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i], b = nodes[j]
-          const dx = (a.x - b.x) * w, dy = (a.y - b.y) * h
-          const dist = Math.hypot(dx, dy)
-          if (dist > 170) continue
-          const t = 1 - dist / 170
-          ctx.strokeStyle = `rgba(240, 231, 216, ${t * 0.13})`
-          ctx.lineWidth = 1
-          ctx.beginPath()
-          ctx.moveTo(a.x * w, a.y * h)
-          ctx.lineTo(b.x * w, b.y * h)
-          ctx.stroke()
-        }
-      }
-      // nodes
-      nodes.forEach((n, i) => {
-        const accent = i % 7 === 0
-        ctx.fillStyle = accent ? 'rgba(233, 172, 87, 0.85)' : 'rgba(240, 231, 216, 0.45)'
-        if (accent) { ctx.shadowColor = 'rgba(233, 172, 87, 0.8)'; ctx.shadowBlur = 12 }
-        ctx.beginPath()
-        ctx.arc(n.x * w, n.y * h, n.r, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.shadowBlur = 0
-      })
-    }
-
-    const step = () => {
-      nodes.forEach((n) => {
-        n.x += n.vx; n.y += n.vy
-        if (n.x < 0 || n.x > 1) n.vx *= -1
-        if (n.y < 0 || n.y > 1) n.vy *= -1
-      })
-      draw()
-      raf = requestAnimationFrame(step)
-    }
-
-    /* ---------- When the field is allowed to run ----------
-
-       The canvas fills the hero, and the hero is the first of ten sections:
-       for most of a visit it is scrolled well out of sight. The loop used to
-       run regardless — thirty-four nodes is 561 distance measurements and a
-       shadow-blurred fill every frame, forever, for a drawing nobody can
-       see, on whatever battery the visitor happens to be running on. It also
-       kept going in a background tab, where the browser throttles the frames
-       but still hands us the work.
-
-       So the loop is now gated on the two things that decide whether the
-       drawing is worth making: it is on screen, and the tab is in front.
-       Node positions are plain state that simply stops advancing, so coming
-       back resumes the drift where it paused rather than jumping. */
-    const running = () => !reduce && onScreen && !document.hidden
-    const stop = () => { if (raf) { cancelAnimationFrame(raf); raf = 0 } }
-    const sync = () => {
-      if (running()) { if (!raf) raf = requestAnimationFrame(step) }
-      else stop()
-    }
-
-    // Optimistic until the observer's first callback, which is asynchronous:
-    // a hero at the top of the page is on screen, and starting a frame early
-    // is cheaper than a blank canvas on first paint.
-    const io = new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; sync() })
-    io.observe(canvas)
-    document.addEventListener('visibilitychange', sync)
-
-    seed(); resize(); draw()
-    sync()
-
-    const ro = new ResizeObserver(() => { resize(); draw() })
-    ro.observe(canvas)
-    return () => {
-      stop()
-      io.disconnect()
-      ro.disconnect()
-      document.removeEventListener('visibilitychange', sync)
-    }
-  }, [reduce])
-
-  return <canvas ref={canvasRef} className={`nodefield ${className}`} aria-hidden="true" />
-}
 
 /* ---------- Category glyphs — one per problem the client arrives with.
    These used to be three glyphs for three disciplines (Innovation,
@@ -141,18 +18,36 @@ export function NodeField({ className = '' }) {
    category; a bar reading stands for "understand your data" in its
    place. Same 64×64 frame, same 1.4 stroke, same single accent dot —
    the drawing grammar is unchanged. */
+/* 2026-11: the glyphs for AI work are drawn in the calm gradient, amber
+   through cream to ice, rising from the bottom left; their accent dot is
+   ice, the AI at work. The glyphs for the other services (automation, data,
+   web, and the rest) are not AI, so they stay one colour, in cream. */
+const AI_KINDS = new Set(['voice', 'chat', 'document', 'agent', 'copilot', 'answer', 'bespoke'])
+
 export function CategoryGlyph({ kind }) {
+  const gid = `glyph-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
+  const lit = AI_KINDS.has(kind)
   const common = {
     viewBox: '0 0 64 64', width: 46, height: 46, fill: 'none',
-    stroke: 'currentColor', strokeWidth: 1.4,
+    stroke: lit ? `url(#${gid})` : 'currentColor', strokeWidth: 1.4,
     strokeLinecap: 'round', strokeLinejoin: 'round',
-    'aria-hidden': 'true', className: 'glyph',
+    'aria-hidden': 'true', className: lit ? 'glyph' : 'glyph glyph--plain',
   }
+  const defs = lit ? (
+    <defs>
+      <linearGradient id={gid} x1="6" y1="58" x2="58" y2="6" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stopColor="#E9AC57" />
+        <stop offset="0.5" stopColor="#EFE2C6" />
+        <stop offset="1" stopColor="#7CCBFF" />
+      </linearGradient>
+    </defs>
+  ) : null
 
   // Save time — a clock with the wasted wedge lifted out of it.
   if (kind === 'time') {
     return (
       <svg {...common}>
+        {defs}
         <path d="M32 12a20 20 0 1 0 20 20" />
         <path d="M32 12v20h20" strokeOpacity=".45" strokeDasharray="3 5" />
         <path d="M32 32l-11 7" />
@@ -165,6 +60,7 @@ export function CategoryGlyph({ kind }) {
   if (kind === 'accuracy') {
     return (
       <svg {...common}>
+        {defs}
         <rect x="10" y="16" width="44" height="32" rx="3" strokeOpacity=".45" />
         <path d="M18 26h14" strokeOpacity=".55" />
         <path d="M18 34h10" strokeOpacity=".55" />
@@ -179,6 +75,7 @@ export function CategoryGlyph({ kind }) {
   if (kind === 'data') {
     return (
       <svg {...common}>
+        {defs}
         <path d="M12 12v40h40" strokeOpacity=".45" />
         <path d="M20 44v-8" strokeOpacity=".55" />
         <path d="M29 44V28" strokeOpacity=".55" />
@@ -193,6 +90,7 @@ export function CategoryGlyph({ kind }) {
   if (kind === 'build') {
     return (
       <svg {...common}>
+        {defs}
         <rect x="10" y="10" width="20" height="20" rx="2" />
         <rect x="34" y="10" width="20" height="20" rx="2" strokeOpacity=".45" strokeDasharray="3 5" />
         <rect x="10" y="34" width="20" height="20" rx="2" strokeOpacity=".45" strokeDasharray="3 5" />
@@ -205,6 +103,7 @@ export function CategoryGlyph({ kind }) {
   if (kind === 'train') {
     return (
       <svg {...common}>
+        {defs}
         <circle cx="32" cy="20" r="7" />
         <path d="M20 50a12 12 0 0 1 24 0" />
         <path d="M10 44a9 9 0 0 1 8-8" strokeOpacity=".45" />
@@ -220,6 +119,7 @@ export function CategoryGlyph({ kind }) {
   if (kind === 'answer') {
     return (
       <svg {...common}>
+        {defs}
         <path d="M14 8h18l8 8v28a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4z" strokeOpacity=".45" />
         <path d="M32 8v8h8" strokeOpacity=".45" />
         <path d="M17 24h14" strokeOpacity=".55" />
@@ -237,6 +137,7 @@ export function CategoryGlyph({ kind }) {
   if (kind === 'voice') {
     return (
       <svg {...common}>
+        {defs}
         <path d="M20 12h8l3 10-5 3c2 5 6 9 11 11l3-5 10 3v8c0 2-2 4-4 4C28 46 14 32 14 16c0-2 2-4 4-4z" />
         <path d="M40 12a12 12 0 0 1 12 12" strokeOpacity=".45" />
         <path d="M40 19a5 5 0 0 1 5 5" strokeOpacity=".55" />
@@ -249,6 +150,7 @@ export function CategoryGlyph({ kind }) {
   if (kind === 'chat') {
     return (
       <svg {...common}>
+        {defs}
         <path d="M10 14h26a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H20l-8 6v-6h-2" strokeOpacity=".45" />
         <path d="M54 30H30a4 4 0 0 0-4 4v10a4 4 0 0 0 4 4h14l8 6v-6h2" />
         <circle cx="40" cy="39" r="2.6" fill="currentColor" stroke="none" />
@@ -260,6 +162,7 @@ export function CategoryGlyph({ kind }) {
   if (kind === 'document') {
     return (
       <svg {...common}>
+        {defs}
         <path d="M16 8h20l10 10v34a4 4 0 0 1-4 4H16a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4z" strokeOpacity=".45" />
         <path d="M36 8v10h10" strokeOpacity=".45" />
         <path d="M18 24h12M18 44h16" strokeOpacity=".55" />
@@ -273,6 +176,7 @@ export function CategoryGlyph({ kind }) {
   if (kind === 'agent') {
     return (
       <svg {...common}>
+        {defs}
         <path d="M12 16l3 3 6-6M12 32l3 3 6-6" />
         <path d="M28 16h24M28 32h24M28 48h16" strokeOpacity=".55" />
         <circle cx="16" cy="48" r="5" strokeOpacity=".45" />
@@ -285,6 +189,7 @@ export function CategoryGlyph({ kind }) {
   if (kind === 'copilot') {
     return (
       <svg {...common}>
+        {defs}
         <circle cx="18" cy="22" r="7" strokeOpacity=".55" />
         <circle cx="46" cy="22" r="7" strokeOpacity=".55" />
         <path d="M8 44a10 10 0 0 1 20 0M36 44a10 10 0 0 1 20 0" strokeOpacity=".45" />
@@ -298,6 +203,7 @@ export function CategoryGlyph({ kind }) {
   if (kind === 'bespoke') {
     return (
       <svg {...common}>
+        {defs}
         <rect x="8" y="26" width="12" height="12" rx="3" strokeOpacity=".55" />
         <rect x="44" y="12" width="12" height="12" rx="3" strokeOpacity=".55" />
         <rect x="44" y="40" width="12" height="12" rx="3" strokeOpacity=".55" />
@@ -312,6 +218,7 @@ export function CategoryGlyph({ kind }) {
   // to come back to if the repair card ever returns.
   return (
     <svg {...common}>
+        {defs}
       <path d="M40 12a12 12 0 0 0-9.5 19.3L14 47.8a4 4 0 0 0 5.7 5.7l16.5-16.5A12 12 0 1 0 40 12z" strokeOpacity=".45" />
       <circle cx="40" cy="24" r="6.5" />
       <path d="M30.5 31.3L14 47.8a4 4 0 0 0 5.7 5.7l16.5-16.5" />

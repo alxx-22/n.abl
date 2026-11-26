@@ -32,6 +32,13 @@ a:hover > .nabl-logo .nabl-logo__dot {
   padding: var(--s-6);
   box-shadow: var(--glow-lg), 0 24px 60px rgba(0,0,0,0.55);
 }
+/* On a lit page the modal is the same dark glass as the cards, a shade denser. */
+.lit .modal {
+  background: rgba(19, 16, 14, 0.9);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-radius: 20px;
+}
 .modal:focus { outline: none; }
 .modal__title { font-size: var(--t-xl); margin-bottom: var(--s-3); }
 .modal__title--lg { font-size: var(--t-2xl); margin: var(--s-3) 0; }
@@ -65,7 +72,7 @@ a:hover > .nabl-logo .nabl-logo__dot {
 .docpage__back:hover { color: var(--accent-400); }
 .docpage__back:focus-visible { outline: 2px solid var(--accent-400); outline-offset: 3px; border-radius: 6px; }
 .docpage__title {
-  font-family: var(--font-mono); font-size: var(--t-xs); letter-spacing: .1em;
+  font-size: 0.72rem; letter-spacing: var(--track-label);
   text-transform: uppercase; color: var(--cream-600);
 }
 .docpage__frame { flex: 1; width: 100%; border: 0; background: var(--bg); }
@@ -78,6 +85,83 @@ a:hover > .nabl-logo .nabl-logo__dot {
 .modal__form { display: flex; flex-direction: column; gap: var(--s-3); }
 .modal__form .btn { margin-top: var(--s-2); }
 .modal__success { text-align: center; }
+
+/* ---------- The discovery call (DiscoveryModal.jsx) ----------
+   The one featured panel on screen: glass with the trio line along its top.
+   On a desk the reason to book sits beside the form, in front of the
+   aurora; the fields pair up so the whole form fits without scrolling. On
+   a phone it stacks. */
+.modal.dmodal {
+  position: relative; max-width: 58rem; max-height: 92dvh; padding: 0;
+  overflow: hidden auto; border-radius: 24px;
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 40px 120px -30px rgba(0, 0, 0, 0.85);
+  animation: dmodal-in .38s cubic-bezier(.2, .9, .25, 1.08) backwards;
+}
+.lit .modal.dmodal { background: rgba(19, 16, 14, 0.9); -webkit-backdrop-filter: blur(18px) saturate(130%); backdrop-filter: blur(18px) saturate(130%); }
+.dmodal::before {
+  content: ''; position: absolute; left: 30px; right: 30px; top: 0; height: 1px; z-index: 2; pointer-events: none;
+  background: var(--grad-trio); opacity: 0.85;
+}
+@keyframes dmodal-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+.dmodal__grid { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); }
+.dmodal__intro {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: flex; flex-direction: column; padding: 46px 40px 40px;
+  border-right: 1px solid var(--line-faint);
+}
+/* the aurora, as the lit ground draws it (assets/aurora.svg): its hem low
+   in the pane, behind the chips, the haze rising towards the words and
+   the title on the dark above it */
+.dmodal__intro::after {
+  content: ''; position: absolute; left: -30%; right: -30%; top: 30%; height: 100%; z-index: -1; pointer-events: none;
+  background: url('../assets/aurora.svg') center top / auto 100% no-repeat;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%);
+  mask-image: linear-gradient(180deg, transparent, #000 22%);
+  opacity: 0.92;
+}
+.dmodal__title {
+  margin-top: 20px;
+  font-weight: 100; font-size: clamp(2.2rem, 1.6rem + 1.8vw, 3.1rem); line-height: 1.04;
+  letter-spacing: var(--track-display); word-spacing: var(--word-display); color: var(--cream-100); text-wrap: balance;
+}
+.modal__body.dmodal__body { margin: 18px 0 0; font-size: var(--t-lede); line-height: 1.55; color: var(--cream-300); }
+.dmodal__facts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 34px; }
+.dmodal__facts li {
+  display: inline-flex; align-items: center; gap: 9px; height: 34px; padding: 1px 14px 0;
+  border-radius: 999px; border: 1px solid rgba(var(--cream-rgb), 0.18); background: rgba(14, 12, 10, 0.55);
+  font-size: 14px; line-height: 1; color: var(--cream-200); white-space: nowrap;
+}
+.dmodal__facts li::before { content: ''; width: 6px; height: 6px; flex: none; margin-top: -1px; background: var(--accent-400); box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.55); }
+.modal__form.dmodal__form { gap: 16px; padding: 46px 40px 36px; }
+.dmodal__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+.dmodal .input { background: rgba(8, 7, 6, 0.5); border-color: rgba(var(--cream-rgb), 0.14); border-radius: 12px; }
+.dmodal .input:hover { border-color: rgba(var(--cream-rgb), 0.22); }
+.dmodal .input:focus { border-color: rgba(var(--accent-rgb), 0.55); box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.1); }
+.dmodal textarea.input { min-height: 6.6rem; }
+.dmodal .modal__form .btn { margin-top: 6px; min-height: 52px; }
+.modal__close.dmodal__close {
+  position: absolute; top: 16px; right: 16px; z-index: 3;
+  width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+  border: 1px solid rgba(var(--cream-rgb), 0.14); background: rgba(14, 12, 10, 0.55); color: var(--cream-300);
+  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.modal__close.dmodal__close:hover { color: var(--cream-100); border-color: rgba(var(--cream-rgb), 0.3); }
+/* sent: a smaller panel, the AI's ice on the tick */
+.modal.dmodal.dmodal--done { max-width: 30rem; }
+.dmodal__done { padding: 48px 38px 36px; display: flex; flex-direction: column; align-items: center; }
+.dmodal__done .dmodal__body { margin: 16px 0 28px; }
+.tick.tick--ice { border-color: var(--ice-400); box-shadow: 0 0 26px -4px rgba(var(--ice-rgb), 0.55), inset 0 0 14px rgba(var(--ice-rgb), 0.12); margin-bottom: 22px; }
+.tick.tick--ice::before, .tick.tick--ice::after { background: var(--ice-300); }
+@media (max-width: 860px) {
+  .dmodal__grid { grid-template-columns: 1fr; }
+  .dmodal__intro { padding: 34px 24px 4px; border-right: 0; }
+  .dmodal__intro::after { display: none; }
+  .dmodal__facts { margin-top: 18px; padding-top: 0; }
+  .modal__form.dmodal__form { padding: 22px 24px 26px; }
+  .dmodal__row { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .modal.dmodal { animation: none; } }
 
 /* Animated tick on successful submit */
 .tick {
@@ -147,15 +231,16 @@ a:hover > .nabl-logo .nabl-logo__dot {
   border-bottom: 1px solid transparent;
 }
 .nav--scrolled {
-  background: rgba(14, 12, 10, 0.72);
+  background: rgba(14, 12, 10, 0.74);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
   backdrop-filter: blur(14px) saturate(1.2);
   border-bottom-color: var(--line);
 }
 .nav__links { display: flex; align-items: center; gap: var(--s-5); }
 .nav__link {
   position: relative;
-  font-size: var(--t-sm);
-  color: var(--cream-400);
+  font-size: 14.5px;
+  color: var(--cream-300);
   transition: color var(--dur-fast) var(--ease);
 }
 .nav__link::after {
@@ -201,7 +286,7 @@ a:hover > .nabl-logo .nabl-logo__dot {
     visibility: visible;
     transition: transform var(--dur) var(--ease), visibility 0s;
   }
-  .nav__link { font-size: var(--t-2xl); font-family: var(--font-display); color: var(--cream-100); }
+  .nav__link { font-size: var(--t-2xl); font-family: var(--font-display); font-weight: 100; color: var(--cream-100); }
 }
 
 /* ---------- Footer ---------- */
@@ -209,6 +294,12 @@ a:hover > .nabl-logo .nabl-logo__dot {
   border-top: 1px solid var(--line);
   padding: var(--s-8) 0 var(--s-5);
   position: relative;
+}
+/* over the lit ground the footer is a dark glass shelf, so the light settles behind it */
+.lit .footer {
+  background: rgba(14, 12, 10, 0.86);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 .footer__grid {
   display: grid; gap: var(--s-6);
@@ -556,17 +647,6 @@ a:hover > .nabl-logo .nabl-logo__dot {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: none; }
 }
-/* A whole turn, not a half: it loops while the cursor is on the launcher, and
-   0deg and 360deg are the same frame, so the repeat has no seam. The scale
-   pulses on the quarters so the spin has a pulse to it rather than reading as
-   a loading spinner. */
-@keyframes spark-turn {
-  from { transform: rotate(0deg)   scale(1); }
-  25%  { transform: rotate(90deg)  scale(1.14); }
-  50%  { transform: rotate(180deg) scale(1); }
-  75%  { transform: rotate(270deg) scale(1.14); }
-  to   { transform: rotate(360deg) scale(1); }
-}
 @keyframes think {
   0%, 80%, 100% { opacity: .25; transform: translateY(0); }
   40%           { opacity: 1;   transform: translateY(-3px); }
@@ -604,45 +684,99 @@ a:hover > .nabl-logo .nabl-logo__dot {
   z-index: 60;
   display: inline-flex;
   align-items: center;
-  gap: var(--s-2);
   appearance: none;
-  border: 1px solid var(--line-strong);
-  background: var(--surface-2);
+  border: 1px solid rgba(var(--cream-rgb), 0.16);
+  background: rgba(26, 22, 19, 0.72);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
   color: var(--cream-100);
   font: inherit;
   font-size: var(--t-sm);
-  padding: var(--s-3) var(--s-5);
+  /* the mark sits in the pill's round end, like an avatar */
+  padding: 7px var(--s-5) 7px 7px;
+  gap: 10px;
   border-radius: 999px;
   cursor: pointer;
-  box-shadow: 0 8px 28px rgba(0,0,0,.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 28px rgba(0,0,0,.35);
   transition: border-color .22s var(--ease), background .22s var(--ease),
               transform .22s var(--ease), box-shadow .22s var(--ease);
   /* Arrives a beat after the page has settled rather than being part of the
      load, so it reads as an offer rather than furniture. */
   animation: fab-in .4s var(--ease) .9s backwards;
 }
-.assistant-fab:hover {
-  border-color: var(--accent-400);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 34px rgba(0,0,0,.42), var(--glow-sm);
+.assistant-fab__label { padding-top: 2px; animation: label-in .28s var(--ease) backwards; }
+/* Under the pointer the launcher lifts, its own edge brightens, and the ring
+   (global.css, THE RING) opens out round it with the brand's light circling. */
+@media (hover: hover) {
+  .assistant-fab:hover {
+    border-color: rgba(var(--cream-rgb), 0.28);
+    transform: translateY(-2px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 12px 34px rgba(0, 0, 0, .42),
+                0 0 30px -6px rgba(var(--accent-rgb), 0.4), 0 0 50px -12px rgba(var(--ice-rgb), 0.34);
+  }
 }
 .assistant-fab:active { transform: translateY(0); }
-.assistant-fab .spark {
-  color: var(--accent-400);
-  flex: 0 0 auto;
-  /* Two twinkles, spaced, then still. */
+.assistant-fab--open {
+  /* open, it stays glass, with the AI's ice on its edge */
+  background: rgba(26, 22, 19, 0.82);
+  color: var(--cream-100);
+  border-color: rgba(var(--ice-rgb), 0.42);
+}
+
+/* ---------- THE ASSISTANT'S MARK (AssistantMark.jsx) ----------
+   A sphere of dark glass with the brand's three lights inside it, the way
+   the main button holds them, and a spark at its centre. */
+.mark-orb {
+  position: relative; flex: none;
+  width: 30px; height: 30px; border-radius: 50%;
+  overflow: hidden; isolation: isolate;
+  background: #15110E;
+  box-shadow: 0 0 14px -3px rgba(var(--accent-rgb), 0.55), 0 0 20px -6px rgba(var(--ice-rgb), 0.45);
+  transition: box-shadow .4s var(--ease);
+}
+.mark-orb__spin, .mark-orb__lights { position: absolute; border-radius: 50%; display: block; }
+.mark-orb__spin {
+  inset: 0;
+  /* turns only while the pointer is on the launcher, and holds where it stopped */
+  animation: orb-turn 4.5s linear infinite paused;
+}
+.mark-orb__lights {
+  inset: -20%;
+  background:
+    radial-gradient(42% 42% at 28% 74%, rgba(var(--ember-rgb), 0.95), transparent 72%),
+    radial-gradient(42% 42% at 52% 92%, rgba(var(--accent-rgb), 0.95), transparent 72%),
+    radial-gradient(44% 44% at 76% 30%, rgba(var(--ice-rgb), 0.9), transparent 72%),
+    radial-gradient(40% 40% at 40% 34%, rgba(239, 226, 198, 0.38), transparent 72%);
+  filter: blur(2px);
+  transition: filter .4s var(--ease);
+  /* one slow turn as the launcher arrives, then still */
+  animation: orb-turn 6s cubic-bezier(.45, 0, .25, 1) 1.5s 1 backwards;
+}
+/* the curve of the glass: a highlight up and to the left, a hairline rim, a little shade below */
+.mark-orb::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none; z-index: 1;
+  background: radial-gradient(55% 45% at 32% 22%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 70%);
+  box-shadow: inset 0 0 0 1px rgba(var(--cream-rgb), 0.22), inset 0 -3px 6px rgba(0, 0, 0, 0.35);
+}
+.mark-orb__spark {
+  position: absolute; left: 50%; top: 50%; z-index: 2;
+  width: 16px; height: 16px; margin: -8px 0 0 -8px;
+  overflow: visible; fill: #FFF9EF;
+  filter: drop-shadow(0 0 2.5px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 6px rgba(255, 236, 200, 0.5));
+  transition: transform .6s var(--ease-out);
+  /* catches the eye twice after the page settles, then leaves you alone */
   animation: twinkle 4.5s var(--ease) 2.4s 2;
 }
-/* Hover overrides the twinkle and keeps turning for as long as the cursor is
-   there — one gesture at a time, and it stops the moment you leave. */
-.assistant-fab:hover .spark { animation: spark-turn 1.6s linear infinite; }
-.assistant-fab__label { animation: label-in .28s var(--ease) backwards; }
-.assistant-fab--open {
-  background: var(--accent-400);
-  color: var(--on-accent);
-  border-color: var(--accent-400);
+@keyframes orb-turn { to { transform: rotate(360deg); } }
+@media (hover: hover) {
+  .assistant-fab:hover .mark-orb { box-shadow: 0 0 18px -2px rgba(var(--accent-rgb), 0.7), 0 0 26px -4px rgba(var(--ice-rgb), 0.55); }
+  .assistant-fab:hover .mark-orb__spin { animation-play-state: running; }
+  .assistant-fab:hover .mark-orb__lights { filter: blur(2px) brightness(1.2) saturate(1.15); }
+  /* a quarter turn: the spark ends as it began, so it reads as a glint */
+  .assistant-fab:hover .mark-orb__spark { transform: rotate(90deg) scale(1.12); }
 }
-.assistant-fab--open .spark { color: var(--on-accent); }
+/* open: the spark turns to a cross, the close it now stands for */
+.assistant-fab--open .mark-orb__spark { transform: rotate(45deg) scale(.86); }
 
 .assistant {
   position: fixed;
@@ -653,14 +787,43 @@ a:hover > .nabl-logo .nabl-logo__dot {
   max-height: min(32rem, 70vh);
   display: flex;
   flex-direction: column;
-  background: var(--surface-1);
+  /* dark glass over the page's light */
+  background: rgba(19, 16, 14, 0.86);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
   border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  box-shadow: 0 24px 60px rgba(0,0,0,.5);
+  border-radius: 20px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 60px rgba(0,0,0,.5);
   overflow: hidden;
   transform-origin: bottom right;
+  transition: box-shadow 0.6s var(--ease);
   animation: assistant-in .34s cubic-bezier(.2, .9, .25, 1.12) backwards;
 }
+/* The brand's line along the top edge. */
+.assistant::before {
+  content: ''; position: absolute; left: 18px; right: 18px; top: 0; height: 1px; pointer-events: none;
+  background: var(--grad-trio); opacity: 0.55;
+}
+/* While the agent is answering, light runs round the edge and the box glows,
+   cool and warm, until the answer lands. */
+.assistant::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none; z-index: 2;
+  background: conic-gradient(from var(--ring-a),
+    transparent 0deg, rgba(var(--ember-rgb), 0.85) 50deg, var(--accent-300) 110deg, var(--calm-mid) 160deg,
+    var(--ice-300) 210deg, transparent 280deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease);
+}
+.assistant--thinking {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 60px rgba(0,0,0,.5),
+              0 0 42px -6px rgba(var(--ice-rgb), 0.4), 0 0 90px -20px rgba(var(--accent-rgb), 0.42);
+}
+.assistant--thinking::after { opacity: 0.9; animation: ring-spin 2.4s linear infinite; }
+@keyframes ring-spin { from { --ring-a: 0deg; } to { --ring-a: 360deg; } }
 /* Forwards here, unlike everywhere else: the node is about to be removed, so
    holding the final frame is the point. Duration matches CLOSE_MS in
    SiteAssistant.jsx — if one changes the other has to. */
@@ -696,18 +859,20 @@ a:hover > .nabl-logo .nabl-logo__dot {
   animation: msg-in .3s var(--ease) backwards;
 }
 .assistant__msg--assistant {
-  background: var(--surface-2);
+  /* the agent's words: the AI at work, in ice */
+  background: linear-gradient(180deg, rgba(var(--ice-rgb), .085), rgba(var(--ice-rgb), .04));
   color: var(--cream-200);
-  border: 1px solid var(--line-faint);
+  border: 1px solid rgba(var(--ice-rgb), .2);
   border-bottom-left-radius: 5px;
   box-shadow: 0 2px 10px rgba(0,0,0,.22);
   max-width: 92%;
 }
 .assistant__msg--user {
+  /* the visitor's own words: plain glass */
   background: linear-gradient(180deg,
-    rgba(var(--accent-rgb), .22),
-    rgba(var(--accent-rgb), .14));
-  border: 1px solid rgba(var(--accent-rgb), .35);
+    rgba(var(--cream-rgb), .10),
+    rgba(var(--cream-rgb), .06));
+  border: 1px solid rgba(var(--cream-rgb), .18);
   color: var(--cream-100);
   justify-self: end;
   border-bottom-right-radius: 5px;
@@ -720,7 +885,8 @@ a:hover > .nabl-logo .nabl-logo__dot {
 .assistant__msg--busy { display: inline-flex; gap: 5px; align-items: center; padding: var(--s-4); }
 .assistant__msg--busy i {
   width: 6px; height: 6px; border-radius: 50%;
-  background: var(--accent-400);
+  background: var(--ice-400);
+  box-shadow: 0 0 8px rgba(var(--ice-rgb), .7);
   animation: think 1.3s infinite var(--ease);
 }
 .assistant__msg--busy i:nth-child(2) { animation-delay: .18s; }
@@ -745,7 +911,7 @@ a:hover > .nabl-logo .nabl-logo__dot {
   align-items: flex-end;
   padding: var(--s-3);
   border-top: 1px solid var(--line-faint);
-  background: var(--surface-1);
+  background: rgba(14, 12, 10, 0.4);
 }
 /* Height is set from JS as the text wraps; resize is off so a drag handle
    does not fight it.
@@ -825,9 +991,11 @@ a:hover > .nabl-logo .nabl-logo__dot {
   .assistant__handoff .btn,
   .assistant-fab,
   .assistant-fab__label,
-  .assistant-fab .spark { animation: none; }
+  .mark-orb__spin,
+  .mark-orb__lights,
+  .mark-orb__spark { animation: none; }
+  .mark-orb__spark { transition: none; }
   .assistant-fab:hover { transform: none; }
-  .assistant-fab:hover .spark { animation: none; }
   .assistant__form .btn:disabled { transform: none; }
   .assistant__msg--busy i { animation: none; opacity: .6; }
 }
