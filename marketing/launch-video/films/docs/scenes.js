@@ -12,14 +12,14 @@
    (ground.js), and three lights that keep their meaning: ember for the
    problem, amber for n.abl, ice for the AI at work. No sound but whooshes.
 
-   box    a delivery arrives: a cream box drops on the swell and turns a
-          step on each pluck; the camera leans in on the three build hits
+   box    a delivery arrives: a cream parcel drops on the swell and rocks a
+          little less on each pluck; the camera leans in on the build
    desk   on the drop its note goes to the computer, set down on the clap;
           someone has to type it all in, a letter a sixteenth
-   stack  then onto the stack it goes: it grows on every kick, the camera
-          stepping back and up to keep its top in view
-   upload a cursor takes the stack on a clap and carries it, a step an
-          eighth, into Upload documents, dropped on the next clap
+   stack  then onto the stack it goes: sheets dropped on with every kick;
+          then in the same shot a cursor takes the stack on a clap, the
+          sheets gather under it, and it carries them a step an eighth into
+          Upload documents, dropped on the next clap
    sheet  one sheet, a row a document and a column a field, a row filled
           each sixteenth; then the rest stream past, done
    count  thousands of documents read and filed, a jump each sixteenth,
@@ -103,24 +103,6 @@ function wordLine(parent, words, size = CAP) {
 }
 function chip(parent, html) { return h('div', 'd-chip', parent, `<span class="sq"></span><span>${html}</span>`) }
 
-/* ---------- a box in three dimensions: six faces; size() changes it ---------- */
-function cuboid(parent, cls, w, hh, d) {
-  const e = h('div', 'd-cub ' + cls, parent)
-  const f = {}
-  ;['back', 'bottom', 'left', 'right', 'front', 'top'].forEach(k => { f[k] = h('div', 'fc ' + k, e) })
-  e.size = (w, hh, d) => {
-    const set = (el, ww, hgt, tf) => Object.assign(el.style, { width: ww + 'px', height: hgt + 'px', marginLeft: -ww / 2 + 'px', marginTop: -hgt / 2 + 'px', transform: tf })
-    set(f.front, w, hh, `translateZ(${d / 2}px)`)
-    set(f.back, w, hh, `rotateY(180deg) translateZ(${d / 2}px)`)
-    set(f.right, d, hh, `rotateY(90deg) translateZ(${w / 2}px)`)
-    set(f.left, d, hh, `rotateY(-90deg) translateZ(${w / 2}px)`)
-    set(f.top, w, d, `rotateX(90deg) translateZ(${hh / 2}px)`)
-    set(f.bottom, w, d, `rotateX(-90deg) translateZ(${hh / 2}px)`)
-  }
-  e.size(w, hh, d); e.f = f
-  return e
-}
-
 /* ---------- the delivery note: printed, plain, and still to be typed in ---------- */
 function note(parent) {
   return h('div', 'd-note', parent, `
@@ -128,6 +110,13 @@ function note(parent) {
     <div class="sup">Harbour Foods Ltd</div><div class="ad">Unit 4, Quay Road</div>
     <div class="its"><div><span>Plum tomatoes, 2.5 kg</span><b>12</b></div><div><span>Olive oil, 5 L</span><b>6</b></div><div><span>Flour, 16 kg</span><b>10</b></div></div>
     <div class="tot"><span>Total</span><b>£542.70</b></div>`)
+}
+/* a sheet for the stack: an invoice, a header and a few lines */
+const LW = [62, 44, 90, 84, 70, 92, 58, 80, 40, 66]
+const KINDS = ['INVOICE', 'DELIVERY NOTE', 'INVOICE', 'RECEIPT', 'INVOICE', 'STATEMENT', 'DELIVERY NOTE', 'ORDER']
+function sheet(parent, i) {
+  const lines = LW.map((w, j) => `<i class="${j === 1 || j === 8 ? 'd' : ''}" style="width:${(w + (i * 7 + j * 13) % 17) % 100}%"></i>`).join('')
+  return h('div', 'd-sheet ' + ['', 'b', 'c'][i % 3], parent, `<div class="h">${KINDS[i % KINDS.length]}</div>${lines}`)
 }
 /* the computer: a monitor with an empty invoice form on it */
 function monitor(parent) {
@@ -137,30 +126,35 @@ function monitor(parent) {
 }
 
 /* ============================================================
-   BOX: a delivery arrives. It drops on the swell and turns a step on each
-   pluck after; the camera steps in on every pluck, and leans in on the build
+   BOX: a delivery arrives. It drops on the swell, rocks a little less on
+   each pluck after as it settles; the camera steps in on every pluck, and
+   leans in on the build
    ============================================================ */
 const T_LAND = bt(10)
+/* the parcel: front on, lit softly, a lid seam, tape, its note */
+function parcel(parent) {
+  const e = h('div', 'd-parcel', parent, '<i class="lid"></i><i class="seam"></i><i class="tape"></i><i class="sheen"></i>')
+  const nt = note(e); nt.classList.add('on')
+  return e
+}
 function buildBox(s) {
   widen(s)
-  const BW = 520, BH = 360, BD = 420
   const shadow = h('div', 'd-shadow', s.cam)
-  const box = cuboid(s.cam, 'box', BW, BH, BD)
-  const nt = note(box.f.front); nt.classList.add('on'); nt.style.transform = 'rotate(-2deg) scale(.7)'
-  h('i', 'tape', box.f.top); h('i', 'tape', box.f.front)
+  const box = parcel(s.cam)
   const line = wordLine(s.hud, ['A', 'delivery', `arrives${STOP}`])
-  const BY = M({ land: 90, sq: 120, tall: 150, port: 190 }) / Z0, BK = M({ land: .78, def: .72 })
-  const TURN = PLUCK.filter(p => p > T_LAND + .05)
+  const BY = M({ land: 110, sq: 140, tall: 170, port: 210 }) / Z0, BK = M({ land: 1.15, def: .95 })
+  const SETTLE = PLUCK.filter(p => p > T_LAND + .05)
   cue('whoosh', T_LAND, { d: .55, v: .32 })
   return t => {
-    // it falls and lands on the swell, with a little give
+    // it falls and lands on the swell, gives, then rocks a little less on each pluck
     const u = P(t, T_LAND - .32, T_LAND, E.in2), sq = bell(t, T_LAND - .01, T_LAND + .05, T_LAND + .32)
-    put(box, { y: lerp(-H / 2 - 600, BY, u) + 10 * sq, rx: -16, ry: -30 + 4 * steps(t, TURN), s: BK, o: t > T_LAND - .32 ? 1 : 0 })
-    put(shadow, { y: BY + BH / 2 * BK + 30, s: BK * lerp(.3, 1, u) * (1 + .05 * sq), o: .7 * u })
+    let rock = 0; SETTLE.forEach((p, i) => { rock += (i % 2 ? -1 : 1) * (1.8 - i * .4) * bell(t, p - .03, p + .05, p + .42) })
+    put(box, { y: lerp(-H / 2 - 520, BY, u) + 8 * sq, r: rock, s: BK * (1 - .015 * sq), o: t > T_LAND - .32 ? 1 : 0 })
+    put(shadow, { y: BY + 190 * BK + 26, s: BK * lerp(.3, 1, u) * (1 + .05 * sq), o: .75 * u })
     line.at(t, PLUCK.slice(0, 3))
     // the camera: a step closer on each pluck, then a lean in on each build hit
     const k = steps(t, PLUCK), b = steps(t, BUILD, .05, .06)
-    shoot(s, () => [-16 * b, BY * .15 * b / 3, 0, 3 * b / 3, -3 * b / 3, 0, 1 + .01 * k + .04 * b], t)
+    shoot(s, () => [40 * b, BY * .12 * b, 0, 0, 0, 0, 1 + .01 * k + .045 * b], t)
     breathe(s, t)
     lens(s, {})
   }
@@ -206,108 +200,98 @@ function buildDesk(s) {
 }
 
 /* ============================================================
-   STACK: then onto the stack it goes. It grows on every kick, the claps
-   adding more; the camera steps back and up to keep its top in view
+   STACK: then onto the stack it goes; sheets dropped on with every kick,
+   the claps bringing more. Then, in the same shot, Upload documents: a
+   cursor takes the stack on a clap, the sheets gather under it, and it
+   carries them a step an eighth into the box, dropped on the next clap
    ============================================================ */
-const T_ONTO = bt(20)
-// [beat, sheets, height in px] the stack takes on at each hit; it starts with 18 waiting
-const GROW = [[20, 1, 10], [21, 5, 70], [22, 4, 60], [23, 6, 90], [24, 4, 70], [25, 7, 110]]
-const S0 = 18, SH0 = 250
-const STACKTOP = '<b>DELIVERY NOTE</b><span>Harbour Foods Ltd</span><i></i><i></i><i></i><i></i>'
-/* a few sheets out of line on the front and side, so it reads as paper, not a block */
-function ragged(stk) {
-  const r = rng(31)
-  ;['front', 'right'].forEach(f => { for (let i = 0; i < 9; i++) { const e = h('i', 'out', stk.f[f]); Object.assign(e.style, { bottom: (4 + r() * 92).toFixed(1) + '%', left: (-r() * 14).toFixed(1) + 'px', right: (-r() * 14).toFixed(1) + 'px' }) } })
-}
-function buildStack(s) {
-  widen(s)
-  const t0 = s.t0, t1 = s.t1
-  const SW = 380, SD = 300
-  const shadow = h('div', 'd-shadow', s.cam)
-  const stk = cuboid(s.cam, 'stack', SW, SH0, SD)
-  stk.f.top.innerHTML = STACKTOP; ragged(stk)
-  const nt = note(s.cam)
-  const ch = chip(s.hud, `<b>${S0}</b> to type in`), cb = ch.querySelector('b')
-  const line = wordLine(s.hud, ['Then', 'onto', 'the', '|', 'stack', 'it', `goes${STOP}`])
-  const FY = M({ land: 390, sq: 410, tall: 490, port: 690 }) / Z0, SK = M({ land: .8, sq: .78, tall: .9, port: 1.12 })
-  const total = S0 + GROW.reduce((a, g) => a + g[1], 0)          // 43
-  cue('whoosh', T_ONTO, { d: .5, v: .35 })
-  GROW.slice(1).forEach(([b]) => cue('whoosh', bt(b), { d: .3, v: .15 }))
-  const KS = kicksIn(t0, t1)
-  return t => {
-    // the stack's height, a step on each hit
-    let hh = SH0, n = S0
-    GROW.forEach(([b, k, dh]) => { const p = P(t, bt(b) - .06, bt(b) + .1, E.out); hh += dh * p; if (t >= bt(b) - .02) n += k })
-    stk.size(SW, hh, SD)
-    const give = GROW.reduce((a, [b]) => a + bell(t, bt(b) - .01, bt(b) + .04, bt(b) + .25), 0)
-    put(stk, { y: FY - hh / 2 * SK, rx: -14, ry: -28 + 1.2 * steps(t, KS), s: SK * (1 + .015 * give) })
-    put(shadow, { y: FY + 20, s: SK * 1.1, o: .7 })
-    // the note flies on and lands on top on the kick
-    const u = P(t, t0 - .02, T_ONTO, E.io), topY = FY - SH0 * SK - 30
-    put(nt, { x: lerp(-W / 2 - 300, 0, u), y: lerp(topY - 260, topY, u) - 120 * Math.sin(Math.PI * u), r: lerp(-30, -6, u), rx: 60 * u, s: lerp(1.1, .82, u) * SK, o: 1 - P(t, T_ONTO - .02, T_ONTO + .04, E.lin) })
-    cb.textContent = Math.min(total, n)
-    const cbump = GROW.reduce((a, [b]) => a + bell(t, bt(b) - .02, bt(b) + .04, bt(b) + .25), 0)
-    blurIn(ch, t, t0 + .05, { y: TOPY, dur: .3, s0: 1, blur: 10, dy: -14, s: 1 + .08 * cbump }); shield(ch, .7)
-    line.at(t, at16(t0, 6))
-    // the camera steps back and up on each hit, to keep the top in view
-    const k = steps(t, GROW.map(([b]) => bt(b)), .06, .12)
-    shoot(s, () => [0, -k * 6, 0, 2 + k * 1.2, 0, 0, 1.08 - k * .03], t)
-    breathe(s, t)
-    lens(s, {})
-  }
-}
-
-/* ============================================================
-   UPLOAD: a cursor takes the stack on a clap and carries it, a step an
-   eighth, into Upload documents, dropped on the next clap
-   ============================================================ */
+const T_ONTO = bt(20), T_UP = bt(26)
+// [beat, sheets dropped on]; the stack starts at 18 waiting, and the note lands on it at beat 20
+const GROW = [[21, 5], [22, 4], [23, 6], [24, 4], [25, 7]]
+const S0 = 18
 const CURSOR = `<svg width="44" height="44" viewBox="0 0 40 40"><path d="M6 3 L6 31 L13.5 24 L18.5 35.5 L23.5 33.3 L18.6 22.2 L28.5 22.2 Z" fill="#FBF6EC" stroke="#0E0C0A" stroke-width="2.2" stroke-linejoin="round"/></svg>`
 function cursor(parent) { const e = h('div', 'd-cur', parent, CURSOR); e.style.transformOrigin = '6px 3px'; return e }
 function aim(e, x, y, o = 1, press = 0) { e.style.transform = `translate3d(${(x - 6).toFixed(1)}px,${(y - 3).toFixed(1)}px,0) scale(${(1 - .16 * press).toFixed(3)})`; vis(e, o) }
 const UPLOAD = '<svg width="64" height="64" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21a6 6 0 01-.6-12A8 8 0 0123.6 11 5 5 0 0123 21"/><path d="M16 27V15M11.5 19.5L16 15l4.5 4.5"/></svg>'
 const NDOC = 43
 const T_GRAB = bt(27), T_DROP = bt(29)
-function buildUpload(s) {
+function buildStack(s) {
   widen(s)
   const t0 = s.t0, t1 = s.t1
-  const ZW = M({ land: 820, def: 760 }) / Z0, ZH = M({ land: 300, def: 280 }) / Z0
-  const ZY = M({ land: -250, sq: -280, tall: -380, port: -600 }) / Z0
+  const r = rng(17)
+  // the sheets, bottom to top; the note is the nineteenth
+  const SP = 7                                                            // each sheet sits this much above the last
+  const land = []
+  for (let i = 0; i < S0; i++) land.push(-1)
+  land.push(T_ONTO)
+  GROW.forEach(([b, n]) => { for (let j = 0; j < n; j++) land.push(bt(b) - .01 + j * .02) })
+  const shadow = h('div', 'd-shadow', s.cam)
+  const cards = land.map((tl, i) => {
+    const e = i === S0 ? note(s.cam) : sheet(s.cam, i)
+    if (i === S0) e.classList.add('top')
+    return { e, tl, x: (r() - .5) * 14, y: -i * SP, rot: (r() - .5) * 2.6, j: [(r() - .5) * 26, (r() - .5) * 20, (r() - .5) * 10], k: i === S0 ? .74 : 1 }
+  })
+  const ch = chip(s.hud, `<b>${S0}</b> to type in`), cb = ch.querySelector('b')
+  const line = wordLine(s.hud, ['Then', 'onto', 'the', '|', 'stack', 'it', `goes${STOP}`])
+  // where the stack stands: in the middle, then to one side for the upload box
+  const SY = M({ land: 340, sq: 330, tall: 410, port: 590 }) / Z0, SK = M({ land: 1.15, sq: 1.05, tall: 1.15, port: 1.3 })
+  const SX2 = LAND ? -430 : 0, SY2 = LAND ? SY : SY + 60 / Z0, SK2 = LAND ? .85 : .7
+  // the box: beside it, or above it in the narrow frames
+  const ZW = M({ land: 760, def: 760 }) / Z0, ZH = M({ land: 300, def: 280 }) / Z0
+  const ZX = LAND ? 430 : 0, ZY = LAND ? -20 : M({ sq: -300, tall: -400, port: -620 }) / Z0
   const eb = h('div', 'd-eyebrow', s.cam, '<i></i><span>Document AI</span>')
   const zone = h('div', 'd-zone', s.cam, `<div class="ic">${UPLOAD}</div><div class="t">Upload documents</div><div class="s">PDFs, photos, scans</div>
     <div class="dn"><span class="dot"></span><span>Reading <b>${NDOC}</b> documents</span></div>`)
   Object.assign(zone.style, { width: ZW + 'px', height: ZH + 'px' })
   const zt = zone.querySelectorAll('.ic, .t, .s'), zd = zone.querySelector('.dn'), zdot = zone.querySelector('.dot')
-  // the stack, as the last shot left it, smaller, at the bottom
-  const SW = 380, SD = 300, HH = SH0 + GROW.reduce((a, g) => a + g[2], 0)
-  const stk = cuboid(s.cam, 'stack', SW, HH, SD)
-  stk.f.top.innerHTML = STACKTOP; ragged(stk)
   const cur = cursor(s.cam)
-  const GY = M({ land: 470, sq: 470, tall: 560, port: 760 }) / Z0, K0 = M({ land: .5, def: .45 })
   const CARRY = [bt(27.5), bt(28), bt(28.5), T_DROP]
+  cue('whoosh', T_ONTO, { d: .5, v: .35 })
+  GROW.forEach(([b]) => cue('whoosh', bt(b), { d: .3, v: .15 }))
   cue('whoosh', T_DROP, { d: .6, v: .38 })
   return t => {
-    // carried a step an eighth, shrinking as it goes, and dropped in on the clap
-    const m = steps(t, CARRY, .1, .06) / 4, dn = P(t, T_DROP - .03, T_DROP + .1, E.in2)
-    const k = lerp(K0, .16, m) * (1 - .9 * dn)
-    const baseY = lerp(GY, ZY + 40, m), topY = baseY - HH * k
-    put(stk, { y: baseY - HH / 2 * k, rx: -14, ry: lerp(-28, -10, m) + 6 * Math.sin(Math.PI * m), s: Math.max(.001, k), o: 1 - P(dn, .6, 1, E.lin) })
-    // the cursor: in a step a beat, a click on the clap, then with the stack
-    const ci = steps(t, [bt(26.5), T_GRAB], .12, .08) / 2, co = P(t, T_DROP + .15, T_DROP + .7, E.io)
-    const from = [M({ land: 700, def: 420 }), GY]
-    const cx = lerp(from[0], 30, ci), cy = lerp(from[1], topY + 10, ci)
-    aim(cur, cx + co * 260, (t > T_GRAB ? topY + 10 : cy) + co * 220, 1 - co, bell(t, T_GRAB - .03, T_GRAB, T_GRAB + .12) + (t > T_GRAB && t < T_DROP ? .5 : 0))
-    // the zone: lights as they go in, and reads
-    const z = P(t, t0, t0 + .3, E.out), lit = bell(t, T_DROP, T_DROP + .06, T_DROP + .5), sw = P(t, T_DROP + .06, T_DROP + .3, E.out)
+    // the stack moves aside, a step, for the box
+    const mv = P(t, T_UP - .1, T_UP + .12, E.io)
+    const bx = lerp(0, SX2, mv), by = lerp(SY, SY2, mv), bk = lerp(SK, SK * SK2, mv)
+    // taken: the sheets gather under the cursor, ride with it a step an eighth, and drop in on the clap
+    const g = P(t, T_GRAB - .02, T_GRAB + .14, E.out), m = steps(t, CARRY, .1, .06) / 4, dn = P(t, T_DROP - .03, T_DROP + .1, E.in2)
+    const n = cards.length, topY = by + cards[n - 1].y * bk
+    const gx = lerp(bx, ZX, m), gy = lerp(topY + 60 * bk, ZY + 10, m) - 80 * Math.sin(Math.PI * m)
+    const gk = lerp(.85 * bk, .32, m) * (1 - .8 * dn)
+    let count = 0
+    cards.forEach((c, i) => {
+      // each sheet drops on from above and lands on its hit
+      const fall = c.tl < 0 ? 1 : P(t, c.tl - .14, c.tl, E.in2)
+      if (c.tl >= 0 && t >= c.tl - .02) count++
+      const fromNote = i === S0 ? P(t, t0 - .02, T_ONTO, E.io) : fall
+      const sx = bx + c.x * bk, sy = by + c.y * bk
+      let x = i === S0 ? lerp(-W / 2 - 300, sx, fromNote) : sx, y = i === S0 ? lerp(sy - 260, sy, fromNote) - 120 * Math.sin(Math.PI * fromNote) : sy - (1 - fall) * 220
+      let rot = i === S0 ? lerp(-24, c.rot, fromNote) : c.rot + (1 - fall) * 10 * Math.sign(c.j[0]), k = bk * c.k
+      x = lerp(x, gx + c.j[0] * gk, g); y = lerp(y, gy + c.j[1] * gk + (i - n) * 1.2 * gk, g); rot = lerp(rot, c.j[2], g); k = lerp(k, gk * c.k, g)
+      put(c.e, { x, y, r: rot, s: k, o: (c.tl < 0 || t >= (i === S0 ? t0 : c.tl - .14)) ? 1 - P(dn, .6, 1, E.lin) : 0 })
+    })
+    put(shadow, { x: bx, y: by + 170 * bk, s: bk * 1.05 * (1 - g), o: .7 * (1 - g) })
+    cb.textContent = Math.min(NDOC, S0 + count)
+    const bump = GROW.reduce((a, [b]) => a + bell(t, bt(b) - .02, bt(b) + .04, bt(b) + .25), 0)
+    blurIn(ch, t, t0 + .05, { y: TOPY, dur: .3, s0: 1, blur: 10, dy: -14, s: 1 + .08 * bump, o: 1 - mv }); if (mv < .5) shield(ch, .7)
+    line.at(t, at16(t0, 6), { o: 1 - mv })
+    // the box, and the cursor
+    const z = P(t, T_UP - .05, T_UP + .25, E.out), lit = bell(t, T_DROP, T_DROP + .06, T_DROP + .5), sw = P(t, T_DROP + .06, T_DROP + .3, E.out)
     const hit = CARRY.reduce((a, b) => a + bell(t, b - .02, b + .04, b + .2), 0)
-    put(zone, { y: ZY + (1 - z) * 30, s: (1 + .04 * lit) * (1 + .012 * hit), o: z })
-    put(eb, { y: ZY - ZH / 2 - 44, o: z }); shield(eb, .7)
+    put(zone, { x: ZX, y: ZY + (1 - z) * 30, s: (1 + .04 * lit) * (1 + .012 * hit), o: z })
+    put(eb, { x: ZX, y: ZY - ZH / 2 - 46, o: z }); if (z > .3) shield(eb, .7)
     zone.style.borderColor = lit > .02 || t > T_DROP ? `rgba(124,203,255,${(.5 + .5 * lit).toFixed(3)})` : ''
     zone.style.boxShadow = `0 0 ${(80 * lit).toFixed(0)}px rgba(124,203,255,${(.35 * lit).toFixed(3)}), 0 40px 90px rgba(0,0,0,.45)`
     zt.forEach(e => { e.style.opacity = (1 - sw).toFixed(3) })
     zd.style.opacity = sw.toFixed(3); zd.style.transform = `translateY(${((1 - sw) * 20).toFixed(1)}px)`
     zdot.style.opacity = (.35 + .65 * Math.exp(-(((t - T_DROP) % (B / 2)) + B / 2) % (B / 2) / .12)).toFixed(3)
-    const kk = steps(t, kicksIn(t0, t1))
-    shoot(s, () => [0, ZY * .03 * kk, 0, 0, 0, 0, 1 + .01 * kk], t)
+    const ci = steps(t, [bt(26.5), T_GRAB], .12, .08) / 2, co = P(t, T_DROP + .15, T_DROP + .7, E.io)
+    const from = [LAND ? 760 : 420, by + 200]
+    const cx = t > T_GRAB ? gx : lerp(from[0], bx + 20, ci), cy = t > T_GRAB ? gy - 30 * gk : lerp(from[1], topY - 30 * bk, ci)
+    aim(cur, cx + co * 260, cy + co * 220, (t > T_UP ? 1 : 0) * (1 - co), bell(t, T_GRAB - .03, T_GRAB, T_GRAB + .12) + (t > T_GRAB && t < T_DROP ? .5 : 0))
+    // the camera: back and up a step with each drop of sheets, then a step a kick
+    const k = steps(t, GROW.map(([b]) => bt(b)), .06, .12), kk = steps(t, kicksIn(T_UP, t1))
+    shoot(s, () => [0, -k * 5, 0, 0, 0, 0, 1.06 - k * .02 + .01 * kk], t)
     breathe(s, t)
     lens(s, {})
   }
@@ -487,7 +471,7 @@ const G = {
 function buildGround(s) {
   const at = id => TL.scenes.find(x => x.id === id).start
   const KF = [
-    [0, G.warm], [at('stack') - .3, G.warm], [at('stack') + .8, G.hot], [at('upload') - .02, G.hot], [at('upload') + 1, G.turn],
+    [0, G.warm], [at('stack') - .3, G.warm], [at('stack') + .8, G.hot], [T_UP - .02, G.hot], [T_UP + 1, G.turn],
     [at('sheet') + .3, G.cool], [at('end') - .02, G.cool], [at('end') + .6, G.rise], [TL.duration, G.settle],
   ]
   const sample = t => {
@@ -517,7 +501,6 @@ export default function setup() {
   scene(['box'], buildBox)
   scene(['desk'], buildDesk)
   scene(['stack'], buildStack)
-  scene(['upload'], buildUpload)
   scene(['sheet'], buildSheet)
   scene(['count'], buildCount)
   scene(['end'], buildEnd)

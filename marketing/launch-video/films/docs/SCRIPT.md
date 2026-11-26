@@ -25,8 +25,9 @@ forms and delivery notes, pulls out what matters and files it.
   quieter than the other films.
 - **Look:** an ad, in the 2026-11 brand (`business/02-brand/brand-guidelines.md`):
   Manjari, the brand's aurora as the only background, and ember, amber and ice
-  keeping their meanings. The parcel is a cream box in three dimensions; the
-  backlog is one tall stack of paper, not a heap.
+  keeping their meanings. Nothing is drawn in forced perspective: the parcel
+  is a cream box seen front on and lit softly, and the backlog is a stack of
+  real sheets of paper, piled front on, growing as more are dropped on it.
 
 ## 2. The track
 
@@ -46,10 +47,9 @@ film:
 
 | Time | Shot | What happens, and on what |
 |---|---|---|
-| 0.00 | **Box** | *A delivery arrives.*, a word a pluck. A cream box in three dimensions drops and lands on the swell (1.71) with a little give, a printed delivery note taped to its front; it turns a step on each pluck after, the camera steps closer on every pluck and leans in on each of the three build hits. |
+| 0.00 | **Box** | *A delivery arrives.*, a word a pluck. A cream parcel, seen front on and lit softly, a printed delivery note on it, drops and lands on the swell (1.71) with a little give, then rocks a little less on each pluck as it settles. The camera steps closer on every pluck and leans in on each of the three build hits. |
 | 3.87 | **Desk** | On the drop the note comes in from the side in two steps and is set down by a computer on the clap (4.41). *Someone has to type it all in.*, a word a sixteenth. From the next kick the supplier's name is typed into the empty New invoice form, a letter a sixteenth, no further than *Harbour Food* by the cut. The camera steps in on every kick. |
-| 6.57 | **Stack** | *Then onto the stack it goes.*, a word a sixteenth. The note lands on top of a stack of paper on the kick (7.11), and the stack grows on every kick after, the claps adding more, until it towers; the chip counts what is left to type in, 18 up to 43, and the camera steps back and up on each. |
-| 10.36 | **Upload** | *Document AI* over *Upload documents*. A cursor comes in a step a beat and clicks the top of the stack on the clap (10.90); the stack rides with it a step an eighth, shrinking as it goes, and is dropped in on the next clap (11.98); the box lights ice and reads *Reading 43 documents*. |
+| 6.57 | **Stack** | *Then onto the stack it goes.*, a word a sixteenth. The note lands on top of a stack of paper on the kick (7.11), and sheets are dropped on with every kick after, the claps bringing more, the chip counting what is left to type in, 18 up to 43. On the phrase (10.36), in the same shot, the stack steps aside and *Upload documents* appears, *Document AI* over it. A cursor comes in a step a beat and clicks the stack on the clap (10.90); the sheets gather up under it and ride with it a step an eighth, smaller as they go, dropped in on the next clap (11.98); the box lights ice and reads *Reading 43 documents*. |
 | 12.52 | **Sheet** | *Every field. Every document.*, a word an eighth. One sheet, Invoices: a row for each document as it came in and a column for each field. From the clap (13.06) a row fills each sixteenth, its cells a breath apart left to right, each value lit ice and each row ticked *Filed*; then the rest of the 43 rush past a step a sixteenth. |
 | 14.68 | **Count** | The count of documents read and filed jumps on each sixteenth, each jump smaller, landing on 12,480 on the kick (15.76); file tiles drift past and pulse with the beat; *Reading* turns to *Read and filed*. |
 | 16.30 | **End** | On the clap the name draws in: the n., its dot on the half beat, *abl* on the next kick; *Document AI*; *Paperwork, read and filed.* a word an eighth (17.39); *nabl.agency* (18.47). The dot pulses and the frame steps in on every kick until the breakdown (19.0), then all of it holds still, out at 20.0. |
