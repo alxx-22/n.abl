@@ -33,14 +33,13 @@ VOICE_PROVIDER = "none"
 VOICE, LANG, SPEED, SHORT_SPEED = "bm_fable", "en-gb", 1.2, 1.36
 SAY = {"n.abl": "enable"}
 SCENES = [
-    dict(id="box",    beats=7.1625, lines=[]),  # a delivery arrives: a cream box settles on a pluck; the camera leans in on the three build hits
-    dict(id="desk",   beats=5, lines=[]),       # on the drop its note goes to the computer, put down on the clap; someone has to type it all in
-    dict(id="pile",   beats=5, lines=[]),       # then onto the pile it goes, and more on top, a toss a beat
-    dict(id="flash",  beats=2, lines=[]),       # n.abl Document AI, flashed in and out on three hits, the last held
-    dict(id="upload", beats=4, lines=[]),       # a cursor picks the pile up on a clap and drops it into Upload documents on the next
-    dict(id="sheet",  beats=4, lines=[]),       # one sheet, a row a document and a column a field, filling in one wave; the rest stream past
-    dict(id="count",  beats=3, lines=[]),       # thousands of documents read and filed, counted up to a kick
-    dict(id="end",    beats=6.8376, lines=[]),  # n.abl, Document AI, Paperwork, read and filed., the address, held into the breakdown
+    dict(id="box",    beats=7.1625, lines=[]),  # a delivery arrives: a cream box drops on the swell and turns a step a pluck; the camera leans in on the build
+    dict(id="desk",   beats=5, lines=[]),       # on the drop its note goes to the computer, set down on the clap; someone has to type it all in
+    dict(id="stack",  beats=7, lines=[]),       # then onto the stack it goes: it grows on every kick, the camera stepping back and up
+    dict(id="upload", beats=4, lines=[]),       # a cursor takes the stack on a clap and carries it, a step an eighth, into Upload documents
+    dict(id="sheet",  beats=4, lines=[]),       # one sheet, a row a document and a column a field, a row filled each sixteenth; the rest stream past
+    dict(id="count",  beats=3, lines=[]),       # thousands of documents read and filed, a jump each sixteenth, landing on a kick
+    dict(id="end",    beats=6.8376, lines=[]),  # the name drawn on the clap, the line a word an eighth, the dot on every kick, still for the breakdown
 ]
 
 # the supplied track, played as it is from its start (films/docs/music)

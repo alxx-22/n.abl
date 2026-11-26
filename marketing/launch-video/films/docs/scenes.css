@@ -255,3 +255,29 @@
 .d-note .tot { display: flex; justify-content: space-between; align-items: baseline; padding-top: 14px; font: 400 16px var(--f); color: var(--ink-3); }
 .d-note .tot b { font: 700 28px var(--f); color: var(--ink); font-variant-numeric: tabular-nums; }
 .d-mon .bx .tx { white-space: nowrap; }
+
+/* ---------- things in three dimensions: a box, and a stack of paper ---------- */
+.d-cub { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; }
+.d-cub .fc { position: absolute; left: 0; top: 0; backface-visibility: hidden; }
+.d-cub.box .front { background: linear-gradient(180deg, #ECE3D4, #D9CDB8); }
+.d-cub.box .right, .d-cub.box .left { background: linear-gradient(180deg, #C9BBA4, #B2A38B); }
+.d-cub.box .back { background: #C9BCA6; }
+.d-cub.box .top { background: linear-gradient(135deg, #F8F3EA, #EAE1D2); }
+.d-cub.box .bottom { background: #A89A83; }
+.d-cub.box .top .tape { position: absolute; left: 50%; top: 0; bottom: 0; width: 84px; margin-left: -42px; background: rgba(196, 180, 152, .55); }
+.d-cub.box .front .tape { position: absolute; left: 50%; top: 0; width: 84px; height: 64px; margin-left: -42px; background: rgba(196, 180, 152, .55); z-index: 2; }
+.d-cub.box .front .d-note.on { left: 95px; top: 52px; transform-origin: 50% 0; box-shadow: 0 4px 12px rgba(60, 45, 25, .22), 0 0 0 1px rgba(20, 17, 14, .1); }
+.d-cub.box .front .d-note.on::before { display: none; }
+/* the stack: paper edges, a sheet on top */
+.d-cub.stack .front, .d-cub.stack .back, .d-cub.stack .left, .d-cub.stack .right {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(40, 28, 16, .2)),
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 37px, rgba(120, 100, 72, .35) 37px 39px),
+    repeating-linear-gradient(180deg, #F4EDE1 0 2px, #C9BBA3 2px 3px, #EDE4D5 3px 5px, #BFAF96 5px 6px); }
+.d-cub.stack .fc .out { position: absolute; height: 3px; background: #F6EFE3; box-shadow: 0 1px 0 rgba(90, 70, 45, .45), 0 -1px 0 rgba(255, 255, 255, .4); }
+.d-cub.stack .left, .d-cub.stack .right { filter: brightness(.8); }
+.d-cub.stack .bottom { background: #6F6352; }
+.d-cub.stack .top { background: #FBF6EC; padding: 26px 30px; display: flex; flex-direction: column; gap: 12px; font-family: var(--f); color: var(--ink); box-shadow: inset 0 0 0 1px rgba(20, 17, 14, .08); }
+.d-cub.stack .top b { font: 700 18px var(--f); letter-spacing: .12em; }
+.d-cub.stack .top span { font: 700 26px var(--f); margin-bottom: 6px; }
+.d-cub.stack .top i { display: block; height: 9px; border-radius: 5px; background: #E3D9C8; }
+.d-cub.stack .top i:nth-child(odd) { width: 72%; }
