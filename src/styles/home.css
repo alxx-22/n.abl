@@ -261,10 +261,57 @@
 .step__peek-arrow { margin-left: auto; flex: none; color: var(--cream-600); transition: transform 0.3s var(--ease), color 0.3s var(--ease); }
 .problem.step:is(:hover, :focus-visible) .step__peek-arrow { transform: translateX(3px); color: var(--accent-300); }
 
-/* the scene side: darker glass, the journey line again, and its label in the brand's caps */
+/* ---------- the scene side: the aurora ----------
+   How we work is where the brand's ground turns to aurora (brand-guidelines
+   .md, 4: "the work running"), so a card that turns over shows its step
+   inside one: three curtains of light rising from a hem, ember hugging the
+   base, amber, then ice. Each step leans along the journey, warmer at the
+   first and cooler at the last, and the curtains drift slowly while the
+   card is open. Dark stays above the light and below the hem, where the
+   label sits, as the brand keeps text off the bright middle of a glow.
+   The journey line is drawn again on top, in the same place as the
+   card's. */
 .lit .problem.step .problem__scene {
-  background: var(--journey) var(--journey-at) / 500% 2px no-repeat, linear-gradient(180deg, #15120F, #0D0B0A);
+  background: var(--journey) var(--journey-at) / 500% 2px no-repeat, #0B0A09;
 }
+.problem.step .problem__scene::before {
+  content: ''; position: absolute; inset: -10% -35% 0; z-index: 0; pointer-events: none;
+  --ember-a: calc(0.85 - var(--i, 0) * 0.13);
+  --ice-a: calc(0.22 + var(--i, 0) * 0.14);
+  background:
+    radial-gradient(62% 26% at 26% 72%, rgba(var(--ember-rgb), var(--ember-a)), transparent 72%),
+    radial-gradient(46% 44% at 50% 58%, rgba(var(--accent-rgb), 0.72), transparent 70%),
+    radial-gradient(44% 56% at 76% 46%, rgba(var(--ice-rgb), var(--ice-a)), transparent 72%),
+    radial-gradient(30% 22% at 47% 60%, rgba(239, 226, 198, 0.32), transparent 70%),
+    radial-gradient(70% 30% at 60% 30%, rgba(var(--accent-rgb), 0.12), transparent 72%);
+  filter: blur(9px);
+  animation: step-aurora 18s ease-in-out infinite alternate paused;
+}
+/* the folds of the curtains, and the dark above the light and below the hem */
+.problem.step .problem__scene::after {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    linear-gradient(0deg, #0B0A09 0%, rgba(11, 10, 9, 0.92) 12%, rgba(11, 10, 9, 0.35) 22%, transparent 32%),
+    linear-gradient(180deg, rgba(11, 10, 9, 0.85), rgba(11, 10, 9, 0.25) 22%, transparent 40%),
+    repeating-linear-gradient(90deg, rgba(255, 244, 228, 0.07) 0 1px, transparent 1px 6px, rgba(0, 0, 0, 0.12) 6px 8px,
+      transparent 8px 13px, rgba(255, 244, 228, 0.04) 13px 15px, transparent 15px 21px);
+}
+/* the curtains drift only while the card is turned over */
+.problem.step:is(:hover, :focus-within, [aria-expanded='true']) .problem__scene::before { animation-play-state: running; }
+@keyframes step-aurora {
+  from { transform: translateX(-6%) scaleY(1); }
+  to   { transform: translateX(6%) scaleY(1.08); }
+}
+.problem.step .problem__stage, .problem.step .problem__tag { position: relative; z-index: 1; }
+/* the scene draws no ground of its own over the aurora */
+.problem.step .f-ground, .problem.step .f-vignette { display: none; }
+/* and its glass is thinner here than on the page, so the aurora shows through it */
+.problem.step .f-stage {
+  --glass: linear-gradient(180deg, rgba(240, 231, 216, 0.09), rgba(240, 231, 216, 0.025) 55%, rgba(240, 231, 216, 0.012)), rgba(17, 14, 12, 0.5);
+  --glass-deep: linear-gradient(180deg, rgba(240, 231, 216, 0.08), rgba(240, 231, 216, 0.02) 55%), rgba(17, 14, 12, 0.8);
+}
+.problem.step .r-pill { background: linear-gradient(180deg, rgba(240, 231, 216, 0.09), rgba(240, 231, 216, 0.025)), rgba(17, 14, 12, 0.55); }
+@media (prefers-reduced-motion: reduce) { .problem.step .problem__scene::before { animation: none; } }
 .problem.step .problem__tag { padding: 0.6rem 18px 0.65rem; border-top: 1px solid var(--line-faint); }
 .problem.step .problem__cap { display: inline-flex; align-items: center; gap: 8px; font-size: 0.68rem; color: var(--accent-300); }
 .problem.step .problem__cap::before { content: ''; width: 6px; height: 6px; flex: none; background: var(--accent-400); box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.55); }

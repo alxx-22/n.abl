@@ -49,7 +49,11 @@ around the products.
   icon in a hairline circle, and at the foot what the card turns over to
   show, with the amber square and a drawn arrow. A line runs along the top
   of the five, ember at the first step to ice at the last, and holds still
-  while a card turns over to its scene.
+  while a card turns over to its scene. Turned over, a card shows its step
+  inside an aurora (curtains of ember, amber and ice rising from a hem,
+  warmer at the first step and cooler at the last, drifting while the card
+  is open), and the scene's glass is thinner there so the light shows
+  through it.
 - **Room between the words and the animations:** on a desk the text column
   and the animation's box added up to more than the page's width and
   overlapped by about 32px. The text is now at most 42% of the shell and
