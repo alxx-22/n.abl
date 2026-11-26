@@ -88,9 +88,9 @@ a:hover > .nabl-logo .nabl-logo__dot {
 
 /* ---------- The discovery call (DiscoveryModal.jsx) ----------
    The one featured panel on screen: glass with the trio line along its top.
-   On a desk the reason to book sits beside the form, the three lights low
-   inside its glass as they are inside the main button; the fields pair up
-   so the whole form fits without scrolling. On a phone it stacks. */
+   On a desk the reason to book sits beside the form, in front of the
+   aurora; the fields pair up so the whole form fits without scrolling. On
+   a phone it stacks. */
 .modal.dmodal {
   position: relative; max-width: 58rem; max-height: 92dvh; padding: 0;
   overflow: hidden auto; border-radius: 24px;
@@ -110,14 +110,15 @@ a:hover > .nabl-logo .nabl-logo__dot {
   display: flex; flex-direction: column; padding: 46px 40px 40px;
   border-right: 1px solid var(--line-faint);
 }
-/* the three lights, rising softly from the foot of the pane */
+/* the aurora, as the lit ground draws it (assets/aurora.svg): its hem low
+   in the pane, behind the chips, the haze rising towards the words and
+   the title on the dark above it */
 .dmodal__intro::after {
-  content: ''; position: absolute; left: -20%; right: -20%; bottom: -30%; height: 70%; z-index: -1; pointer-events: none;
-  background:
-    radial-gradient(34% 46% at 22% 78%, rgba(var(--ember-rgb), 0.55), transparent 70%),
-    radial-gradient(30% 44% at 52% 92%, rgba(var(--accent-rgb), 0.5), transparent 70%),
-    radial-gradient(34% 46% at 82% 78%, rgba(var(--ice-rgb), 0.45), transparent 70%);
-  filter: blur(22px); opacity: 0.55;
+  content: ''; position: absolute; left: -30%; right: -30%; top: 30%; height: 100%; z-index: -1; pointer-events: none;
+  background: url('../assets/aurora.svg') center top / auto 100% no-repeat;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%);
+  mask-image: linear-gradient(180deg, transparent, #000 22%);
+  opacity: 0.92;
 }
 .dmodal__title {
   margin-top: 20px;

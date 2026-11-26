@@ -5,6 +5,16 @@ repository, so any entry can be read in full with `git show <hash>`.
 
 ## 2026-11-26 · The rest of the site in the 2026-11 brand (on `claude/modest-wright-2zlwat`)
 
+- **One rule for the ground (`ground/story.js`):** the wisps seen bare, the
+  soft blurred light, belong to the homepage's opening alone. Everywhere
+  else the ground is the fluted glass (the light seen through its reeds) or
+  the aurora on its own. On the homepage the glass now arrives as the hero
+  is left, and the stretch from the prices to the close is the aurora.
+  Other services opens on the glass and ends in the aurora; the legal
+  pages and the client portal are the aurora, its curtain high behind the
+  title; the discovery call's left pane shows the aurora drawing
+  (`assets/aurora.svg`) instead of blurred light.
+
 - **Other services (`pages/Services.jsx`):** the page tells its own story on
   the lit ground, in the homepage's order (`ground/story.js`,
   `servicesKeyframes`): the opening, warmth while the problems are read, the
