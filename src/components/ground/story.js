@@ -68,12 +68,20 @@ const L = {
    puts colour above and below it. */
 const CALM = { drift: 0.22, pace: 1, shd: 0, vig: 0.2, tone: 0.45, hp: 0.3, sat: 1, k: 1, heat: 0.3 }
 
+/* THE RULE: the wisps seen bare, as soft blurred light, belong to the
+   homepage's opening alone. Everywhere else the ground is one of the two
+   materials: the fluted glass, with the light seen through its reeds, or
+   the aurora on its own (g 0). Between the two, the wisps stay low while
+   the glass gives way. */
 export const ST = {
   hero: mk(CALM, L.hero),
-  heatStart: mk({ ...CALM, heat: 0.35 }, L.heat1),
-  heatPeak: mk({ ...CALM, heat: 0.5 }, L.heat2),
-  /* the glass materialises in place: fine reeds at nothing, then full reeds at full strength */
-  glassIn: mk({ ...CALM, heat: 0.45, f: 0, fw: 8 }, L.heat2),
+  /* the warmth while the problems are read, already seen through the glass */
+  heatStart: mk({ ...CALM, heat: 0.35, f: 1 }, L.heat1),
+  heatPeak: mk({ ...CALM, heat: 0.5, f: 1 }, L.heat2),
+  /* the reeds narrow for a moment as the first product arrives */
+  glassIn: mk({ ...CALM, heat: 0.45, f: 1, fw: 8 }, L.heat2),
+  /* a page that opens on the glass rather than the wisps: Other services */
+  glassTop: mk({ ...CALM, heat: 0.3, f: 1, vig: 0.3 }, L.hero),
   fix1: mk({ ...CALM, heat: 0.35, f: 1 }, L.fix1),
   fix2: mk({ ...CALM, heat: 0.3, f: 1 }, L.fix2),
   fix3: mk({ ...CALM, heat: 0.3, f: 1 }, L.fix3),
@@ -81,14 +89,15 @@ export const ST = {
   glassCards: mk({ f: 1, heat: 0.2, k: 0.85 }, L.cards),
   step1: mk({ f: 1, fw: 26, k: 0.92 }, L.step1),
   step2: mk({ f: 0.9, fw: 46 }, L.step2),
-  step3: mk({ tau: 0.7, spread: 0.65, f: 0.45, fw: 96, g: 0.65, a: 0.6, cy: 0.7, k: 0.88 }, dim(L.step2, 0.75)),
-  step4: mk({ tau: 0.84, spread: 0.6, f: 0.06, fw: 150, g: 0.3, a: 1, cy: 0.74, k: 0.8 }, dim(L.step2, 0.5)),
-  step5: mk({ tau: 0.94, spread: 0.5, f: 0, g: 0.2, a: 1, cy: 0.76, k: 0.78 }, dim(L.step2, 0.4)),
-  cases: mk({ tau: 0.9, spread: 0.55, g: 0.25, a: 1, cy: 0.8, k: 0.74 }, dim(L.step2, 0.4)),
-  pricing: mk({ tau: 0.66, spread: 0.8, g: 0.6, a: 0.5, cy: 0.78, k: 0.8 }, L.pricing),
-  /* the bands between the price and the conversation: the aurora sinking back into the wisps */
-  settle: mk({ tau: 0.58, spread: 0.7, g: 0.8, a: 0.35, cy: 0.62, k: 0.76 }, dim(L.contact, 1.2)),
-  contact: mk({ tau: 0.5, spread: 0.5, g: 0.9, a: 0.25, cy: 0.5 }, L.contact),
+  step3: mk({ tau: 0.7, spread: 0.65, f: 0.6, fw: 96, g: 0.4, a: 0.6, cy: 0.7, k: 0.88 }, dim(L.step2, 0.75)),
+  step4: mk({ tau: 0.84, spread: 0.6, f: 0.1, fw: 150, g: 0.06, a: 1, cy: 0.74, k: 0.8 }, dim(L.step2, 0.5)),
+  step5: mk({ tau: 0.94, spread: 0.5, f: 0, g: 0, a: 1, cy: 0.76, k: 0.78 }, dim(L.step2, 0.4)),
+  cases: mk({ tau: 0.9, spread: 0.55, g: 0, a: 1, cy: 0.8, k: 0.74 }, dim(L.step2, 0.4)),
+  /* from the prices to the conversation the aurora holds, warming and
+     sinking as the page closes */
+  pricing: mk({ tau: 0.72, spread: 0.7, g: 0, a: 1, cy: 0.82, k: 0.76 }, L.pricing),
+  settle: mk({ tau: 0.6, spread: 0.65, g: 0, a: 1, cy: 0.72, k: 0.72 }, dim(L.contact, 1.2)),
+  contact: mk({ tau: 0.5, spread: 0.55, g: 0, a: 1, cy: 0.5, k: 0.82 }, L.contact),
 }
 
 /* The products (sections/Products.jsx): fluted glass behind each one, the
@@ -166,9 +175,9 @@ export function homeKeyframes(page) {
   return kf
 }
 
-/* A page with no story: the opening light, held. The 404. */
+/* A page with no story of its own: the glass, held. */
 export function stillKeyframes({ portrait }) {
-  return [[0, portrait ? portraitOf(ST.hero) : ST.hero]]
+  return [[0, portrait ? portraitOf(ST.glassTop) : ST.glassTop]]
 }
 
 /* Shared by the stories below: keyframes in scroll order, never two at the
@@ -180,23 +189,22 @@ const ordered = (kf) => {
 }
 
 /* ------------------------------------------------------------
-   Other services (/services), told the way the homepage is: the opening
-   light, warmth while the problems are read, the fluted glass arriving
-   with what we build (one layout of light per capability), the aurora
-   for the examples, and the quiet close. Each section gets a dark field
-   on the side its words are on, instead of the opening's light held
-   behind everything.
+   Other services (/services), in the homepage's order but never in its
+   opening's wisps: the glass from the first screen, warming while the
+   problems are read, one layout of light per capability, then the aurora
+   for the examples, the price and the close. Each section keeps a dark
+   field on the side its words are on.
    ------------------------------------------------------------ */
 export function servicesKeyframes(page) {
   const { vh, maxY, portrait, sec } = page
   const A = portrait ? portraitOf : (s) => s
   const mid = (id) => { const s = sec(id); return s ? s.top + s.h / 2 - vh / 2 : null }
-  const kf = [[0, A(ST.hero)]]
+  const kf = [[0, A(ST.glassTop)]]
   const push = (y, s) => { if (y != null && isFinite(y)) kf.push([y, A(s)]) }
 
   const p = sec('problems')
   if (p) {
-    push(p.top - vh * 0.6, ST.hero)
+    push(p.top - vh * 0.6, ST.glassTop)
     push(p.top - vh * 0.05, ST.heatStart)
     push(p.top + p.h - vh * 0.6, ST.heatPeak)
   }
@@ -218,13 +226,12 @@ export function servicesKeyframes(page) {
 
 /* ------------------------------------------------------------
    The quiet pages: the legal documents and the client portal. Something
-   to read or to work in, so the light stays low and at the edges: a
-   dimmed opening behind the title, settling as the page goes on into
-   the close's layout, dimmer still, with the dark kept down the side the
-   words are on.
+   to read or to work in, so the ground is the aurora alone, its curtain
+   high behind the title and the dark below where the words are; as the
+   page goes on it rises further and dims.
    ------------------------------------------------------------ */
-const QUIET_TOP = mk({ ...CALM, k: 0.72, vig: 0.34, heat: 0.22, drift: 0.16, pace: 0.7 }, dim(L.hero, 0.8))
-const QUIET = mk({ tau: 0.55, spread: 0.7, g: 0.9, a: 0, cy: 0.6, k: 0.58, drift: 0.2, pace: 0.6, shd: 0.6, vig: 0.36, tone: 0.45, hp: 0.25, sat: 0.95, heat: 0.2 }, dim(L.contact, 0.9))
+const QUIET_TOP = mk({ tau: 0.62, spread: 0.6, g: 0, a: 1, cy: 0.9, k: 0.78, drift: 0.2, pace: 0.6, shd: 0.6, vig: 0.2, tone: 0.45, hp: 0.25, sat: 0.95 })
+const QUIET = mk({ tau: 0.56, spread: 0.62, g: 0, a: 1, cy: 0.98, k: 0.6, drift: 0.2, pace: 0.6, shd: 0.6, vig: 0.2, tone: 0.45, hp: 0.25, sat: 0.95 })
 export function quietKeyframes({ vh, maxY, portrait }) {
   const A = portrait ? portraitOf : (s) => s
   return ordered([[0, A(QUIET_TOP)], [Math.min(maxY, vh * 0.9), A(QUIET)]])

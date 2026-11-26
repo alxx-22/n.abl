@@ -109,8 +109,7 @@ export default function DiscoveryModal({ open, onClose, prefill = '' }) {
     <div className="overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose?.() }}>
       {/* The brand's one featured panel on screen: glass with the trio line
           along its top. On a desk the reason to book sits beside the form,
-          with the three lights low inside its glass; on a phone it sits
-          above it. */}
+          in front of the aurora; on a phone it sits above it. */}
       <div
         className={`modal modal--wide dmodal ${done ? 'dmodal--done' : ''}`}
         role="dialog"
