@@ -106,7 +106,7 @@ if (missing.length) {
    number to anyone who asked. The modal is the source of truth because it is
    what someone reads as they book. */
 const modal = readFileSync(new URL('../src/components/DiscoveryModal.jsx', import.meta.url), 'utf8')
-const onSite = modal.match(/Free,\s*(\d+)\s*minutes/i)?.[1]
+const onSite = modal.match(/CALL_MINUTES\s*=\s*(\d+)/)?.[1]
 if (!onSite) {
   console.error('\n  Could not find the call length in DiscoveryModal.jsx — the check that\n  keeps it in step with the assistant is now blind. Fix the pattern.\n')
   process.exit(1)

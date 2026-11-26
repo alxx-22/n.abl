@@ -3,7 +3,9 @@ import PortalAssistant from '../components/PortalAssistant.jsx'
 import { Link } from 'react-router-dom'
 import { portalClient, signedUrl, friendlyError } from '../lib/supabase.js'
 import { isGeneratedPack, fetchDocHtml, DocPage } from '../components/ui/index.jsx'
-import { Logo, Reveal, EdgeCard, Badge, Empty, Loading, prefersReducedMotion } from '../components/ui/index.jsx'
+import { Logo, Reveal, EdgeCard, Empty, prefersReducedMotion } from '../components/ui/index.jsx'
+import LitGround from '../components/LitGround.jsx'
+import '../styles/portal.css'
 
 /* ============================================================
    CLIENT PORTAL
@@ -24,6 +26,30 @@ const dateLong = (v) => {
 }
 const monthYear = (d) => d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase()
 const timeStr = (d) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+
+/* Manjari has no arrows (brand-guidelines.md, 5.5): they are drawn. */
+const Arrow = ({ back = false }) => (
+  <svg className="p-arrow" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+    strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+    {back ? <path d="M19 12H6M11 7l-5 5 5 5" /> : <path d="M5 12h13M13 7l5 5-5 5" />}
+  </svg>
+)
+
+/* A record's state as one of the brand's chips: the ember square for what
+   waits on the client, the round ice dot for work that is live (breathing)
+   or done (still), the amber square for what n.abl has arranged. The word
+   is always there too, so the colour is never the only signal. */
+const TONE = {
+  sent: 'wait', review: 'wait', awaiting: 'wait', pending: 'wait',
+  active: 'live', inprogress: 'live', live: 'live', building: 'live',
+  accepted: 'done', approved: 'done', complete: 'done', completed: 'done', signed: 'done', paid: 'done',
+  scheduled: 'nabl', confirmed: 'nabl', planning: 'nabl', booked: 'nabl',
+}
+function Status({ status }) {
+  if (!status) return null
+  const key = String(status).toLowerCase().replace(/[^a-z]/g, '')
+  return <span className={`pchip pchip--${TONE[key] || 'plain'}`}>{status}</span>
+}
 
 /* A file link that mints a fresh signed URL at click time.
    Signed URLs are never cached or persisted. */
@@ -56,21 +82,24 @@ function FileLink({ client, bucket, path, children, onOpenDoc, className = 'btn 
         if (!ok) { setFailed(true); setTimeout(() => setFailed(false), 3000) }
       }}
     >
-      {busy ? 'Opening…' : failed ? 'Unable to load — try again' : pack ? 'Open →' : children}
+      {busy ? 'Opening…' : failed ? 'Unable to load. Try again' : pack ? <>Open <Arrow /></> : children}
     </button>
   )
 }
 
-function Section({ label, title, children }) {
+function Section({ id, label, title, count, children }) {
   return (
-    <section className="section" style={{ paddingBlock: 'var(--s-7)' }}>
-      <Reveal><span className="eyebrow">{label}</span></Reveal>
-      <Reveal delay={0.05}>
-        <h2 className="section__title" style={{ fontSize: 'var(--t-2xl)' }}>
-          {title}<span className="dot" />
-        </h2>
+    <section id={id} className="p-section">
+      <Reveal>
+        <div className="p-section__head">
+          <span className="eyebrow">{label}</span>
+          {count > 0 && <span className="p-section__count">{count}</span>}
+        </div>
       </Reveal>
-      <div style={{ marginTop: 'var(--s-5)' }}>{children}</div>
+      <Reveal delay={0.05}>
+        <h2 className="p-section__title">{title}<span className="dot" /></h2>
+      </Reveal>
+      <div className="p-section__body">{children}</div>
     </section>
   )
 }
@@ -153,14 +182,15 @@ export default function Portal() {
   /* ---------------- LOGIN ---------------- */
   if (!me) {
     return (
-      <div className="grain">
-        <div className="app-top">
+      <div className="lit portal">
+        <LitGround story="quiet" />
+        <div className="app-top p-top">
           <Link to="/" aria-label="n.abl home"><Logo size={22} /></Link>
-          <Link to="/" className="app-back">← Back to site</Link>
+          <Link to="/" className="p-back"><Arrow back /><span>Back to site</span></Link>
         </div>
 
         <div className="auth-wrap">
-          <div className="auth-card">
+          <div className="auth-card p-auth">
             <span className="eyebrow">Client portal</span>
             <h1>Enter your access key<span className="dot" /></h1>
             <p className="auth-card__sub">
@@ -177,8 +207,10 @@ export default function Portal() {
                 autoComplete="off"
                 spellCheck="false"
               />
-              <button className="btn btn--accent btn--block" disabled={loading}>
-                {loading ? 'Verifying…' : 'Access portal →'}
+              <button type="submit" className="btn btn--primary btn--block" disabled={loading}>
+                <span className="ring" aria-hidden="true" />
+                <span className="lbl">{loading ? 'Verifying…' : 'Open my portal'}</span>
+                {!loading && <Arrow />}
               </button>
               <p className="auth-error" role="alert" aria-live="assertive">{error}</p>
             </form>
@@ -208,51 +240,86 @@ export default function Portal() {
     return <DocPage title="Welcome pack" html={openDoc} onBack={() => setOpenDoc(null)} />
   }
 
+  /* what needs the client, what is live, and when we next meet: the four
+     things worth knowing before reading any further */
+  const toReview = quotes.filter((q) => TONE[String(q.status || '').toLowerCase().replace(/[^a-z]/g, '')] === 'wait').length
+  const live = projects.filter((p) => TONE[String(p.status || '').toLowerCase().replace(/[^a-z]/g, '')] === 'live').length
+  const next = sortedMeetings.find((m) => m.datetime && new Date(m.datetime).getTime() >= now)
+  const nextD = next ? new Date(next.datetime) : null
+
   return (
-    <div className="grain">
-      <div className="app-top">
+    <div className="lit portal">
+      <LitGround story="quiet" />
+      <div className="app-top p-top">
         <Link to="/" aria-label="n.abl home"><Logo size={22} /></Link>
-        <button className="btn btn--ghost btn--sm" onClick={logOut}>Log out</button>
+        <div className="p-top__right">
+          <span className="p-top__who">{me.business_name || 'Client portal'}</span>
+          <button className="btn btn--ghost btn--sm" onClick={logOut}><span className="lbl">Log out</span></button>
+        </div>
       </div>
 
-      <div className="shell" style={{ paddingBottom: 'var(--s-9)' }}>
-        <header style={{ paddingTop: 'var(--s-8)' }}>
+      <div className="shell p-shell">
+        <header className="p-head">
           <Reveal><span className="eyebrow">Welcome back</span></Reveal>
           <Reveal delay={0.05}>
-            <h1 style={{ fontSize: 'var(--t-3xl)', margin: 'var(--s-3) 0 var(--s-2)' }}>
-              {me.business_name || 'Your dashboard'}<span className="dot" />
-            </h1>
+            <h1 className="p-head__title">{me.business_name || 'Your dashboard'}<span className="dot" /></h1>
           </Reveal>
-          {me.contact_name && <Reveal delay={0.1}><p className="muted">{me.contact_name}</p></Reveal>}
+          {me.contact_name && <Reveal delay={0.1}><p className="p-head__sub">{me.contact_name}</p></Reveal>}
         </header>
 
+        {/* AT A GLANCE */}
+        <div className="p-glance">
+          <Reveal delay={0.12}>
+            <a className="p-stat" href="#quotes">
+              <span className={`p-stat__k ${toReview ? 'is-wait' : ''}`}>Quotes</span>
+              <b className="p-stat__n">{toReview || quotes.length}</b>
+              <span className="p-stat__s">{toReview ? 'waiting for your review' : (quotes.length === 1 ? 'quote on file' : 'quotes on file')}</span>
+            </a>
+          </Reveal>
+          <Reveal delay={0.16}>
+            <a className="p-stat" href="#projects">
+              <span className={`p-stat__k ${live ? 'is-live' : ''}`}>Projects</span>
+              <b className="p-stat__n">{live || projects.length}</b>
+              <span className="p-stat__s">{live ? 'being built now' : (projects.length === 1 ? 'project' : 'projects')}</span>
+            </a>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <a className="p-stat" href="#meetings">
+              <span className={`p-stat__k ${next ? 'is-nabl' : ''}`}>Next meeting</span>
+              <b className="p-stat__n">{nextD && !isNaN(nextD) ? nextD.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'None'}</b>
+              <span className="p-stat__s">{next ? [next.title, !isNaN(nextD) ? timeStr(nextD) : null].filter(Boolean).join(' · ') : 'nothing booked yet'}</span>
+            </a>
+          </Reveal>
+          <Reveal delay={0.24}>
+            <a className="p-stat" href="#documents">
+              <span className="p-stat__k">Files</span>
+              <b className="p-stat__n">{documents.length}</b>
+              <span className="p-stat__s">{documents.length === 1 ? 'document' : 'documents'}</span>
+            </a>
+          </Reveal>
+        </div>
+
         {/* QUOTES */}
-        <Section label="Quotes" title="Your quotes">
+        <Section id="quotes" label="Quotes" title="Your quotes" count={quotes.length}>
           {quotes.length === 0 ? (
             <Empty>No quotes yet. We&rsquo;ll let you know when there&rsquo;s something to review.</Empty>
           ) : (
             <div className="grid grid--2 grid--3">
               {quotes.map((q, i) => (
                 <Reveal key={q.id} delay={i * 0.05}>
-                  <EdgeCard className="card-pad">
-                    {q.reference && <div className="eyebrow">{q.reference}</div>}
-                    <h3 style={{ fontSize: 'var(--t-lg)', margin: 'var(--s-3) 0' }}>
-                      {q.title || 'Untitled quote'}
-                    </h3>
-                    <div style={{
-                      fontFamily: 'var(--font-display)', fontWeight: 700,
-                      fontSize: 'var(--t-2xl)', color: 'var(--accent-400)',
-                      marginBottom: 'var(--s-3)',
-                    }}>{gbp(q.amount)}</div>
-                    <Badge status={q.status}>{q.status}</Badge>
+                  <EdgeCard className="card-pad p-quote">
+                    <div className="p-card__head">
+                      {q.reference && <span className="p-ref">{q.reference}</span>}
+                      <Status status={q.status} />
+                    </div>
+                    <h3 className="p-card__title">{q.title || 'Untitled quote'}</h3>
+                    <div className="p-amount">{gbp(q.amount)}</div>
                     {q.valid_until && (
-                      <div className="dim" style={{ fontSize: 'var(--t-sm)', marginTop: 'var(--s-3)' }}>
-                        Valid until {dateLong(q.valid_until)}
-                      </div>
+                      <div className="p-meta">Valid until {dateLong(q.valid_until)}</div>
                     )}
                     {q.pdf_url && (
                       <div className="card-actions">
-                        <FileLink client={client} bucket="quotes" path={q.pdf_url}>View PDF →</FileLink>
+                        <FileLink client={client} bucket="quotes" path={q.pdf_url}>View PDF <Arrow /></FileLink>
                       </div>
                     )}
                   </EdgeCard>
@@ -263,7 +330,7 @@ export default function Portal() {
         </Section>
 
         {/* PROJECTS */}
-        <Section label="Projects" title="What we're building">
+        <Section id="projects" label="Projects" title="What we're building" count={projects.length}>
           {projects.length === 0 ? (
             <Empty>No active projects right now. Let&rsquo;s chat about what&rsquo;s next.</Empty>
           ) : (
@@ -272,32 +339,24 @@ export default function Portal() {
                 const pct = Math.max(0, Math.min(100, Number(p.progress_percent) || 0))
                 return (
                   <Reveal key={p.id} delay={i * 0.05}>
-                    <EdgeCard className="card-pad">
-                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--s-3)' }}>
-                        <h3 style={{ fontSize: 'var(--t-lg)' }}>{p.title || 'Untitled project'}</h3>
-                        <Badge status={p.status}>{p.status}</Badge>
+                    <EdgeCard className="card-pad p-project">
+                      <div className="p-card__head">
+                        <h3 className="p-card__title">{p.title || 'Untitled project'}</h3>
+                        <Status status={p.status} />
                       </div>
-                      {p.description && (
-                        <p className="muted" style={{ fontSize: 'var(--t-sm)', marginTop: 'var(--s-3)' }}>
-                          {p.description}
-                        </p>
-                      )}
-                      <div className="progress" style={{ marginTop: 'var(--s-5)' }}>
-                        <div className="progress__fill" style={{ '--p': pct / 100 }} />
+                      {p.description && <p className="p-card__body">{p.description}</p>}
+                      <div className="p-progress">
+                        <div className="p-progress__row">
+                          <span className="p-progress__k">Progress</span>
+                          <span className="p-progress__v">{pct}% complete</span>
+                        </div>
+                        <div className="progress"><div className="progress__fill" style={{ '--p': pct / 100 }} /></div>
                       </div>
-                      <div style={{ fontSize: 'var(--t-sm)', marginTop: 'var(--s-2)' }}>{pct}% complete</div>
                       {(p.next_milestone || p.next_milestone_date) && (
-                        <div style={{
-                          marginTop: 'var(--s-4)', paddingTop: 'var(--s-4)',
-                          borderTop: '1px solid var(--line)',
-                        }}>
-                          <div className="eyebrow">Next</div>
-                          {p.next_milestone && <div style={{ marginTop: 'var(--s-2)' }}>{p.next_milestone}</div>}
-                          {p.next_milestone_date && (
-                            <div className="dim" style={{ fontSize: 'var(--t-sm)' }}>
-                              Due {dateLong(p.next_milestone_date)}
-                            </div>
-                          )}
+                        <div className="p-next">
+                          <span className="p-next__k">Next</span>
+                          {p.next_milestone && <div className="p-next__t">{p.next_milestone}</div>}
+                          {p.next_milestone_date && <div className="p-meta">Due {dateLong(p.next_milestone_date)}</div>}
                         </div>
                       )}
                     </EdgeCard>
@@ -309,7 +368,7 @@ export default function Portal() {
         </Section>
 
         {/* MEETINGS */}
-        <Section label="Meetings" title="What's coming up">
+        <Section id="meetings" label="Meetings" title="What's coming up" count={sortedMeetings.length}>
           {sortedMeetings.length === 0 ? (
             <Empty>
               Nothing scheduled. Want to book a call?{' '}
@@ -323,22 +382,22 @@ export default function Portal() {
                 const past = valid && d.getTime() < now
                 return (
                   <Reveal key={m.id} delay={i * 0.04}>
-                    <EdgeCard className="card-pad meeting" style={past ? { opacity: 0.6 } : undefined}>
+                    <EdgeCard className={`card-pad meeting ${past ? 'meeting--past' : ''}`}>
                       <div className="meeting__date">
                         <div className="meeting__day">{valid ? d.getDate() : '–'}</div>
                         <div className="meeting__my">{valid ? monthYear(d) : ''}</div>
                       </div>
                       <div>
-                        <h3 style={{ fontSize: 'var(--t-lg)' }}>{m.title || 'Meeting'}</h3>
-                        <div className="dim" style={{ fontSize: 'var(--t-sm)', marginTop: 'var(--s-1)' }}>
+                        <h3 className="p-card__title">{m.title || 'Meeting'}</h3>
+                        <div className="p-meta">
                           {[m.location, valid ? timeStr(d) : null].filter(Boolean).join(' · ')}
                         </div>
                       </div>
                       <div className="meeting__right">
-                        {m.status && <Badge status={m.status}>{m.status}</Badge>}
+                        {m.status && <Status status={m.status} />}
                         {m.join_url && !past && (
-                          <a className="btn btn--accent btn--sm" href={m.join_url} target="_blank" rel="noopener noreferrer">
-                            Join →
+                          <a className="btn btn--primary btn--sm" href={m.join_url} target="_blank" rel="noopener noreferrer">
+                            <span className="ring" aria-hidden="true" /><span className="lbl">Join</span><Arrow />
                           </a>
                         )}
                       </div>
@@ -351,7 +410,7 @@ export default function Portal() {
         </Section>
 
         {/* DOCUMENTS */}
-        <Section label="Documents" title="Your files">
+        <Section id="documents" label="Documents" title="Your files" count={documents.length}>
           {documents.length === 0 ? (
             <Empty>Nothing here yet.</Empty>
           ) : (
@@ -360,20 +419,21 @@ export default function Portal() {
                 <Reveal key={doc.id} delay={i * 0.04}>
                   <EdgeCard className="card-pad doc">
                     <span className="doc__icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" width="26" height="26" fill="none"
-                           stroke="var(--accent-400)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                           stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
                         <polyline points="14 3 14 8 19 8" />
+                        <path d="M9 13h6M9 17h4" />
                       </svg>
                     </span>
                     <div>
-                      <h3 style={{ fontSize: 'var(--t-base)' }}>{doc.title || 'Document'}</h3>
-                      {doc.document_type && <div className="eyebrow" style={{ marginTop: 'var(--s-1)' }}>{doc.document_type}</div>}
+                      <h3 className="p-card__title p-card__title--sm">{doc.title || 'Document'}</h3>
+                      {doc.document_type && <span className="p-ref">{doc.document_type}</span>}
                     </div>
                     <div className="doc__right">
-                      {doc.uploaded_at && <span className="dim" style={{ fontSize: 'var(--t-sm)' }}>{dateLong(doc.uploaded_at)}</span>}
+                      {doc.uploaded_at && <span className="p-meta">{dateLong(doc.uploaded_at)}</span>}
                       <FileLink client={client} bucket="documents" path={doc.file_url}
-                          onOpenDoc={setOpenDoc}>Download →</FileLink>
+                          onOpenDoc={setOpenDoc}>Download <Arrow /></FileLink>
                     </div>
                   </EdgeCard>
                 </Reveal>

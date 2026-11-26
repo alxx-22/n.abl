@@ -8,7 +8,7 @@ import { Chapter } from '../components/Journey.jsx'
 import { WipeGrid } from '../components/WipeCard.jsx'
 import LitGround from '../components/LitGround.jsx'
 import Capabilities from '../components/sections/Capabilities.jsx'
-import { automation, data, web } from '../components/scenes/index.js'
+import { automate, analyse, booking } from '../components/film/cards.js'
 import { track } from '../lib/analytics.js'
 
 import '../styles/home.css'
@@ -26,13 +26,13 @@ import '../styles/home.css'
    and illustrative examples labelled as such.
    ============================================================ */
 export const OTHER_CARDS = [
-  { n: '01', title: 'Save time', glyph: 'time', scene: automation, label: 'Automation',
+  { n: '01', title: 'Save time', glyph: 'time', scene: automate, label: 'Automation',
     quote: 'We lose a morning a week to work that repeats itself.',
     body: 'The steps that repeat between your systems, set up once and then left to run.' },
-  { n: '02', title: 'Understand your data', glyph: 'data', scene: data, label: 'Data & Analytics',
+  { n: '02', title: 'Understand your data', glyph: 'data', scene: analyse, label: 'Data & Analytics',
     quote: 'We have the data, but not the answers.',
     body: 'The data cleaned up first, then reporting you can actually make a decision from.' },
-  { n: '03', title: 'Build something new', glyph: 'build', scene: web, label: 'Web',
+  { n: '03', title: 'Build something new', glyph: 'build', scene: booking, label: 'Web',
     quote: "Whatever we've got online, it doesn't do anything.",
     body: 'Your first site, or the one that finally does the work: booking, ordering, payments, accounts.' },
 ]
@@ -56,8 +56,10 @@ export default function Services() {
 
   return (
     <div className="lit">
-      {/* the opening light, held: this page has no story of its own */}
-      <LitGround story="still" />
+      {/* the light follows this page's own story, in the homepage's order:
+          the opening, warmth for the problems, the glass for what we build,
+          the aurora for the examples, the quiet close (ground/story.js) */}
+      <LitGround story="services" />
       <Nav home={false} />
       <main>
         <section className="section services-hero">
@@ -134,7 +136,7 @@ export default function Services() {
           </div>
         </section>
 
-        <section className="section section--impact">
+        <section id="cost" className="section section--impact">
           <div className="shell">
             <Chapter index={4}>What it costs</Chapter>
             <Reveal delay={0.06}>

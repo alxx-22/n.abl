@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Reveal } from '../ui/index.jsx'
 import { Chapter } from '../Journey.jsx'
 import Scene from '../scenes/Scene.jsx'
-import { automation, data, web } from '../scenes/index.js'
+import { automate, analyse, booking } from '../film/cards.js'
 
 /* ============================================================
    OTHER SERVICES — WHAT WE BUILD
@@ -20,15 +20,15 @@ export const TOOLKIT = [
   { cat: 'Automation',
     what: 'Workflow automation, system integration, custom scripts',
     items: ['n8n', 'Make', 'Zapier', 'Power Automate', 'APIs'],
-    scenes: [automation] },
+    scenes: [automate] },
   { cat: 'Data & Analytics',
     what: 'Data cleaning, dashboards, reporting, decision support',
     items: ['Power BI', 'SQL', 'Spreadsheets done properly'],
-    scenes: [data] },
+    scenes: [analyse] },
   { cat: 'Web',
     what: 'Websites, booking flows, customer portals, payments',
     items: ['React', 'Payments', 'Calendar sync'],
-    scenes: [web] },
+    scenes: [booking] },
 ]
 
 /* A row's scene, plus the tabs when it has more than one. Remounting on a

@@ -3,6 +3,40 @@
 What has changed on the public site, newest first. Commit hashes are from this
 repository, so any entry can be read in full with `git show <hash>`.
 
+## 2026-11-26 · The rest of the site in the 2026-11 brand (on `claude/modest-wright-2zlwat`)
+
+- **Other services (`pages/Services.jsx`):** the page tells its own story on
+  the lit ground, in the homepage's order (`ground/story.js`,
+  `servicesKeyframes`): the opening, warmth while the problems are read, the
+  fluted glass for what we build (one layout of light per capability), the
+  aurora for the examples, the quiet close. It used to hold the opening light
+  behind every section. The three grey wireframe animations are replaced by
+  scenes in the products' glass language (`film/cards.js`: `automate`,
+  `analyse`, `booking`): a morning sync between three systems, three sheets
+  that disagree made into one set of numbers, and a booking taken, paid for
+  and put in the diary. Each is drawn small behind its problem card and
+  large in its capability row, where it floats over the light unframed. The
+  capability names are set in Thin; Manjari has no 600.
+- **Legal pages (`pages/Legal.jsx`):** in the site's nav and footer over the
+  quiet ground (`quietKeyframes`), the title in Thin, the three documents one
+  step apart as chips, a contents list on a desk that marks the section
+  being read, sections numbered between hairlines, and the draft notice as
+  ember glass, the brand's mark for what must not be missed.
+- **Client portal (`pages/Portal.jsx`, `styles/portal.css`):** the sign-in is
+  the featured glass card with the trio line, the key in the mono face it is
+  reserved for, and the frosted main button. The dashboard sits on the quiet
+  ground under a glass bar, opens with four tiles at a glance (quotes waiting
+  for review, projects being built, the next meeting, files), and shows each
+  record's state as a brand chip: ember for what waits on the client, ice for
+  live and done, amber for what n.abl has arranged. Prices, days and counts
+  are in Thin; progress fills warm to cool; typed arrows are drawn.
+- **Book a discovery call (`DiscoveryModal.jsx`):** two panes on a desk, the
+  reason to book beside the form with the three lights low in its glass, the
+  fields paired so it fits without scrolling; stacked on a phone. The close
+  is drawn, and the sent state's tick is ice. The call length is now one
+  constant (`CALL_MINUTES`), which `scripts/build-knowledge.mjs` checks the
+  assistant's knowledge file against.
+
 ## 2026-11-25 · The 2026-11 brand, and a chapter for each product (on `claude/modest-wright-2zlwat`)
 
 The brand moved to Manjari and the ember, amber and ice colourway

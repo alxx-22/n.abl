@@ -171,6 +171,9 @@ const I = {
   link: '<path d="M13 19l6-6"/><path d="M11 14l-3 3a4 4 0 006 6l3-3M21 18l3-3a4 4 0 00-6-6l-3 3"/>',
   /* Manjari has no arrows: one is drawn wherever the words need one */
   arrow: '<path d="M5 16h21M19 9l7 7-7 7"/>',
+  cart: '<path d="M4 6h3.4l2.6 13.2h13.4L26 10.5H9.2"/><circle cx="12.4" cy="25.2" r="1.7"/><circle cx="21.8" cy="25.2" r="1.7"/>',
+  lock: '<rect x="8" y="14" width="16" height="12.5" rx="3"/><path d="M11.5 14v-3.2a4.5 4.5 0 019 0V14"/>',
+  sync: '<path d="M25.5 16A9.5 9.5 0 018.9 22.3M6.5 16a9.5 9.5 0 0116.6-6.3"/><path d="M23.6 4.8v4.9h-4.9M8.4 27.2v-4.9h4.9"/>',
 }
 export const icon = k => `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${I[k]}</svg>`
 

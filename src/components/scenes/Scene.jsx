@@ -65,6 +65,21 @@ export function stop(m) {
 /** The frame reduced motion gets: the outcome, not the journey to it. */
 export const still = (scene) => scene.dur * 0.8
 
+/* Two kinds of scene can be hosted. The SVG scenes in this folder are
+   strings mounted above. The film's card scenes (src/components/film/
+   cards.js) build themselves: they carry mount(), and hand back a render
+   and a destroy. Both are driven by the same shared loop, which only ever
+   calls scene.render(els, t); unmount() takes either down. */
+export function mountAny(host, scene) {
+  if (!scene.mount) return mountScene(host, scene)
+  const handle = scene.mount(host)
+  return { scene: { dur: scene.dur, render: (_, t) => handle.render(t) }, els: null, t0: 0, handle }
+}
+export function unmount(host, m) {
+  if (m.handle) m.handle.destroy()
+  else host.innerHTML = ''
+}
+
 /**
  * A scene that plays while its row is on screen.
  * Used for the capability rows, where the animation is the row's content.
@@ -76,13 +91,13 @@ export default function Scene({ scene, className = 'scene', label }) {
   useEffect(() => {
     const host = ref.current
     if (!host) return
-    const m = mountScene(host, scene)
+    const m = mountAny(host, scene)
 
     if (reduced) {
-      scene.render(m.els, still(scene))
-      return () => { host.innerHTML = '' }
+      m.scene.render(m.els, still(scene))
+      return () => unmount(host, m)
     }
-    scene.render(m.els, 0)
+    m.scene.render(m.els, 0)
 
     let onScreen = false
     const sync = () => (onScreen && !document.hidden ? play(m) : stop(m))
@@ -94,7 +109,7 @@ export default function Scene({ scene, className = 'scene', label }) {
       io.disconnect()
       document.removeEventListener('visibilitychange', sync)
       stop(m)
-      host.innerHTML = ''
+      unmount(host, m)
     }
   }, [scene, reduced])
 
