@@ -58,7 +58,7 @@ export default function Hero({ onBook }) {
           {/* The label sits in its own span so it can be trimmed to its
               capitals and centred in the pill in every browser (.lbl). */}
           <button className="btn btn--primary" onClick={onBook}>
-            <span className="ring" aria-hidden="true" />
+            <span className="ring" aria-hidden="true"><i /></span>
             <span className="lbl">Book a free discovery call</span>
           </button>
           <a className="btn btn--ghost" href="#see-it-work" onClick={() => track('cta_secondary')}><span className="lbl">See it work</span></a>

@@ -793,10 +793,18 @@ a:hover > .nabl-logo .nabl-logo__dot {
   backdrop-filter: blur(18px) saturate(140%);
   border: 1px solid var(--line);
   border-radius: 20px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 60px rgba(0,0,0,.5);
-  overflow: hidden;
+  /* The three glows are here at rest, unlit, so that answering only turns
+     them up: with the same shadows in the same order the change is a fade. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06),
+              0 0 40px 4px rgba(var(--ice-rgb), 0), 0 0 90px 16px rgba(var(--ice-rgb), 0),
+              0 0 140px 24px rgba(var(--accent-rgb), 0),
+              0 24px 60px rgba(0,0,0,.5);
+  /* Not hidden: the answering glow lies outside the glass. Nothing inside
+     needs the clip — the log scrolls within itself and the form rounds its
+     own corners. */
+  overflow: visible;
   transform-origin: bottom right;
-  transition: box-shadow 0.6s var(--ease);
+  transition: box-shadow 0.7s var(--ease);
   animation: assistant-in .34s cubic-bezier(.2, .9, .25, 1.12) backwards;
 }
 /* The brand's line along the top edge. */
@@ -804,26 +812,63 @@ a:hover > .nabl-logo .nabl-logo__dot {
   content: ''; position: absolute; left: 18px; right: 18px; top: 0; height: 1px; pointer-events: none;
   background: var(--grad-trio); opacity: 0.55;
 }
-/* While the agent is answering, light runs round the edge and the box glows,
-   cool and warm, until the answer lands. */
-.assistant::after {
-  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none; z-index: 2;
-  background: conic-gradient(from var(--ring-a),
-    transparent 0deg, rgba(var(--ember-rgb), 0.85) 50deg, var(--accent-300) 110deg, var(--calm-mid) 160deg,
-    var(--ice-300) 210deg, transparent 280deg, transparent 360deg);
+/* While the agent is answering the whole box glows: soft light off every
+   edge, cool with a little warmth further out, rather than a line round it. */
+.assistant--thinking {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06),
+              0 0 40px 4px rgba(var(--ice-rgb), 0.36), 0 0 90px 16px rgba(var(--ice-rgb), 0.17),
+              0 0 140px 24px rgba(var(--accent-rgb), 0.15),
+              0 24px 60px rgba(0,0,0,.34);
+}
+/* And one swell of brighter light travels the edge: long along it and low
+   off it, rising and falling like a wave, so it moves as one smooth light
+   rather than a spark. Five soft lights a little apart, the middle one
+   brightest, make the one swell — and because each follows the edge on its
+   own, the swell bends round the corners instead of sticking out of them.
+   The layer is cut to the outside of the glass, so none of it falls on the
+   words. While idle it holds where it stopped, so the next answer carries
+   on from there. Browsers without motion paths keep the glow, not the swell. */
+.assistant__glow {
+  --halo: 110px;
+  --lap: 4.4s;
+  position: absolute;
+  inset: calc(-1px - var(--halo));
+  padding: var(--halo);
+  border-radius: calc(20px + var(--halo));
+  pointer-events: none;
+  z-index: -1;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
           mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           mask-composite: exclude;
   opacity: 0;
-  transition: opacity 0.5s var(--ease);
+  transition: opacity 0.7s var(--ease);
 }
-.assistant--thinking {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 60px rgba(0,0,0,.5),
-              0 0 42px -6px rgba(var(--ice-rgb), 0.4), 0 0 90px -20px rgba(var(--accent-rgb), 0.42);
+.assistant--thinking .assistant__glow { opacity: 1; }
+.assistant__glow i {
+  position: absolute; left: 0; top: 0;
+  width: 280px; height: 124px;
+  offset-path: inset(var(--halo) round 20px);
+  offset-rotate: auto;
+  /* a bell, not a disc: brightest at its middle, nothing at its rim */
+  background: radial-gradient(closest-side,
+    rgba(var(--c), var(--a)),
+    rgba(var(--c), calc(var(--a) * .84)) 20%, rgba(var(--c), calc(var(--a) * .49)) 40%,
+    rgba(var(--c), calc(var(--a) * .2)) 60%, rgba(var(--c), calc(var(--a) * .056)) 80%,
+    rgba(var(--c), 0));
+  animation: glow-travel var(--lap) linear infinite paused;
+  animation-delay: calc(var(--lap) * var(--k) * -0.04);
 }
-.assistant--thinking::after { opacity: 0.9; animation: ring-spin 2.4s linear infinite; }
-@keyframes ring-spin { from { --ring-a: 0deg; } to { --ring-a: 360deg; } }
+.assistant__glow i:nth-child(1) { --k: 0; --c: var(--ember-rgb);  --a: .18; }
+.assistant__glow i:nth-child(2) { --k: 1; --c: var(--accent-rgb); --a: .34; }
+.assistant__glow i:nth-child(3) { --k: 2; --c: var(--cream-rgb);  --a: .46; }
+.assistant__glow i:nth-child(4) { --k: 3; --c: var(--ice-rgb);    --a: .38; }
+.assistant__glow i:nth-child(5) { --k: 4; --c: var(--ice-rgb);    --a: .18; }
+.assistant--thinking .assistant__glow i { animation-play-state: running; }
+@keyframes glow-travel { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@supports not (offset-path: inset(0 round 1px)) {
+  .assistant__glow i { display: none; }
+}
 /* Forwards here, unlike everywhere else: the node is about to be removed, so
    holding the final frame is the point. Duration matches CLOSE_MS in
    SiteAssistant.jsx — if one changes the other has to. */
@@ -912,6 +957,8 @@ a:hover > .nabl-logo .nabl-logo__dot {
   padding: var(--s-3);
   border-top: 1px solid var(--line-faint);
   background: rgba(14, 12, 10, 0.4);
+  /* the panel's own corners, less its 1px border: the panel no longer clips */
+  border-radius: 0 0 19px 19px;
 }
 /* Height is set from JS as the text wraps; resize is off so a drag handle
    does not fight it.
@@ -998,6 +1045,8 @@ a:hover > .nabl-logo .nabl-logo__dot {
   .assistant-fab:hover { transform: none; }
   .assistant__form .btn:disabled { transform: none; }
   .assistant__msg--busy i { animation: none; opacity: .6; }
+  /* the glow still comes up while it answers; only the travelling light goes */
+  .assistant__glow i { display: none; }
 }
 
 @media (max-width: 520px) {

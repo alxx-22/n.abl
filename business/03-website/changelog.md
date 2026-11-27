@@ -3,6 +3,31 @@
 What has changed on the public site, newest first. Commit hashes are from this
 repository, so any entry can be read in full with `git show <hash>`.
 
+## 2026-11-27 · The assistant's answering glow, and one smooth light on the rings (on `claude/modest-wright-2zlwat`)
+
+- **The chat box while the agent answers (`styles/components.css`,
+  `.assistant__glow`):** the whole box now glows, soft light off every edge,
+  cool with a little warmth further out. It replaces a thin line of light
+  running round the border, which read as a border. On top of the glow, one
+  swell of brighter light travels the edge. It is long along the edge and
+  low off it, rising and falling like a wave, so it moves as one smooth
+  light rather than a spark. Five soft lights a little apart make the one
+  swell, each on a motion path round the box, so it bends round the corners
+  instead of sticking out of them. It is cut to the outside of the glass, so
+  none of it falls on the words, and it holds where it stopped between
+  answers. The panel no longer clips its contents, which is what lets the
+  glow sit outside it; the form rounds its own bottom corners instead. The
+  client portal's assistant now has the same glow.
+- **The ring on Ask a question and the main buttons (`styles/global.css`,
+  THE RING):** the light that circles the button was a comet with a white
+  head and a hard end. It is now one soft light moving along the ring's own
+  line. It is long and gentle, its strength falling away like a bell, warm
+  behind and cool ahead. It keeps its length and pace all the way round,
+  rounded ends included, where the old one bunched up along the sides and
+  whipped round the ends. Each ring has an inner `<i>` for it. Browsers
+  without motion paths, and reduced motion, keep the ring and its glow
+  without the travelling light.
+
 ## 2026-11-26 · The rest of the site in the 2026-11 brand (on `claude/modest-wright-2zlwat`)
 
 - **One rule for the ground (`ground/story.js`):** the wisps seen bare, the
