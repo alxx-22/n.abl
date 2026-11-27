@@ -796,8 +796,8 @@ a:hover > .nabl-logo .nabl-logo__dot {
   /* The three glows are here at rest, unlit, so that answering only turns
      them up: with the same shadows in the same order the change is a fade. */
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06),
-              0 0 40px 4px rgba(var(--ice-rgb), 0), 0 0 90px 16px rgba(var(--ice-rgb), 0),
-              0 0 140px 24px rgba(var(--accent-rgb), 0),
+              0 0 34px 6px rgba(var(--ice-rgb), 0), 0 0 100px 20px rgba(var(--ice-rgb), 0),
+              0 0 160px 30px rgba(var(--accent-rgb), 0),
               0 24px 60px rgba(0,0,0,.5);
   /* Not hidden: the answering glow lies outside the glass. Nothing inside
      needs the clip — the log scrolls within itself and the form rounds its
@@ -816,8 +816,8 @@ a:hover > .nabl-logo .nabl-logo__dot {
    edge, cool with a little warmth further out, rather than a line round it. */
 .assistant--thinking {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06),
-              0 0 40px 4px rgba(var(--ice-rgb), 0.36), 0 0 90px 16px rgba(var(--ice-rgb), 0.17),
-              0 0 140px 24px rgba(var(--accent-rgb), 0.15),
+              0 0 34px 6px rgba(var(--ice-rgb), 0.42), 0 0 100px 20px rgba(var(--ice-rgb), 0.2),
+              0 0 160px 30px rgba(var(--accent-rgb), 0.16),
               0 24px 60px rgba(0,0,0,.34);
 }
 /* And one swell of brighter light travels the edge: long along it and low
