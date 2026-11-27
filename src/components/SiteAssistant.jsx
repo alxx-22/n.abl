@@ -114,7 +114,7 @@ export default function SiteAssistant({ onHandoff }) {
         aria-controls="site-assistant"
         onClick={toggle}
       >
-        <span className="ring" aria-hidden="true" />
+        <span className="ring" aria-hidden="true"><i /></span>
         <AssistantMark />
         {/* Keyed so React swaps the node rather than the text: the label then
             replays its entrance and the two words cross-fade instead of
@@ -131,6 +131,9 @@ export default function SiteAssistant({ onHandoff }) {
           role="dialog"
           aria-label="Ask n.abl a question"
         >
+          {/* the glow while it answers (components.css): five soft lights
+              that travel the edge together as one swell */}
+          <span className="assistant__glow" aria-hidden="true"><i /><i /><i /><i /><i /></span>
           <div className="assistant__log">
             {messages.map((m, i) => (
               <p

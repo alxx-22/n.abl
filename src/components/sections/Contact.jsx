@@ -31,7 +31,7 @@ export default function Contact({ onBook }) {
         </Reveal>
         <Reveal delay={0.16}>
           <button className="btn btn--primary contact__btn" onClick={onBook}>
-            <span className="ring" aria-hidden="true" />
+            <span className="ring" aria-hidden="true"><i /></span>
             <span className="lbl">Book a discovery call</span>
           </button>
         </Reveal>

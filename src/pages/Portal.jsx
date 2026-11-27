@@ -208,7 +208,7 @@ export default function Portal() {
                 spellCheck="false"
               />
               <button type="submit" className="btn btn--primary btn--block" disabled={loading}>
-                <span className="ring" aria-hidden="true" />
+                <span className="ring" aria-hidden="true"><i /></span>
                 <span className="lbl">{loading ? 'Verifying…' : 'Open my portal'}</span>
                 {!loading && <Arrow />}
               </button>
@@ -397,7 +397,7 @@ export default function Portal() {
                         {m.status && <Status status={m.status} />}
                         {m.join_url && !past && (
                           <a className="btn btn--primary btn--sm" href={m.join_url} target="_blank" rel="noopener noreferrer">
-                            <span className="ring" aria-hidden="true" /><span className="lbl">Join</span><Arrow />
+                            <span className="ring" aria-hidden="true"><i /></span><span className="lbl">Join</span><Arrow />
                           </a>
                         )}
                       </div>

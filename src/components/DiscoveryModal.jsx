@@ -134,7 +134,7 @@ export default function DiscoveryModal({ open, onClose, prefill = '' }) {
               thing that&rsquo;s getting in the way.
             </p>
             <button className="btn btn--primary btn--block" onClick={onClose}>
-              <span className="ring" aria-hidden="true" /><span className="lbl">Close</span>
+              <span className="ring" aria-hidden="true"><i /></span><span className="lbl">Close</span>
             </button>
           </div>
         ) : (
@@ -195,7 +195,7 @@ export default function DiscoveryModal({ open, onClose, prefill = '' }) {
               </div>
 
               <button type="submit" className="btn btn--primary btn--block" disabled={sending}>
-                <span className="ring" aria-hidden="true" />
+                <span className="ring" aria-hidden="true"><i /></span>
                 <span className="lbl">{sending ? 'Sending…' : 'Book my discovery call'}</span>
               </button>
               {error && <p className="auth-error" role="alert">{error}</p>}

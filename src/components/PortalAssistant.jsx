@@ -181,7 +181,7 @@ export default function PortalAssistant({ accessKey, clientName }) {
         aria-controls="portal-assistant"
         onClick={toggle}
       >
-        <span className="ring" aria-hidden="true" />
+        <span className="ring" aria-hidden="true"><i /></span>
         <AssistantMark />
         <span key={open ? 'close' : 'ask'} className="assistant-fab__label">
           {open ? 'Close' : 'Ask about your account'}
@@ -190,11 +190,13 @@ export default function PortalAssistant({ accessKey, clientName }) {
 
       {open && (
         <div
-          className={`assistant assistant--portal ${closing ? 'assistant--closing' : ''}`}
+          className={`assistant assistant--portal ${closing ? 'assistant--closing' : ''} ${busy ? 'assistant--thinking' : ''}`}
           id="portal-assistant"
           role="dialog"
           aria-label={`Ask about ${clientName || 'your account'}`}
         >
+          {/* the glow while it answers, as on the public site */}
+          <span className="assistant__glow" aria-hidden="true"><i /><i /><i /><i /><i /></span>
           <div className="assistant__log">
             {messages.map((m, i) => (
               <p
